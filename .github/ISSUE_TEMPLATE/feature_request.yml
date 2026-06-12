@@ -1,0 +1,60 @@
+name: Feature Request
+description: Propose a new feature or improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea that would make BuildX better? Describe it below.
+
+  - type: input
+    id: title
+    attributes:
+      label: Feature Title
+      placeholder: "AI-powered supplier matching based on project budget"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Relevant Phase
+      options:
+        - Phase 2 — Authentication
+        - Phase 3 — Marketplace UI
+        - Phase 4 — Products & Categories
+        - Phase 5 — Cart & Orders
+        - Phase 6 — Admin Dashboard
+        - Phase 7 — AI Features
+        - Phase 8 — Cloud Deployment
+        - New Phase / Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / Motivation
+      description: What problem does this solve? Who benefits?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe how you'd like it to work from a user perspective
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any other approaches you thought of?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Mockups, links, references

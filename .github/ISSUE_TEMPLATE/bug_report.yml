@@ -1,0 +1,66 @@
+name: Bug Report
+description: Something is broken
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please fill this out completely.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Bug Summary
+      description: One-line description of the bug
+      placeholder: "Cart total is wrong when applying a discount code"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps to reproduce the behavior
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include error messages and stack traces.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Frontend (Next.js)
+        - API (Express)
+        - Database / Prisma
+        - Authentication (Clerk)
+        - AI Features
+        - Infrastructure / Docker
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Browser, OS, Node version, relevant logs, screenshots
