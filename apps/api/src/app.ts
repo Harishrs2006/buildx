@@ -9,6 +9,9 @@ import { errorMiddleware } from './shared/middleware/error.middleware';
 import { logger } from './shared/logger/logger';
 import { userRoutes } from './features/users/user.routes';
 import { webhookRoutes } from './features/webhooks/webhook.routes';
+import { productRoutes } from './features/products/product.routes';
+import { categoryRoutes } from './features/categories/category.routes';
+import { supplierRoutes } from './features/suppliers/supplier.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -62,6 +65,9 @@ export function createApp(): Application {
 
   // ─── Feature routes ─────────────────────────────────
   app.use(`/api/${env.API_VERSION}/users`, userRoutes);
+  app.use(`/api/${env.API_VERSION}/products`, productRoutes);
+  app.use(`/api/${env.API_VERSION}/categories`, categoryRoutes);
+  app.use(`/api/${env.API_VERSION}/suppliers`, supplierRoutes);
 
   // ─── 404 handler ────────────────────────────────────
   app.use((_req: Request, res: Response) => {
