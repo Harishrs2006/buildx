@@ -1,0 +1,9 @@
+# Global owner — all PRs require review from Harishrs2006
+* @Harishrs2006
+
+# Core architecture files require explicit owner review
+apps/api/prisma/schema.prisma @Harishrs2006
+apps/api/src/config/ @Harishrs2006
+apps/api/src/shared/middleware/ @Harishrs2006
+infrastructure/ @Harishrs2006
+.github/ @Harishrs2006
