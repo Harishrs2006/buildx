@@ -7,6 +7,8 @@ import { env } from './config/env';
 import { globalRateLimit } from './shared/middleware/rate-limit.middleware';
 import { errorMiddleware } from './shared/middleware/error.middleware';
 import { logger } from './shared/logger/logger';
+import { userRoutes } from './features/users/user.routes';
+import { webhookRoutes } from './features/webhooks/webhook.routes';
 
 export function createApp(): Application {
   const app = express();
@@ -26,6 +28,9 @@ export function createApp(): Application {
     })
   );
 
+  // ─── Raw body for Clerk webhooks (must come before json parser) ──
+  app.use('/webhooks', express.raw({ type: 'application/json' }));
+
   // ─── Body parsing ───────────────────────────────────
   app.use(express.json({ limit: '10mb' }));
   app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -39,9 +44,6 @@ export function createApp(): Application {
     })
   );
 
-  // ─── Rate limiting ──────────────────────────────────
-  app.use(`/api/${env.API_VERSION}`, globalRateLimit);
-
   // ─── Health check ───────────────────────────────────
   app.get('/health', (_req: Request, res: Response) => {
     res.json({
@@ -52,9 +54,14 @@ export function createApp(): Application {
     });
   });
 
-  // ─── API Routes (registered by feature) ─────────────
-  // Routes are registered in server.ts after app creation
-  // This keeps app.ts testable without side effects
+  // ─── Webhooks (no rate limit, no auth — svix signed) ─
+  app.use('/webhooks', webhookRoutes);
+
+  // ─── Rate limiting on all API routes ────────────────
+  app.use(`/api/${env.API_VERSION}`, globalRateLimit);
+
+  // ─── Feature routes ─────────────────────────────────
+  app.use(`/api/${env.API_VERSION}/users`, userRoutes);
 
   // ─── 404 handler ────────────────────────────────────
   app.use((_req: Request, res: Response) => {
