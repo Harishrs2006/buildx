@@ -1,4 +1,8 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
+import { listCategories } from './category.controller';
+
 const router = Router();
-router.get('/ping', (_req, res) => res.json({ feature: 'categories', status: 'coming soon' }));
+
+router.get('/', listCategories);
+
 export { router as categoryRoutes };
