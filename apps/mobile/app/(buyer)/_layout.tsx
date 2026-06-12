@@ -22,22 +22,21 @@ export default function BuyerLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Home" emoji="🏠" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Home" emoji="🏠" focused={focused} /> }}
       />
       <Tabs.Screen
         name="orders"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Orders" emoji="📦" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Orders" emoji="📦" focused={focused} /> }}
       />
       <Tabs.Screen
         name="profile"
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon label="Profile" emoji="👤" focused={focused} />,
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="Profile" emoji="👤" focused={focused} /> }}
       />
+      {/* Non-tab screens — hidden from tab bar */}
+      <Tabs.Screen name="products" options={{ href: null }} />
+      <Tabs.Screen name="search" options={{ href: null }} />
+      <Tabs.Screen name="product" options={{ href: null }} />
+      <Tabs.Screen name="cart" options={{ href: null }} />
     </Tabs>
   );
 }
