@@ -1,65 +1,59 @@
 import { Request, Response, NextFunction } from 'express';
-import { clerkClient, createClerkClient } from '@clerk/clerk-sdk-node';
+import { getAuth } from 'firebase-admin/auth';
 import { AppError } from '../errors/AppError';
-import { env } from '../../config/env';
-
-export type UserRole = 'BUYER' | 'SUPPLIER' | 'ADMIN' | 'SUPER_ADMIN';
+import { User } from '../../infrastructure/database/models/User.model';
 
 declare global {
   namespace Express {
     interface Request {
       auth?: {
+        uid: string;
+        phone: string;
         userId: string;
-        orgId?: string;
-        role?: UserRole;
-        sessionId: string;
+        role: string;
       };
     }
   }
 }
 
-const clerk = createClerkClient({ secretKey: env.CLERK_SECRET_KEY });
-
-export async function requireAuth(
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): Promise<void> {
+export async function requireAuth(req: Request, _res: Response, next: NextFunction) {
   try {
-    const token = extractBearerToken(req);
-    if (!token) throw AppError.unauthorized('Missing authorization token');
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith('Bearer ')) {
+      throw AppError.unauthorized('Missing or invalid Authorization header');
+    }
 
-    const payload = await clerk.verifyToken(token);
+    const token = authHeader.slice(7);
+    const decoded = await getAuth().verifyIdToken(token);
+
+    const user = await User.findOne({ firebaseUid: decoded.uid }).select('_id role phone').lean();
+    if (!user) throw AppError.unauthorized('User not found. Please complete onboarding.');
+    if (!user.isActive) throw AppError.forbidden('Account suspended. Contact support.');
 
     req.auth = {
-      userId: payload.sub,
-      orgId: payload.org_id as string | undefined,
-      role: payload.metadata?.role as UserRole | undefined,
-      sessionId: payload.sid,
+      uid: decoded.uid,
+      phone: decoded.phone_number ?? '',
+      userId: user._id.toString(),
+      role: user.role,
     };
 
     next();
-  } catch (err) {
-    if (err instanceof AppError) return next(err);
-    next(AppError.unauthorized('Invalid or expired token'));
+  } catch (err: any) {
+    if (err.isOperational) return next(err);
+    // Firebase token errors
+    if (err.code?.startsWith('auth/')) {
+      return next(AppError.unauthorized('Invalid or expired token'));
+    }
+    next(err);
   }
 }
 
-export function requireRole(...roles: UserRole[]) {
-  return (req: Request, _res: Response, next: NextFunction): void => {
-    if (!req.auth) return next(AppError.unauthorized());
-
-    const userRole = req.auth.role;
-    if (!userRole || !roles.includes(userRole)) {
-      return next(AppError.forbidden('Insufficient permissions'));
+export function requireRole(...roles: string[]) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.auth) return next(AppError.unauthorized('Not authenticated'));
+    if (!roles.includes(req.auth.role)) {
+      return next(AppError.forbidden(`Requires role: ${roles.join(' or ')}`));
     }
-
     next();
   };
-}
-
-function extractBearerToken(req: Request): string | null {
-  const header = req.headers.authorization;
-  if (!header?.startsWith('Bearer ')) return null;
-  return header.slice(7);
 }
