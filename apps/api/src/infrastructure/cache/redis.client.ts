@@ -9,14 +9,14 @@ export const redis = new Redis(env.REDIS_URL, {
 });
 
 redis.on('connect', () => logger.info('Redis connected'));
-redis.on('error', (err) => logger.error('Redis error', { error: err.message }));
+redis.on('error', () => {}); // suppress noisy reconnect errors in dev
 redis.on('close', () => logger.warn('Redis connection closed'));
 
 export async function connectRedis(): Promise<void> {
   try {
     await redis.connect();
-  } catch (error) {
-    logger.error('Failed to connect to Redis', { error });
+  } catch {
+    logger.warn('Redis unavailable — caching disabled (install Redis for rate limiting)');
   }
 }
 

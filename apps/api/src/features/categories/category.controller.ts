@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import Category from '../../infrastructure/database/models/Category.model';
+import { Category } from '../../infrastructure/database/models/Category.model';
 
 export async function listCategories(_req: Request, res: Response, next: NextFunction) {
   try {
