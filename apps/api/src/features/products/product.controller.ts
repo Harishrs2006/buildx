@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import Product from '../../infrastructure/database/models/Product.model';
-import Category from '../../infrastructure/database/models/Category.model';
+import { Product } from '../../infrastructure/database/models/Product.model';
+import { Category } from '../../infrastructure/database/models/Category.model';
 
 export async function listProducts(req: Request, res: Response, next: NextFunction) {
   try {

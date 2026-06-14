@@ -7,6 +7,8 @@ import { logger } from "./shared/logger/logger";
 import { env } from "./config/env";
 
 // Feature routes
+import { Request, Response } from "express";
+import { errorMiddleware } from "./shared/middleware/error.middleware";
 import { authRoutes } from "./features/auth/auth.routes";
 import { userRoutes } from "./features/users/user.routes";
 import { categoryRoutes } from "./features/categories/category.routes";
@@ -32,6 +34,12 @@ async function bootstrap(): Promise<void> {
   app.use(`${base}/orders`, orderRoutes);
   app.use(`${base}/payments`, paymentRoutes);
   app.use(`${base}/upload`, uploadRoutes);
+
+  // 404 + error handlers must come AFTER all routes
+  app.use((_req: Request, res: Response) => {
+    res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Route not found" } });
+  });
+  app.use(errorMiddleware);
 
   await connectDatabase(env.MONGODB_URI);
   await connectRedis();

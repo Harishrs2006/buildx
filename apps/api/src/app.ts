@@ -49,15 +49,7 @@ export function createApp(): Application {
     });
   });
 
-  // Routes registered in server.ts after DB connect
-  app.use((_req: Request, res: Response) => {
-    res.status(404).json({
-      success: false,
-      error: { code: "NOT_FOUND", message: "Route not found" },
-    });
-  });
-
-  app.use(errorMiddleware);
+  // 404 and error handlers are registered in server.ts AFTER routes are mounted
 
   return app;
 }

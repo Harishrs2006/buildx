@@ -13,20 +13,20 @@ const envSchema = z.object({
 
   REDIS_URL: z.string().default('redis://localhost:6379'),
 
-  // Firebase Admin SDK
-  FIREBASE_PROJECT_ID: z.string().min(1),
-  FIREBASE_CLIENT_EMAIL: z.string().email(),
-  FIREBASE_PRIVATE_KEY: z.string().min(1),
+  // Firebase Admin SDK — optional when using Application Default Credentials (gcloud auth application-default login)
+  FIREBASE_PROJECT_ID: z.string().optional().default(''),
+  FIREBASE_CLIENT_EMAIL: z.string().optional().default(''),
+  FIREBASE_PRIVATE_KEY: z.string().optional().default(''),
 
-  // Cloudinary
-  CLOUDINARY_CLOUD_NAME: z.string().min(1),
-  CLOUDINARY_API_KEY: z.string().min(1),
-  CLOUDINARY_API_SECRET: z.string().min(1),
+  // Cloudinary — required in production, optional for local dev
+  CLOUDINARY_CLOUD_NAME: z.string().default(''),
+  CLOUDINARY_API_KEY: z.string().default(''),
+  CLOUDINARY_API_SECRET: z.string().default(''),
 
-  // Razorpay
-  RAZORPAY_KEY_ID: z.string().min(1),
-  RAZORPAY_KEY_SECRET: z.string().min(1),
-  RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
+  // Razorpay — required in production, optional for local dev
+  RAZORPAY_KEY_ID: z.string().default(''),
+  RAZORPAY_KEY_SECRET: z.string().default(''),
+  RAZORPAY_WEBHOOK_SECRET: z.string().default(''),
 
   // WhatsApp (Interakt)
   INTERAKT_API_KEY: z.string().optional(),
