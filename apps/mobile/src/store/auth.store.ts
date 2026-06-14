@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
 
-export type UserRole = 'BUYER' | 'SUPPLIER' | 'OPERATOR' | 'ADMIN';
+export type UserRole = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'OPERATOR' | 'ADMIN';
 
 interface AuthUser {
   id: string;

@@ -95,7 +95,7 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
     const profile = await getSupplierProfile(req.auth!.userId);
     const { status } = req.body as { status: string };
 
-    const allowed = ['IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
+    const allowed = ['READY_FOR_PICKUP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
     if (!allowed.includes(status)) {
       throw AppError.badRequest(`Status must be one of: ${allowed.join(', ')}`);
     }

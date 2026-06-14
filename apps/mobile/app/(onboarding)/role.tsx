@@ -6,7 +6,7 @@ import { api } from '../../src/lib/api';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Colors } from '../../src/constants/colors';
 
-type Role = 'BUYER' | 'SUPPLIER';
+type Role = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER';
 
 export default function RoleScreen() {
   const router = useRouter();
@@ -15,11 +15,15 @@ export default function RoleScreen() {
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [vehicleType, setVehicleType] = useState('TEMPO');
+  const [vehicleNumber, setVehicleNumber] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleContinue() {
     if (!role || !name.trim()) return;
     if (role === 'SUPPLIER' && (!businessName.trim() || !whatsapp.trim())) return;
+    if (role === 'DELIVERY_PARTNER' && (!vehicleType || !vehicleNumber.trim() || !licenseNumber.trim())) return;
 
     setLoading(true);
     try {
@@ -29,6 +33,11 @@ export default function RoleScreen() {
         ...(role === 'SUPPLIER' && {
           businessName: businessName.trim(),
           whatsappNumber: whatsapp.replace(/\s/g, ''),
+        }),
+        ...(role === 'DELIVERY_PARTNER' && {
+          vehicleType,
+          vehicleNumber: vehicleNumber.trim().toUpperCase(),
+          licenseNumber: licenseNumber.trim().toUpperCase(),
         }),
       });
       await syncWithBackend();
@@ -40,8 +49,11 @@ export default function RoleScreen() {
     }
   }
 
-  const canContinue = role && name.trim() &&
-    (role === 'BUYER' || (businessName.trim() && /^[6-9]\d{9}$/.test(whatsapp.replace(/\s/g, ''))));
+  const canContinue = role && name.trim() && (
+    role === 'BUYER' ||
+    (role === 'SUPPLIER' && businessName.trim() && /^[6-9]\d{9}$/.test(whatsapp.replace(/\s/g, ''))) ||
+    (role === 'DELIVERY_PARTNER' && vehicleType && vehicleNumber.trim() && licenseNumber.trim())
+  );
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -51,22 +63,20 @@ export default function RoleScreen() {
 
         {/* Role cards */}
         <View style={styles.cards}>
-          {(['BUYER', 'SUPPLIER'] as Role[]).map((r) => (
+          {([
+            { r: 'BUYER', emoji: '🏗️', title: 'Contractor / Buyer', desc: 'I buy construction materials for projects' },
+            { r: 'SUPPLIER', emoji: '🏭', title: 'Supplier / Dealer', desc: 'I sell construction materials or equipment' },
+            { r: 'DELIVERY_PARTNER', emoji: '🚚', title: 'Delivery Partner', desc: 'I deliver orders from suppliers to buyers' },
+          ] as { r: Role; emoji: string; title: string; desc: string }[]).map(({ r, emoji, title, desc }) => (
             <TouchableOpacity
               key={r}
               style={[styles.card, role === r && styles.cardSelected]}
               onPress={() => setRole(r)}
               activeOpacity={0.8}
             >
-              <Text style={styles.cardEmoji}>{r === 'BUYER' ? '🏗️' : '🏭'}</Text>
-              <Text style={[styles.cardTitle, role === r && styles.cardTitleSelected]}>
-                {r === 'BUYER' ? 'Contractor / Buyer' : 'Supplier / Dealer'}
-              </Text>
-              <Text style={styles.cardDesc}>
-                {r === 'BUYER'
-                  ? 'I buy construction materials for projects'
-                  : 'I sell construction materials or equipment'}
-              </Text>
+              <Text style={styles.cardEmoji}>{emoji}</Text>
+              <Text style={[styles.cardTitle, role === r && styles.cardTitleSelected]}>{title}</Text>
+              <Text style={styles.cardDesc}>{desc}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -109,6 +119,52 @@ export default function RoleScreen() {
               />
             </View>
             <Text style={styles.hint}>Customers will contact you on this number for orders.</Text>
+          </>
+        )}
+
+        {/* Delivery Partner fields */}
+        {role === 'DELIVERY_PARTNER' && (
+          <>
+            <Text style={styles.label}>Vehicle type *</Text>
+            <View style={styles.vehicleGrid}>
+              {[
+                { key: 'BIKE', label: 'Bike', icon: '🏍️' },
+                { key: 'AUTO', label: 'Auto', icon: '🛺' },
+                { key: 'MINI_TRUCK', label: 'Mini Truck', icon: '🚐' },
+                { key: 'TEMPO', label: 'Tempo', icon: '🚚' },
+                { key: 'TRUCK', label: 'Truck', icon: '🚛' },
+                { key: 'TRACTOR', label: 'Tractor', icon: '🚜' },
+              ].map((v) => (
+                <TouchableOpacity
+                  key={v.key}
+                  style={[styles.vehicleChip, vehicleType === v.key && styles.vehicleChipActive]}
+                  onPress={() => setVehicleType(v.key)}
+                >
+                  <Text style={styles.vehicleIcon}>{v.icon}</Text>
+                  <Text style={[styles.vehicleLabel, vehicleType === v.key && styles.vehicleLabelActive]}>{v.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Text style={styles.label}>Vehicle number *</Text>
+            <TextInput
+              style={styles.input}
+              value={vehicleNumber}
+              onChangeText={setVehicleNumber}
+              placeholder="e.g. KA 06 AB 1234"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="characters"
+            />
+
+            <Text style={styles.label}>Driving license number *</Text>
+            <TextInput
+              style={styles.input}
+              value={licenseNumber}
+              onChangeText={setLicenseNumber}
+              placeholder="e.g. KA0620200012345"
+              placeholderTextColor={Colors.textMuted}
+              autoCapitalize="characters"
+            />
           </>
         )}
 
@@ -160,4 +216,10 @@ const styles = StyleSheet.create({
   },
   btnDisabled: { opacity: 0.5 },
   btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  vehicleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
+  vehicleChip: { width: '30%', alignItems: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
+  vehicleChipActive: { borderColor: Colors.primary, backgroundColor: '#FFF7ED' },
+  vehicleIcon: { fontSize: 24, marginBottom: 4 },
+  vehicleLabel: { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+  vehicleLabelActive: { color: Colors.primary },
 });

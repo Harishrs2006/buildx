@@ -48,6 +48,8 @@ function AuthGate() {
 
     if (user.role === 'SUPPLIER' && !inAuth && !inOnboarding) {
       if (segments[0] !== '(supplier)') router.replace('/(supplier)/home');
+    } else if (user.role === 'DELIVERY_PARTNER' && !inAuth && !inOnboarding) {
+      if (segments[0] !== '(driver)') router.replace('/(driver)/available');
     } else if (!inAuth && !inOnboarding) {
       if (segments[0] !== '(buyer)') router.replace('/(buyer)/home');
     }
@@ -66,6 +68,7 @@ export default function RootLayout() {
           <Stack.Screen name="(onboarding)" />
           <Stack.Screen name="(buyer)" />
           <Stack.Screen name="(supplier)" />
+          <Stack.Screen name="(driver)" />
         </Stack>
         <StatusBar style="dark" />
       </QueryClientProvider>
