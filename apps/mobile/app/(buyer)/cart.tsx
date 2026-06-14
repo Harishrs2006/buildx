@@ -52,11 +52,11 @@ function CartRow({ item }: { item: CartItem }) {
 export default function CartScreen() {
   const router = useRouter();
   const items = useCartStore((s) => s.items);
-  const total = useCartStore((s) => s.total());
+  const subtotal = useCartStore((s) => s.subtotal());
+  const gstTotal = useCartStore((s) => s.gstTotal());
+  const grandTotal = useCartStore((s) => s.grandTotal());
+  const itemCount = useCartStore((s) => s.itemCount());
   const clear = useCartStore((s) => s.clear);
-
-  const gstEstimate = total * 0.18;
-  const grandTotal = total + gstEstimate;
 
   if (items.length === 0) {
     return (
@@ -85,7 +85,7 @@ export default function CartScreen() {
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cart ({items.length})</Text>
+        <Text style={styles.headerTitle}>Cart ({itemCount})</Text>
         <TouchableOpacity
           onPress={() =>
             Alert.alert('Clear cart', 'Remove all items?', [
@@ -108,11 +108,11 @@ export default function CartScreen() {
             <Text style={styles.summaryTitle}>Order Summary</Text>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>₹{total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.summaryValue}>₹{subtotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
             </View>
             <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>GST (est. ~18%)</Text>
-              <Text style={styles.summaryValue}>₹{gstEstimate.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.summaryLabel}>GST</Text>
+              <Text style={styles.summaryValue}>₹{gstTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery</Text>

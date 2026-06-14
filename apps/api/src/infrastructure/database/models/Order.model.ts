@@ -7,6 +7,7 @@ export interface IOrderItem {
   unit: string;
   quantity: number;
   pricePerUnit: number;
+  gstRate: number;
   subtotal: number;
 }
 
@@ -55,6 +56,7 @@ const orderSchema = new Schema<IOrder>(
         unit: String,
         quantity: Number,
         pricePerUnit: Number,
+        gstRate: { type: Number, default: 18 },
         subtotal: Number,
       },
     ],

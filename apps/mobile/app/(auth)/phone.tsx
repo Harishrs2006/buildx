@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
   KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
@@ -7,12 +7,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
+import { useAuthStore } from '../../src/store/auth.store';
 
 export default function PhoneScreen() {
   const router = useRouter();
+  const setPendingConfirmation = useAuthStore((s) => s.setPendingConfirmation);
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
-  const confirmRef = useRef<any>(null);
 
   async function sendOtp() {
     const cleaned = phone.replace(/\s/g, '');
@@ -23,7 +24,7 @@ export default function PhoneScreen() {
     setLoading(true);
     try {
       const confirmation = await auth().signInWithPhoneNumber(`+91${cleaned}`);
-      confirmRef.current = confirmation;
+      setPendingConfirmation(confirmation);
       router.push({ pathname: '/(auth)/otp', params: { phone: cleaned } });
     } catch (err: any) {
       Alert.alert('Error', err.message ?? 'Failed to send OTP');

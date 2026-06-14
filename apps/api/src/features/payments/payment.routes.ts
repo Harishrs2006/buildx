@@ -1,4 +1,8 @@
-﻿import { Router } from 'express';
+import { Router } from 'express';
+
 const router = Router();
-router.get('/ping', (_req, res) => res.json({ feature: 'payments', status: 'coming soon' }));
+
+// Payments via Razorpay/UPI will be added when the app scales.
+// All current orders use Cash on Delivery (COD).
+
 export { router as paymentRoutes };

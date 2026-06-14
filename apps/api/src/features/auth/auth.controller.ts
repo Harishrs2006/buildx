@@ -11,17 +11,19 @@ export class AuthController {
     try {
       const { uid, phone } = req.auth!;
 
-      let user = await User.findOne({ firebaseUid: uid });
-
-      if (!user) {
-        user = await User.create({
-          firebaseUid: uid,
-          phone,
-          name: 'New User',
-          role: 'BUYER',
-          onboardingComplete: false,
-        });
-      }
+      const user = await User.findOneAndUpdate(
+        { firebaseUid: uid },
+        {
+          $setOnInsert: {
+            firebaseUid: uid,
+            phone,
+            name: 'New User',
+            role: 'BUYER',
+            onboardingComplete: false,
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
 
       res.json(
         ok({
