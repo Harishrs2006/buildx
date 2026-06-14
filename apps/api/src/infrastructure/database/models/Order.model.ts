@@ -29,7 +29,10 @@ export interface IOrder extends Document {
   subtotal: number;
   gstAmount: number;
   total: number;
-  status: 'PENDING' | 'CONFIRMED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
+  status: 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
+  driverId?: Types.ObjectId;
+  assignedAt?: Date;
+  pickedUpAt?: Date;
   paymentStatus: 'PENDING' | 'CAPTURED' | 'RELEASED' | 'REFUNDED';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
@@ -74,10 +77,13 @@ const orderSchema = new Schema<IOrder>(
     total: { type: Number, required: true },
     status: {
       type: String,
-      enum: ['PENDING', 'CONFIRMED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DISPUTED'],
+      enum: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DISPUTED'],
       default: 'PENDING',
       index: true,
     },
+    driverId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
+    assignedAt: Date,
+    pickedUpAt: Date,
     paymentStatus: {
       type: String,
       enum: ['PENDING', 'CAPTURED', 'RELEASED', 'REFUNDED'],

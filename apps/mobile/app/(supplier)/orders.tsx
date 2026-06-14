@@ -8,7 +8,7 @@ import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS, type OrderStatus } from '../.
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: '', label: 'All' },
   { key: 'CONFIRMED', label: 'New' },
-  { key: 'IN_TRANSIT', label: 'In Transit' },
+  { key: 'READY_FOR_PICKUP', label: 'Ready' },
   { key: 'DELIVERED', label: 'Delivered' },
 ];
 
@@ -18,9 +18,9 @@ function OrderCard({ order, onUpdateStatus }: { order: SupplierOrder; onUpdateSt
 
   function handleAction() {
     if (order.status === 'CONFIRMED') {
-      Alert.alert('Mark In Transit?', 'Confirm that you have dispatched this order.', [
+      Alert.alert('Ready for Pickup?', 'Mark this order as ready — delivery partners will see it and can pick it up.', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Mark In Transit', onPress: () => onUpdateStatus(order._id, 'IN_TRANSIT') },
+        { text: 'Mark Ready', onPress: () => onUpdateStatus(order._id, 'READY_FOR_PICKUP') },
       ]);
     } else if (order.status === 'IN_TRANSIT') {
       Alert.alert('Mark Delivered?', 'Confirm that the buyer received this order.', [
@@ -62,7 +62,7 @@ function OrderCard({ order, onUpdateStatus }: { order: SupplierOrder; onUpdateSt
         {canUpdate && (
           <TouchableOpacity style={styles.actionBtn} onPress={handleAction}>
             <Text style={styles.actionBtnText}>
-              {order.status === 'CONFIRMED' ? 'Mark In Transit' : 'Mark Delivered'}
+              {order.status === 'CONFIRMED' ? 'Mark Ready for Pickup' : 'Mark Delivered'}
             </Text>
           </TouchableOpacity>
         )}

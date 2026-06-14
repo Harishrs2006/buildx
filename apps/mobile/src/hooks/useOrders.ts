@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import type { CartItem } from '../store/cart.store';
 
-export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
+export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
 export type PaymentStatus = 'PENDING' | 'CAPTURED' | 'RELEASED' | 'REFUNDED';
 
 export type OrderItem = {
@@ -88,19 +88,25 @@ export function cartItemsToOrderPayload(
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING:    'Pending',
-  CONFIRMED:  'Confirmed',
-  IN_TRANSIT: 'In Transit',
-  DELIVERED:  'Delivered',
-  CANCELLED:  'Cancelled',
-  DISPUTED:   'Disputed',
+  PENDING:          'Pending',
+  CONFIRMED:        'Confirmed',
+  READY_FOR_PICKUP: 'Ready for Pickup',
+  ASSIGNED:         'Driver Assigned',
+  PICKED_UP:        'Picked Up',
+  IN_TRANSIT:       'In Transit',
+  DELIVERED:        'Delivered',
+  CANCELLED:        'Cancelled',
+  DISPUTED:         'Disputed',
 };
 
 export const ORDER_STATUS_COLORS: Record<OrderStatus, { bg: string; text: string }> = {
-  PENDING:    { bg: '#DBEAFE', text: '#1E40AF' },
-  CONFIRMED:  { bg: '#D1FAE5', text: '#065F46' },
-  IN_TRANSIT: { bg: '#FEF3C7', text: '#92400E' },
-  DELIVERED:  { bg: '#D1FAE5', text: '#065F46' },
-  CANCELLED:  { bg: '#FEE2E2', text: '#991B1B' },
-  DISPUTED:   { bg: '#FEE2E2', text: '#991B1B' },
+  PENDING:          { bg: '#DBEAFE', text: '#1E40AF' },
+  CONFIRMED:        { bg: '#D1FAE5', text: '#065F46' },
+  READY_FOR_PICKUP: { bg: '#FEF3C7', text: '#92400E' },
+  ASSIGNED:         { bg: '#EDE9FE', text: '#5B21B6' },
+  PICKED_UP:        { bg: '#FEF3C7', text: '#92400E' },
+  IN_TRANSIT:       { bg: '#FEF3C7', text: '#92400E' },
+  DELIVERED:        { bg: '#D1FAE5', text: '#065F46' },
+  CANCELLED:        { bg: '#FEE2E2', text: '#991B1B' },
+  DISPUTED:         { bg: '#FEE2E2', text: '#991B1B' },
 };

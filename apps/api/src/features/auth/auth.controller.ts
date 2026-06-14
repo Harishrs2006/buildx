@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { User } from '../../infrastructure/database/models/User.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
+import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 
@@ -43,7 +44,7 @@ export class AuthController {
   async onboard(req: Request, res: Response, next: NextFunction) {
     try {
       const { uid } = req.auth!;
-      const { name, role, businessName, whatsappNumber, deliveryRadiusKm, serviceAreas } = req.body;
+      const { name, role, businessName, whatsappNumber, deliveryRadiusKm, serviceAreas, vehicleType, vehicleNumber, licenseNumber } = req.body;
 
       const user = await User.findOne({ firebaseUid: uid });
       if (!user) throw AppError.notFound('User');
@@ -65,6 +66,19 @@ export class AuthController {
           deliveryRadiusKm: deliveryRadiusKm ?? 30,
           serviceAreas: serviceAreas ?? [],
           verificationStatus: 'PENDING',
+        });
+      }
+
+      if (role === 'DELIVERY_PARTNER') {
+        if (!vehicleType || !vehicleNumber || !licenseNumber) {
+          throw AppError.badRequest('vehicleType, vehicleNumber, licenseNumber required for delivery partners');
+        }
+        await DeliveryPartner.create({
+          userId: user._id,
+          vehicleType,
+          vehicleNumber: vehicleNumber.trim().toUpperCase(),
+          licenseNumber: licenseNumber.trim().toUpperCase(),
+          serviceAreas: serviceAreas ?? [],
         });
       }
 
