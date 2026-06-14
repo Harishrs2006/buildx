@@ -4,8 +4,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useState, useRef } from 'react';
-import { useProducts, type Product } from '../../src/hooks/useProducts';
+import { useState } from 'react';
+import { useProductSearch, getProductImageUrl, type Product } from '../../src/hooks/useProducts';
 import { useCartStore } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
 
@@ -15,6 +15,7 @@ function SearchProductCard({ item }: { item: Product }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
   const inCart = useCartStore((s) => s.items.some((i) => i.productId === item._id));
+  const thumbUrl = getProductImageUrl(item.images);
 
   return (
     <TouchableOpacity
@@ -22,8 +23,8 @@ function SearchProductCard({ item }: { item: Product }) {
       onPress={() => router.push({ pathname: '/(buyer)/product/[id]', params: { id: item._id } })}
       activeOpacity={0.8}
     >
-      {item.images?.[0] ? (
-        <Image source={{ uri: item.images[0] }} style={styles.resultThumb} resizeMode="cover" />
+      {thumbUrl ? (
+        <Image source={{ uri: thumbUrl }} style={styles.resultThumb} resizeMode="cover" />
       ) : (
         <View style={styles.resultThumbPlaceholder}><Text style={{ fontSize: 20 }}>🏗️</Text></View>
       )}
@@ -37,9 +38,10 @@ function SearchProductCard({ item }: { item: Product }) {
         onPress={() => addItem({
           productId: item._id,
           name: item.name,
-          image: item.images?.[0] ?? '',
+          image: thumbUrl,
           unit: item.unit,
           basePrice: item.basePrice,
+          gstRate: item.gstRate,
           supplierId: item.supplierId?._id ?? '',
           supplierName: item.supplierId?.businessName ?? '',
         })}
@@ -52,18 +54,11 @@ function SearchProductCard({ item }: { item: Product }) {
 
 export default function SearchScreen() {
   const router = useRouter();
-  const inputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
-  const [committed, setCommitted] = useState('');
 
-  const { data, isLoading } = useProducts({ q: committed });
-  const products = committed ? (data?.products ?? []) : [];
+  const { data, isLoading } = useProductSearch(query);
+  const products = query.length >= 2 ? (data?.products ?? []) : [];
   const cartCount = useCartStore((s) => s.itemCount());
-
-  function submit(text?: string) {
-    const q = (text ?? query).trim();
-    if (q) setCommitted(q);
-  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -73,18 +68,16 @@ export default function SearchScreen() {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <TextInput
-          ref={inputRef}
           style={styles.input}
           placeholder="Search cement, JCB, pipes..."
           placeholderTextColor={Colors.textMuted}
           value={query}
           onChangeText={setQuery}
-          onSubmitEditing={() => submit()}
           returnKeyType="search"
           autoFocus
         />
         {query.length > 0 && (
-          <TouchableOpacity onPress={() => { setQuery(''); setCommitted(''); }} style={styles.clearBtn}>
+          <TouchableOpacity onPress={() => setQuery('')} style={styles.clearBtn}>
             <Text style={styles.clearText}>✕</Text>
           </TouchableOpacity>
         )}
@@ -96,7 +89,7 @@ export default function SearchScreen() {
         </TouchableOpacity>
       </View>
 
-      {!committed ? (
+      {query.length < 2 ? (
         <View style={styles.suggestions}>
           <Text style={styles.suggestTitle}>Popular searches</Text>
           <View style={styles.suggestChips}>
@@ -104,7 +97,7 @@ export default function SearchScreen() {
               <TouchableOpacity
                 key={s}
                 style={styles.suggestChip}
-                onPress={() => { setQuery(s); submit(s); }}
+                onPress={() => setQuery(s)}
               >
                 <Text style={styles.suggestChipText}>{s}</Text>
               </TouchableOpacity>
@@ -118,7 +111,7 @@ export default function SearchScreen() {
       ) : products.length === 0 ? (
         <View style={styles.center}>
           <Text style={{ fontSize: 36, marginBottom: 12 }}>🔍</Text>
-          <Text style={styles.emptyTitle}>No results for "{committed}"</Text>
+          <Text style={styles.emptyTitle}>No results for "{query}"</Text>
           <Text style={styles.emptySub}>Try a different keyword or browse categories.</Text>
           <TouchableOpacity style={styles.browseBtn} onPress={() => router.back()}>
             <Text style={styles.browseBtnText}>Browse categories</Text>
@@ -126,7 +119,7 @@ export default function SearchScreen() {
         </View>
       ) : (
         <>
-          <Text style={styles.resultCount}>{data?.pagination.total} results for "{committed}"</Text>
+          <Text style={styles.resultCount}>{data?.pagination.total} results for "{query}"</Text>
           <FlatList
             data={products}
             keyExtractor={(item) => item._id}

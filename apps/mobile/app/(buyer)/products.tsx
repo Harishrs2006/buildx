@@ -1,11 +1,11 @@
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Image, ScrollView, RefreshControl,
+  ActivityIndicator, Image, ScrollView, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { useProducts, type Product } from '../../src/hooks/useProducts';
+import { useProducts, getProductImageUrl, type Product } from '../../src/hooks/useProducts';
 import { useCartStore } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
 
@@ -21,11 +21,46 @@ const SORT_OPTIONS: { label: string; value: SortOption }[] = [
 function ProductCard({ item }: { item: Product }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
-  const cartItems = useCartStore((s) => s.items);
-  const inCart = cartItems.some((i) => i.productId === item._id);
+  const inCart = useCartStore((s) => s.items.some((i) => i.productId === item._id));
+  const hasConflict = useCartStore((s) => s.hasConflict(item.supplierId?._id ?? ''));
 
-  const thumb = item.images?.[0] ?? null;
-  const priceWithGst = item.basePrice * (1 + item.gstRate / 100);
+  const thumbUrl = getProductImageUrl(item.images);
+
+  function handleAdd() {
+    if (hasConflict) {
+      Alert.alert(
+        'Different supplier',
+        'Your cart has items from another supplier. Add anyway to create a separate order?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Add anyway',
+            onPress: () => addItem({
+              productId: item._id,
+              name: item.name,
+              image: thumbUrl,
+              unit: item.unit,
+              basePrice: item.basePrice,
+              gstRate: item.gstRate,
+              supplierId: item.supplierId?._id ?? '',
+              supplierName: item.supplierId?.businessName ?? '',
+            }),
+          },
+        ]
+      );
+      return;
+    }
+    addItem({
+      productId: item._id,
+      name: item.name,
+      image: thumbUrl,
+      unit: item.unit,
+      basePrice: item.basePrice,
+      gstRate: item.gstRate,
+      supplierId: item.supplierId?._id ?? '',
+      supplierName: item.supplierId?.businessName ?? '',
+    });
+  }
 
   return (
     <TouchableOpacity
@@ -34,8 +69,8 @@ function ProductCard({ item }: { item: Product }) {
       activeOpacity={0.8}
     >
       <View style={styles.cardImg}>
-        {thumb ? (
-          <Image source={{ uri: thumb }} style={styles.thumb} resizeMode="cover" />
+        {thumbUrl ? (
+          <Image source={{ uri: thumbUrl }} style={styles.thumb} resizeMode="cover" />
         ) : (
           <View style={styles.thumbPlaceholder}>
             <Text style={{ fontSize: 32 }}>🏗️</Text>
@@ -57,23 +92,15 @@ function ProductCard({ item }: { item: Product }) {
           </View>
           <TouchableOpacity
             style={[styles.addBtn, inCart && styles.addBtnActive]}
-            onPress={() =>
-              addItem({
-                productId: item._id,
-                name: item.name,
-                image: item.images?.[0] ?? '',
-                unit: item.unit,
-                basePrice: item.basePrice,
-                supplierId: item.supplierId?._id ?? '',
-                supplierName: item.supplierId?.businessName ?? '',
-              })
-            }
+            onPress={handleAdd}
           >
-            <Text style={styles.addBtnText}>{inCart ? '✓ Added' : '+ Cart'}</Text>
+            <Text style={[styles.addBtnText, inCart && styles.addBtnTextActive]}>
+              {inCart ? '✓' : '+'}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {item.supplierId?.avgRating > 0 && (
+        {(item.supplierId?.avgRating ?? 0) > 0 && (
           <Text style={styles.rating}>⭐ {item.supplierId.avgRating.toFixed(1)}</Text>
         )}
       </View>
@@ -85,18 +112,15 @@ export default function ProductsScreen() {
   const { categorySlug, categoryName } = useLocalSearchParams<{ categorySlug: string; categoryName: string }>();
   const router = useRouter();
   const [sort, setSort] = useState<SortOption>('popular');
-  const [page, setPage] = useState(1);
 
-  const { data, isLoading, isRefetching, refetch } = useProducts({
-    category: categorySlug,
-    sort,
-    page,
-  });
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
+    useProducts({ category: categorySlug, sort });
 
   const cartCount = useCartStore((s) => s.itemCount());
 
-  const products = data?.products ?? [];
-  const pagination = data?.pagination;
+  // Flatten all pages into a single product list
+  const products = data?.pages.flatMap((p) => p.products) ?? [];
+  const total = data?.pages[0]?.pagination.total ?? 0;
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -115,16 +139,12 @@ export default function ProductsScreen() {
       </View>
 
       {/* Sort chips */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chips}
-      >
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         {SORT_OPTIONS.map((opt) => (
           <TouchableOpacity
             key={opt.value}
             style={[styles.chip, sort === opt.value && styles.chipActive]}
-            onPress={() => { setSort(opt.value); setPage(1); }}
+            onPress={() => setSort(opt.value)}
           >
             <Text style={[styles.chipText, sort === opt.value && styles.chipTextActive]}>
               {opt.label}
@@ -151,11 +171,26 @@ export default function ProductsScreen() {
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+          refreshControl={
+            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />
+          }
+          ListHeaderComponent={
+            total > 0 ? (
+              <Text style={styles.totalCount}>{total} products</Text>
+            ) : null
+          }
           ListFooterComponent={
-            pagination && pagination.page < pagination.pages ? (
-              <TouchableOpacity style={styles.loadMore} onPress={() => setPage((p) => p + 1)}>
-                <Text style={styles.loadMoreText}>Load more</Text>
+            hasNextPage ? (
+              <TouchableOpacity
+                style={styles.loadMore}
+                onPress={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+              >
+                {isFetchingNextPage ? (
+                  <ActivityIndicator color={Colors.primary} />
+                ) : (
+                  <Text style={styles.loadMoreText}>Load more</Text>
+                )}
               </TouchableOpacity>
             ) : null
           }
@@ -182,6 +217,7 @@ const styles = StyleSheet.create({
   chipTextActive: { color: '#fff', fontWeight: '700' },
   list: { paddingHorizontal: 12, paddingBottom: 24 },
   row: { justifyContent: 'space-between', marginBottom: 12 },
+  totalCount: { fontSize: 12, color: Colors.textMuted, paddingHorizontal: 4, paddingVertical: 8 },
   card: { width: '48.5%', backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
   cardImg: { position: 'relative' },
   thumb: { width: '100%', height: 130 },
@@ -194,9 +230,10 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
   price: { fontSize: 15, fontWeight: '800', color: Colors.text },
   priceUnit: { fontSize: 10, color: Colors.textMuted, marginTop: 1 },
-  addBtn: { backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.primary, borderRadius: 8, paddingHorizontal: 8, paddingVertical: 5 },
+  addBtn: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: Colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface },
   addBtnActive: { backgroundColor: Colors.primary },
-  addBtnText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+  addBtnText: { fontSize: 16, color: Colors.primary, fontWeight: '700', lineHeight: 20 },
+  addBtnTextActive: { color: '#fff' },
   rating: { fontSize: 11, color: Colors.textMuted, marginTop: 6 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
   emptyTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 8 },

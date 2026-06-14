@@ -5,17 +5,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useRef } from 'react';
-import { useProduct } from '../../../src/hooks/useProducts';
+import { useProduct, getProductImageUrl, type ProductImage } from '../../../src/hooks/useProducts';
 import { useCartStore } from '../../../src/store/cart.store';
 import { Colors } from '../../../src/constants/colors';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-function ImageGallery({ images }: { images: string[] }) {
+function ImageGallery({ images }: { images: ProductImage[] }) {
+  const urls = images.map((img) => img.url);
   const [active, setActive] = useState(0);
   const ref = useRef<FlatList>(null);
 
-  if (!images || images.length === 0) {
+  if (!urls || urls.length === 0) {
     return (
       <View style={galStyles.placeholder}>
         <Text style={{ fontSize: 64 }}>🏗️</Text>
@@ -27,7 +28,7 @@ function ImageGallery({ images }: { images: string[] }) {
     <View>
       <FlatList
         ref={ref}
-        data={images}
+        data={urls}
         horizontal
         pagingEnabled
         showsHorizontalScrollIndicator={false}
@@ -39,9 +40,9 @@ function ImageGallery({ images }: { images: string[] }) {
           <Image source={{ uri: item }} style={galStyles.image} resizeMode="cover" />
         )}
       />
-      {images.length > 1 && (
+      {urls.length > 1 && (
         <View style={galStyles.dots}>
-          {images.map((_, i) => (
+          {urls.map((_, i) => (
             <View key={i} style={[galStyles.dot, i === active && galStyles.dotActive]} />
           ))}
         </View>
@@ -63,20 +64,23 @@ export default function ProductDetailScreen() {
   const router = useRouter();
   const { data: product, isLoading } = useProduct(id);
 
-  const [qty, setQty] = useState(1);
+  const minQty = product?.minOrderQuantity ?? 1;
+  const [qty, setQty] = useState(minQty);
   const addItem = useCartStore((s) => s.addItem);
   const cartItems = useCartStore((s) => s.items);
   const cartCount = useCartStore((s) => s.itemCount());
   const inCart = cartItems.some((i) => i.productId === id);
+  const outOfStock = (product?.stockQuantity ?? 1) === 0;
 
   function handleAddToCart() {
-    if (!product) return;
+    if (!product || outOfStock) return;
     addItem({
       productId: product._id,
       name: product.name,
-      image: product.images?.[0] ?? '',
+      image: getProductImageUrl(product.images),
       unit: product.unit,
       basePrice: product.basePrice,
+      gstRate: product.gstRate,
       supplierId: product.supplierId?._id ?? '',
       supplierName: product.supplierId?.businessName ?? '',
     }, qty);
@@ -176,7 +180,7 @@ export default function ProductDetailScreen() {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Quantity</Text>
             <View style={styles.qtyRow}>
-              <TouchableOpacity style={styles.qtyBtn} onPress={() => setQty((q) => Math.max(1, q - 1))}>
+              <TouchableOpacity style={styles.qtyBtn} onPress={() => setQty((q) => Math.max(minQty, q - 1))}>
                 <Text style={styles.qtyBtnText}>−</Text>
               </TouchableOpacity>
               <Text style={styles.qtyVal}>{qty}</Text>
@@ -249,11 +253,14 @@ export default function ProductDetailScreen() {
           <Text style={styles.stickyTotalValue}>₹{(lineTotal + gstAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
         </View>
         <TouchableOpacity
-          style={[styles.addToCartBtn, inCart && styles.addToCartBtnActive]}
+          style={[styles.addToCartBtn, inCart && styles.addToCartBtnActive, outOfStock && styles.addToCartBtnDisabled]}
           onPress={handleAddToCart}
           activeOpacity={0.85}
+          disabled={outOfStock}
         >
-          <Text style={styles.addToCartText}>{inCart ? '+ Add More' : 'Add to Cart'}</Text>
+          <Text style={styles.addToCartText}>
+            {outOfStock ? 'Out of Stock' : inCart ? '+ Add More' : 'Add to Cart'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -313,5 +320,6 @@ const styles = StyleSheet.create({
   stickyTotalValue: { fontSize: 18, fontWeight: '800', color: Colors.text },
   addToCartBtn: { backgroundColor: Colors.primary, borderRadius: 14, paddingHorizontal: 28, paddingVertical: 15 },
   addToCartBtnActive: { backgroundColor: Colors.primaryDark },
+  addToCartBtnDisabled: { backgroundColor: Colors.border },
   addToCartText: { color: '#fff', fontWeight: '800', fontSize: 15 },
 });

@@ -10,7 +10,7 @@ export const redis = new Redis(env.REDIS_URL, {
 
 redis.on('connect', () => logger.info('Redis connected'));
 redis.on('error', () => {}); // suppress noisy reconnect errors in dev
-redis.on('close', () => logger.warn('Redis connection closed'));
+redis.on('close', () => {});  // suppress close spam when Redis is not running locally
 
 export async function connectRedis(): Promise<void> {
   try {

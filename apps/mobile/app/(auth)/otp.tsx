@@ -7,22 +7,23 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
+import { useAuthStore } from '../../src/store/auth.store';
 
 const OTP_LENGTH = 6;
 
 export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
   const router = useRouter();
+  const pendingConfirmation = useAuthStore((s) => s.pendingConfirmation);
+  const setPendingConfirmation = useAuthStore((s) => s.setPendingConfirmation);
+
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
-  const [confirmResult, setConfirmResult] = useState<any>(null);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    // Auto-focus
     setTimeout(() => inputRef.current?.focus(), 300);
-    // Resend countdown
     const interval = setInterval(() => {
       setResendTimer((t) => (t > 0 ? t - 1 : 0));
     }, 1000);
@@ -33,7 +34,7 @@ export default function OtpScreen() {
     if (resendTimer > 0) return;
     try {
       const confirmation = await auth().signInWithPhoneNumber(`+91${phone}`);
-      setConfirmResult(confirmation);
+      setPendingConfirmation(confirmation);
       setResendTimer(30);
       setOtp('');
     } catch (err: any) {
@@ -41,14 +42,17 @@ export default function OtpScreen() {
     }
   }
 
-  async function verifyOtp() {
-    if (otp.length !== OTP_LENGTH) return;
+  async function verifyOtp(code: string) {
+    if (code.length !== OTP_LENGTH) return;
+    if (!pendingConfirmation) {
+      Alert.alert('Session expired', 'Please go back and request a new OTP.');
+      return;
+    }
     setLoading(true);
     try {
-      // confirmResult comes from the phone screen via Firebase
-      // In production, use the confirmation object stored in a ref/store
-      await auth().currentUser; // Firebase auto-handles the OTP via signInWithPhoneNumber flow
-      // The onAuthStateChanged in _layout.tsx handles the rest
+      await pendingConfirmation.confirm(code);
+      // onAuthStateChanged in _layout.tsx fires here and calls syncWithBackend()
+      // which sets the user and triggers navigation — nothing to do manually
     } catch (err: any) {
       Alert.alert('Invalid OTP', err.message ?? 'Please check the code and try again');
       setOtp('');
@@ -76,9 +80,9 @@ export default function OtpScreen() {
           ref={inputRef}
           value={otp}
           onChangeText={(v) => {
-            const digits = v.replace(/\D/g, '').slice(0, OTP_LENGTH);
-            setOtp(digits);
-            if (digits.length === OTP_LENGTH) verifyOtp();
+            const clean = v.replace(/\D/g, '').slice(0, OTP_LENGTH);
+            setOtp(clean);
+            if (clean.length === OTP_LENGTH) verifyOtp(clean);
           }}
           keyboardType="number-pad"
           maxLength={OTP_LENGTH}

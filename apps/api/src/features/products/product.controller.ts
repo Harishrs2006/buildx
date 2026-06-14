@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { isValidObjectId } from 'mongoose';
 import { Product } from '../../infrastructure/database/models/Product.model';
 import { Category } from '../../infrastructure/database/models/Category.model';
 
@@ -17,15 +18,15 @@ export async function listProducts(req: Request, res: Response, next: NextFuncti
       filter.$text = { $search: q };
     }
 
-    const sortMap: Record<string, Record<string, number>> = {
-      popular:    { totalSold: -1 },
-      price_asc:  { basePrice: 1 },
-      price_desc: { basePrice: -1 },
-      newest:     { createdAt: -1 },
+    const sortMap: Record<string, [string, 1 | -1][]> = {
+      popular:    [['totalSold', -1]],
+      price_asc:  [['basePrice', 1]],
+      price_desc: [['basePrice', -1]],
+      newest:     [['createdAt', -1]],
     };
 
-    const pageNum  = Math.max(1, parseInt(page, 10));
-    const limitNum = Math.min(50, parseInt(limit, 10));
+    const pageNum  = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
 
     const [products, total] = await Promise.all([
       Product.find(filter)
@@ -49,6 +50,9 @@ export async function listProducts(req: Request, res: Response, next: NextFuncti
 
 export async function getProduct(req: Request, res: Response, next: NextFunction) {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid product ID' });
+    }
     const product = await Product.findById(req.params.id)
       .populate('supplierId', 'businessName avgRating totalDeliveries whatsappNumber verificationStatus')
       .populate('categoryId', 'name slug')

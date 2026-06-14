@@ -14,8 +14,11 @@ interface AuthUser {
 interface AuthState {
   user: AuthUser | null;
   loading: boolean;
+  // Holds the Firebase confirmation object between phone.tsx and otp.tsx
+  pendingConfirmation: any | null;
   setUser: (user: AuthUser | null) => void;
   setLoading: (loading: boolean) => void;
+  setPendingConfirmation: (confirmation: any | null) => void;
   syncWithBackend: () => Promise<void>;
   clear: () => void;
 }
@@ -23,10 +26,12 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   loading: true,
+  pendingConfirmation: null,
 
   setUser: (user) => set({ user }),
   setLoading: (loading) => set({ loading }),
-  clear: () => set({ user: null, loading: false }),
+  setPendingConfirmation: (confirmation) => set({ pendingConfirmation: confirmation }),
+  clear: () => set({ user: null, loading: false, pendingConfirmation: null }),
 
   syncWithBackend: async () => {
     try {
