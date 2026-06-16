@@ -5,7 +5,8 @@ export interface IUser extends Document {
   phone: string;
   firebaseUid: string;
   name: string;
-  role: 'BUYER' | 'SUPPLIER' | 'OPERATOR' | 'ADMIN';
+  role: 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'OPERATOR' | 'ADMIN';
+  fcmToken?: string;
   aadhaarVerified: boolean;
   gstNumber?: string;
   gstVerified: boolean;
@@ -36,7 +37,8 @@ const userSchema = new Schema<IUser>(
     phone: { type: String, required: true, unique: true, index: true },
     firebaseUid: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true, trim: true },
-    role: { type: String, enum: ['BUYER', 'SUPPLIER', 'OPERATOR', 'ADMIN'], default: 'BUYER' },
+    role: { type: String, enum: ['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN'], default: 'BUYER' },
+    fcmToken: { type: String, index: true, sparse: true },
     aadhaarVerified: { type: Boolean, default: false },
     gstNumber: { type: String, uppercase: true, sparse: true },
     gstVerified: { type: Boolean, default: false },

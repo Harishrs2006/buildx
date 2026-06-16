@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { Product } from '../../infrastructure/database/models/Product.model';
 import { Order } from '../../infrastructure/database/models/Order.model';
+import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
+import { notifyUser } from '../../shared/services/notification.service';
 
 function generateOrderNumber(): string {
   const ts = Date.now().toString(36).toUpperCase();
@@ -108,6 +110,17 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
       status: 'CONFIRMED',
       paymentStatus: 'PENDING',
       confirmedAt: new Date(),
+    });
+
+    // Notify supplier about new order (fire-and-forget)
+    SupplierProfile.findById(supplierId).select('userId').lean().then((sp) => {
+      if (sp?.userId) {
+        notifyUser(sp.userId.toString(), {
+          title: '🛒 New Order!',
+          body: `Order ${order.orderNumber} — ₹${order.total.toLocaleString('en-IN')} · ${orderItems.length} item${orderItems.length > 1 ? 's' : ''}`,
+          data: { screen: 'supplier_orders', orderId: order._id.toString() },
+        });
+      }
     });
 
     res.status(201).json(

@@ -3,8 +3,10 @@ import { isValidObjectId } from 'mongoose';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { Product } from '../../infrastructure/database/models/Product.model';
 import { Order } from '../../infrastructure/database/models/Order.model';
+import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
+import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
 
 async function getSupplierProfile(userId: string) {
   const profile = await SupplierProfile.findOne({ userId }).lean();
@@ -117,6 +119,32 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
     ).lean();
 
     if (!order) throw AppError.notFound('Order');
+
+    // Fire-and-forget notifications based on new status
+    if (status === 'READY_FOR_PICKUP') {
+      // Broadcast to all available drivers
+      DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
+        const driverUserIds = drivers.map((d) => d.userId.toString());
+        notifyUsers(driverUserIds, {
+          title: '📦 Order Ready for Pickup',
+          body: `Order ${order.orderNumber} is ready · ₹${order.total.toLocaleString('en-IN')} COD`,
+          data: { screen: 'driver_available', orderId: order._id.toString() },
+        });
+      });
+    } else if (status === 'CANCELLED') {
+      notifyUser(order.buyerId.toString(), {
+        title: '❌ Order Cancelled',
+        body: `Your order ${order.orderNumber} has been cancelled by the supplier.`,
+        data: { screen: 'buyer_orders', orderId: order._id.toString() },
+      });
+    } else if (status === 'DELIVERED') {
+      notifyUser(order.buyerId.toString(), {
+        title: '✅ Order Delivered',
+        body: `Your order ${order.orderNumber} has been delivered. Thank you!`,
+        data: { screen: 'buyer_orders', orderId: order._id.toString() },
+      });
+    }
+
     res.json(ok(order));
   } catch (err) { next(err); }
 }

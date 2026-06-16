@@ -24,6 +24,15 @@ router.patch('/me', requireAuth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.patch('/me/fcm-token', requireAuth, async (req, res, next) => {
+  try {
+    const { token } = req.body as { token: string };
+    if (!token) { res.status(400).json({ success: false, error: { message: 'token required' } }); return; }
+    await User.findByIdAndUpdate(req.auth!.userId, { fcmToken: token });
+    res.json(ok({ updated: true }));
+  } catch (err) { next(err); }
+});
+
 router.post('/me/addresses', requireAuth, async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(

@@ -18,6 +18,7 @@ import { orderRoutes } from "./features/orders/order.routes";
 import { paymentRoutes } from "./features/payments/payment.routes";
 import { uploadRoutes } from "./features/upload/upload.routes";
 import { deliveryRoutes } from "./features/delivery/delivery.routes";
+import { aiRoutes } from "./features/ai/ai.routes";
 
 async function bootstrap(): Promise<void> {
   // Init Firebase Admin before anything else
@@ -36,6 +37,7 @@ async function bootstrap(): Promise<void> {
   app.use(`${base}/payments`, paymentRoutes);
   app.use(`${base}/upload`, uploadRoutes);
   app.use(`${base}/delivery`, deliveryRoutes);
+  app.use(`${base}/ai`, aiRoutes);
 
   // 404 + error handlers must come AFTER all routes
   app.use((_req: Request, res: Response) => {
