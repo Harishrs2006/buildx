@@ -66,6 +66,49 @@ export async function getStats(req: Request, res: Response, next: NextFunction) 
   } catch (err) { next(err); }
 }
 
+export async function getAnalytics(req: Request, res: Response, next: NextFunction) {
+  try {
+    const profile = await getSupplierProfile(req.auth!.userId);
+    const supplierId = profile._id;
+
+    // Revenue for last 7 days
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - (6 - i));
+      return d;
+    });
+
+    const [revenueByDay, topProducts, orderStatusBreakdown] = await Promise.all([
+      Promise.all(
+        days.map(async (day) => {
+          const next = new Date(day.getTime() + 86400000);
+          const agg = await Order.aggregate([
+            { $match: { supplierId, status: 'DELIVERED', createdAt: { $gte: day, $lt: next } } },
+            { $group: { _id: null, revenue: { $sum: '$total' }, orders: { $sum: 1 } } },
+          ]);
+          return {
+            date: day.toISOString().slice(0, 10),
+            revenue: agg[0]?.revenue ?? 0,
+            orders: agg[0]?.orders ?? 0,
+          };
+        })
+      ),
+      Product.find({ supplierId, status: 'ACTIVE' })
+        .sort({ totalSold: -1 })
+        .limit(5)
+        .select('name totalSold basePrice unit')
+        .lean(),
+      Order.aggregate([
+        { $match: { supplierId } },
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+    ]);
+
+    res.json(ok({ revenueByDay, topProducts, orderStatusBreakdown }));
+  } catch (err) { next(err); }
+}
+
 export async function listSupplierOrders(req: Request, res: Response, next: NextFunction) {
   try {
     const profile = await getSupplierProfile(req.auth!.userId);
