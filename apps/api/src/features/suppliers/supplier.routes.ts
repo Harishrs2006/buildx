@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { requireAuth } from '../../shared/middleware/auth.middleware';
 import {
-  getProfile, updateProfile, getStats,
+  getProfile, updateProfile, getStats, getAnalytics,
   listSupplierOrders, updateOrderStatus,
   listSupplierProducts, createProduct, updateProduct, deleteProduct,
 } from './supplier.controller';
@@ -13,6 +13,7 @@ router.use(requireAuth);
 router.get('/me', getProfile);
 router.patch('/me', updateProfile);
 router.get('/me/stats', getStats);
+router.get('/me/analytics', getAnalytics);
 
 router.get('/me/orders', listSupplierOrders);
 router.patch('/me/orders/:id/status', updateOrderStatus);
