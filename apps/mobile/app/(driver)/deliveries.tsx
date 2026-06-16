@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import { useMyDeliveries, useUpdateDeliveryStatus, type DeliveryOrder } from '../../src/hooks/useDelivery';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS, type OrderStatus } from '../../src/hooks/useOrders';
@@ -13,6 +14,7 @@ const TABS = [
 ];
 
 function DeliveryCard({ order, onUpdate }: { order: DeliveryOrder; onUpdate: (id: string, status: string) => void }) {
+  const router = useRouter();
   const colors = ORDER_STATUS_COLORS[order.status] ?? { bg: '#F3F4F6', text: '#6B7280' };
   const supplier = order.supplierId as any;
   const buyer = order.buyerId as any;
@@ -34,7 +36,7 @@ function DeliveryCard({ order, onUpdate }: { order: DeliveryOrder; onUpdate: (id
   const canUpdate = order.status === 'ASSIGNED' || order.status === 'PICKED_UP';
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => router.push({ pathname: '/(driver)/order/[id]', params: { id: order._id } } as never)} activeOpacity={0.85}>
       <View style={styles.cardTop}>
         <Text style={styles.orderNumber}>{order.orderNumber}</Text>
         <View style={[styles.badge, { backgroundColor: colors.bg }]}>
@@ -92,7 +94,7 @@ function DeliveryCard({ order, onUpdate }: { order: DeliveryOrder; onUpdate: (id
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

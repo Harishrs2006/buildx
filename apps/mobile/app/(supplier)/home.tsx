@@ -71,6 +71,10 @@ export default function SupplierHome() {
               <Text style={styles.actionIcon}>👤</Text>
               <Text style={styles.actionLabel}>Profile</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.actionBtn} onPress={() => router.push('/(supplier)/analytics' as never)}>
+              <Text style={styles.actionIcon}>📊</Text>
+              <Text style={styles.actionLabel}>Analytics</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
