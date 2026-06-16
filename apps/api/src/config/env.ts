@@ -31,8 +31,8 @@ const envSchema = z.object({
   // WhatsApp (Interakt)
   INTERAKT_API_KEY: z.string().optional(),
 
-  // Anthropic
-  ANTHROPIC_API_KEY: z.string().min(1),
+  // Anthropic — optional, AI chat disabled if not set
+  ANTHROPIC_API_KEY: z.string().default(''),
 
   // Google Maps
   GOOGLE_MAPS_API_KEY: z.string().optional(),
