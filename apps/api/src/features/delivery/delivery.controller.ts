@@ -4,6 +4,7 @@ import { Order } from '../../infrastructure/database/models/Order.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
+import { notifyUser } from '../../shared/services/notification.service';
 
 async function getDriverProfile(userId: string) {
   const profile = await DeliveryPartner.findOne({ userId }).lean();
@@ -45,6 +46,13 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
     ).lean();
 
     if (!order) throw AppError.conflict('Order is no longer available for pickup');
+
+    // Notify buyer that a driver has been assigned
+    notifyUser(order.buyerId.toString(), {
+      title: '🚚 Driver Assigned',
+      body: `A driver is on the way to pick up your order ${order.orderNumber}.`,
+      data: { screen: 'buyer_orders', orderId: order._id.toString() },
+    });
 
     res.json(ok(order));
   } catch (err) { next(err); }
@@ -106,6 +114,21 @@ export async function updateDeliveryStatus(req: Request, res: Response, next: Ne
     ).lean();
 
     if (!order) throw AppError.notFound('Order');
+
+    if (status === 'PICKED_UP') {
+      notifyUser(order.buyerId.toString(), {
+        title: '📦 Order Picked Up',
+        body: `Your order ${order.orderNumber} has been picked up and is on the way!`,
+        data: { screen: 'buyer_orders', orderId: order._id.toString() },
+      });
+    } else if (status === 'DELIVERED') {
+      notifyUser(order.buyerId.toString(), {
+        title: '✅ Delivered!',
+        body: `Order ${order.orderNumber} delivered. Please collect and pay ₹${order.total.toLocaleString('en-IN')} cash.`,
+        data: { screen: 'buyer_orders', orderId: order._id.toString() },
+      });
+    }
+
     res.json(ok(order));
   } catch (err) { next(err); }
 }

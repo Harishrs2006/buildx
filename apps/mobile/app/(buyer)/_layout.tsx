@@ -29,6 +29,10 @@ export default function BuyerLayout() {
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Orders" emoji="📦" focused={focused} /> }}
       />
       <Tabs.Screen
+        name="ai-chat"
+        options={{ tabBarIcon: ({ focused }) => <TabIcon label="AI Chat" emoji="🤖" focused={focused} /> }}
+      />
+      <Tabs.Screen
         name="profile"
         options={{ tabBarIcon: ({ focused }) => <TabIcon label="Profile" emoji="👤" focused={focused} /> }}
       />

@@ -1,14 +1,6 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage, StateStorage } from 'zustand/middleware';
-import { MMKV } from 'react-native-mmkv';
-
-// Use MMKV for fast, synchronous cart persistence (no async-storage dep needed)
-const mmkv = new MMKV({ id: 'buildx-cart' });
-const mmkvStorage: StateStorage = {
-  setItem: (name, value) => mmkv.set(name, value),
-  getItem: (name) => mmkv.getString(name) ?? null,
-  removeItem: (name) => mmkv.delete(name),
-};
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type CartItem = {
   productId: string;
@@ -89,7 +81,7 @@ export const useCartStore = create<CartStore>()(
     }),
     {
       name: 'cart',
-      storage: createJSONStorage(() => mmkvStorage),
+      storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );

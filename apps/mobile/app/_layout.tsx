@@ -7,6 +7,7 @@ import auth from '@react-native-firebase/auth';
 import { useAuthStore } from '../src/store/auth.store';
 import { useRouter, useSegments } from 'expo-router';
 import { StyleSheet } from 'react-native';
+import { usePushNotifications } from '../src/hooks/usePushNotifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,8 @@ function AuthGate() {
   const { user, loading, setLoading, syncWithBackend, setUser, clear } = useAuthStore();
   const segments = useSegments();
   const router = useRouter();
+
+  usePushNotifications();
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged(async (firebaseUser) => {
