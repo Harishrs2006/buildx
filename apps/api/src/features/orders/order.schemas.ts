@@ -37,7 +37,7 @@ export const createOrderSchema = z.object({
 export const cancelSchema = z.object({ reason: z.string().trim().max(300).optional() });
 
 export const supplierStatusSchema = z.object({
-  status: z.enum(['READY_FOR_PICKUP', 'CANCELLED']),
+  status: z.enum(['READY_FOR_PICKUP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED']),
   reason: z.string().trim().max(300).optional(),
 });
 

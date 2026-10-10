@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx src/scripts/seed.ts"
+    "seed": "tsx src/scripts/seed.ts",
+    "grant-role": "tsx src/scripts/grant-role.ts"
   },
   "config": {
     "mongodbMemoryServer": {

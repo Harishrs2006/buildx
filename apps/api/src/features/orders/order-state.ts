@@ -1,62 +1,86 @@
 // Order lifecycle — the single source of truth for who may move an order where.
 //
-// Fulfilment status (Order.status):
+// The supplier picks a delivery mode when dispatching a CONFIRMED order:
 //
-//   CONFIRMED ──supplier──▶ READY_FOR_PICKUP ──driver assigns──▶ ASSIGNED
-//       │                        │                                  │ driver
-//       │ supplier rejects /     │ supplier rejects /               ▼
-//       │ buyer cancels          │ buyer cancels                PICKED_UP ──driver──▶ IN_TRANSIT
-//       ▼                        ▼                                  │                      │
-//   CANCELLED ◀──────────────────┘                                  └──driver──▶ DELIVERED ◀┘
+// PLATFORM — a BuildX delivery partner delivers
+//   CONFIRMED ──supplier──▶ READY_FOR_PICKUP ──driver/ops──▶ ASSIGNED ──driver──▶ PICKED_UP
+//                                ▲                              │                  │
+//                                └────────ops unassigns─────────┘    driver ▼       │ driver
+//                                                                 IN_TRANSIT ──▶ DELIVERED ◀┘
 //
-//   - Orders are created directly as CONFIRMED (COD) with stock already deducted.
-//   - Once a driver is assigned, neither buyer nor supplier can cancel; that needs ops.
-//   - Only the assigned driver moves ASSIGNED → PICKED_UP → (IN_TRANSIT) → DELIVERED.
-//   - CANCELLED and DELIVERED are terminal. PENDING and DISPUTED exist in the schema
-//     but nothing transitions into them yet.
+// SUPPLIER — the supplier delivers with their own vehicle
+//   CONFIRMED ──supplier──▶ IN_TRANSIT ──supplier──▶ DELIVERED
+//   READY_FOR_PICKUP ──supplier──▶ IN_TRANSIT   (takeover while no driver is assigned)
 //
-// Payment status (Order.paymentStatus) is independent of fulfilment:
-//   - COD orders stay PENDING through delivery.
-//   - Only the assigned driver's explicit cash confirmation (POST /delivery/orders/:id/cod)
-//     moves PENDING → CAPTURED, and only after DELIVERED with the exact order total.
+// Cancellation (→ CANCELLED, restores stock unless ops says the goods are gone):
+//   - buyer or supplier: CONFIRMED or READY_FOR_PICKUP only (never once a driver/vehicle has it)
+//   - ops: any status before DELIVERED
 //
-// Every transition is applied as a compare-and-set (`findOneAndUpdate` filtered on
-// the allowed source statuses), so concurrent or repeated requests can't both win.
-// Repeating a transition that already happened returns the current order unchanged.
-
-import type { UserRole } from '@buildx/shared';
+// CANCELLED and DELIVERED are terminal. PENDING and DISPUTED exist in the schema but nothing
+// transitions into them yet.
+//
+// Payment (Order.paymentStatus) is independent of fulfilment. COD stays PENDING through
+// delivery; it becomes CAPTURED only when whoever delivered (assigned driver, or the supplier
+// in SUPPLIER mode) confirms the exact total, or ops records it (PARTIAL if short).
+//
+// Every transition is a compare-and-set (`findOneAndUpdate` filtered on the allowed source
+// statuses and, after dispatch, the delivery mode), so concurrent or repeated requests can't
+// both win. Repeating a transition that already happened returns the order unchanged.
 
 export type OrderStatus =
   | 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP'
   | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
 
-type Actor = Extract<UserRole, 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER'>;
+export type DeliveryMode = 'PLATFORM' | 'SUPPLIER';
+export type Actor = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'OPS';
 
-// from → to → roles allowed to make that move
-const TRANSITIONS: Partial<Record<OrderStatus, Partial<Record<OrderStatus, Actor[]>>>> = {
-  CONFIRMED: { READY_FOR_PICKUP: ['SUPPLIER'], CANCELLED: ['SUPPLIER', 'BUYER'] },
-  READY_FOR_PICKUP: { ASSIGNED: ['DELIVERY_PARTNER'], CANCELLED: ['SUPPLIER', 'BUYER'] },
-  ASSIGNED: { PICKED_UP: ['DELIVERY_PARTNER'] },
-  PICKED_UP: { IN_TRANSIT: ['DELIVERY_PARTNER'], DELIVERED: ['DELIVERY_PARTNER'] },
-  IN_TRANSIT: { DELIVERED: ['DELIVERY_PARTNER'] },
+type Table = Partial<Record<OrderStatus, Partial<Record<OrderStatus, Actor[]>>>>;
+
+const CANCEL_EARLY: Actor[] = ['SUPPLIER', 'BUYER', 'OPS'];
+
+const TRANSITIONS: Record<DeliveryMode, Table> = {
+  PLATFORM: {
+    CONFIRMED: { READY_FOR_PICKUP: ['SUPPLIER'], CANCELLED: CANCEL_EARLY },
+    READY_FOR_PICKUP: { ASSIGNED: ['DELIVERY_PARTNER', 'OPS'], CANCELLED: CANCEL_EARLY },
+    ASSIGNED: { PICKED_UP: ['DELIVERY_PARTNER'], READY_FOR_PICKUP: ['OPS'], CANCELLED: ['OPS'] },
+    PICKED_UP: { IN_TRANSIT: ['DELIVERY_PARTNER'], DELIVERED: ['DELIVERY_PARTNER'], CANCELLED: ['OPS'] },
+    IN_TRANSIT: { DELIVERED: ['DELIVERY_PARTNER'], CANCELLED: ['OPS'] },
+  },
+  SUPPLIER: {
+    CONFIRMED: { IN_TRANSIT: ['SUPPLIER'], CANCELLED: CANCEL_EARLY },
+    READY_FOR_PICKUP: { IN_TRANSIT: ['SUPPLIER'], CANCELLED: CANCEL_EARLY },
+    IN_TRANSIT: { DELIVERED: ['SUPPLIER'], CANCELLED: ['OPS'] },
+  },
 };
 
-/** Statuses from which `actor` may move an order to `to`. Empty = never allowed. */
-export function allowedSources(to: OrderStatus, actor: Actor): OrderStatus[] {
-  return (Object.keys(TRANSITIONS) as OrderStatus[]).filter((from) => TRANSITIONS[from]?.[to]?.includes(actor));
+// Before dispatch an order has no committed delivery mode; after it, the mode decides who acts.
+export const PRE_DISPATCH: OrderStatus[] = ['CONFIRMED', 'READY_FOR_PICKUP'];
+
+/** Statuses from which `actor` may move an order to `to` in the given mode. Empty = never. */
+export function allowedSources(to: OrderStatus, actor: Actor, mode: DeliveryMode): OrderStatus[] {
+  const table = TRANSITIONS[mode];
+  return (Object.keys(table) as OrderStatus[]).filter((from) => table[from]?.[to]?.includes(actor));
 }
 
-/** Target statuses an actor can ever request. */
-export function targetsFor(actor: Actor): OrderStatus[] {
-  const targets = new Set<OrderStatus>();
-  for (const from of Object.keys(TRANSITIONS) as OrderStatus[]) {
-    for (const [to, actors] of Object.entries(TRANSITIONS[from]!)) {
-      if (actors?.includes(actor)) targets.add(to as OrderStatus);
-    }
-  }
-  return [...targets];
+/** Cancellation sources across both modes (cancel doesn't depend on who was delivering). */
+export function cancelSources(actor: Actor): OrderStatus[] {
+  return [...new Set([...allowedSources('CANCELLED', actor, 'PLATFORM'), ...allowedSources('CANCELLED', actor, 'SUPPLIER')])];
 }
 
-export function canTransition(from: OrderStatus, to: OrderStatus, actor: Actor): boolean {
-  return !!TRANSITIONS[from]?.[to]?.includes(actor);
+/** Mongo filter matching orders in `mode`. Orders dispatched before modes existed are PLATFORM. */
+export function modeFilter(mode: DeliveryMode): Record<string, unknown> {
+  return mode === 'SUPPLIER' ? { deliveryMode: 'SUPPLIER' } : { deliveryMode: { $ne: 'SUPPLIER' } };
+}
+
+/**
+ * Compare-and-set filter for a transition: pre-dispatch sources match on status alone,
+ * post-dispatch sources also require the delivery mode.
+ */
+export function sourceFilter(sources: OrderStatus[], mode: DeliveryMode): Record<string, unknown> {
+  const pre = sources.filter((s) => PRE_DISPATCH.includes(s));
+  const post = sources.filter((s) => !PRE_DISPATCH.includes(s));
+  const clauses: Record<string, unknown>[] = [];
+  if (pre.length) clauses.push({ status: { $in: pre } });
+  if (post.length) clauses.push({ status: { $in: post }, ...modeFilter(mode) });
+  return clauses.length === 1 ? clauses[0] : { $or: clauses };
 }

@@ -6,7 +6,7 @@ import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 import { notifyUser } from '../../shared/services/notification.service';
 import { transitionOrder, recordCodCollected } from '../orders/order.service';
-import { allowedSources } from '../orders/order-state';
+import { allowedSources, modeFilter } from '../orders/order-state';
 
 async function getDriverProfile(userId: string) {
   const profile = await DeliveryPartner.findOne({ userId }).lean();
@@ -44,7 +44,7 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
     await getDriverProfile(driverUserId);
 
     const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, status: { $in: allowedSources('ASSIGNED', 'DELIVERY_PARTNER') }, driverId: { $exists: false } },
+      { _id: req.params.id, status: { $in: allowedSources('ASSIGNED', 'DELIVERY_PARTNER', 'PLATFORM') }, driverId: { $exists: false }, ...modeFilter('PLATFORM') },
       {
         $set: { status: 'ASSIGNED', driverId: driverUserId, assignedAt: new Date() },
         $push: { statusHistory: { status: 'ASSIGNED', at: new Date(), byRole: 'DELIVERY_PARTNER', byUserId: driverUserId } },
@@ -110,6 +110,7 @@ export async function updateDeliveryStatus(req: Request, res: Response, next: Ne
       filter: { _id: req.params.id, driverId: req.auth!.userId },
       to: status,
       actor: 'DELIVERY_PARTNER',
+      mode: 'PLATFORM',
       userId: req.auth!.userId,
       set,
     });
@@ -142,8 +143,9 @@ export async function confirmCodCollected(req: Request, res: Response, next: Nex
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
     const { order } = await recordCodCollected({
-      orderId: String(req.params.id),
-      driverUserId: req.auth!.userId,
+      filter: { _id: req.params.id, driverId: req.auth!.userId },
+      collectorUserId: req.auth!.userId,
+      collectorRole: 'DELIVERY_PARTNER',
       amount: req.body.amount,
     });
     res.json(ok(order));

@@ -177,7 +177,7 @@ export default function OrderDetailScreen() {
             <Text style={styles.codText}>💵 Cash on Delivery</Text>
             <View style={[styles.payBadge, { backgroundColor: order.paymentStatus === 'CAPTURED' ? Colors.successLight : Colors.warningLight }]}>
               <Text style={[styles.payBadgeText, { color: order.paymentStatus === 'CAPTURED' ? Colors.success : Colors.warning }]}>
-                {order.paymentStatus === 'CAPTURED' ? 'Paid' : 'Payment Pending'}
+                {order.paymentStatus === 'CAPTURED' ? 'Paid' : order.paymentStatus === 'PARTIAL' ? 'Partially Paid' : 'Payment Pending'}
               </Text>
             </View>
           </View>
