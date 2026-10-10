@@ -7,7 +7,14 @@ export type ErrorCode =
   | 'UNPROCESSABLE_ENTITY'
   | 'TOO_MANY_REQUESTS'
   | 'INTERNAL_ERROR'
-  | 'SERVICE_UNAVAILABLE';
+  | 'SERVICE_UNAVAILABLE'
+  // Location lookup (features/locations)
+  | 'PINCODE_INVALID'
+  | 'PINCODE_NOT_FOUND'
+  | 'LOOKUP_UNAVAILABLE'
+  | 'LOCATION_NOT_RESOLVED'
+  | 'OUTSIDE_INDIA'
+  | 'GEOLOCATION_UNAVAILABLE';
 
 export class AppError extends Error {
   public readonly statusCode: number;
