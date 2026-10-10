@@ -6,6 +6,12 @@ import { AppError } from '../../shared/errors/AppError';
 
 const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
 
+function assertAiConfigured() {
+  if (!env.ANTHROPIC_API_KEY) {
+    throw new AppError('AI assistant is not available right now', 'SERVICE_UNAVAILABLE', 503);
+  }
+}
+
 const SYSTEM_PROMPT = `You are BuildX Assistant — a customer care AI for a B2B construction materials marketplace serving contractors and builders in Tumakuru, Karnataka, India.
 
 Your role:
@@ -24,6 +30,7 @@ Never fabricate prices or availability — those come from our database.`;
 
 export async function chat(req: Request, res: Response, next: NextFunction) {
   try {
+    assertAiConfigured();
     const { message, history = [] } = req.body as {
       message: string;
       history?: { role: 'user' | 'assistant'; content: string }[];
@@ -78,6 +85,7 @@ type AnalysedItem = {
 
 export async function analyzeList(req: Request, res: Response, next: NextFunction) {
   try {
+    assertAiConfigured();
     const { imageBase64, mimeType = 'image/jpeg' } = req.body as {
       imageBase64: string;
       mimeType?: string;

@@ -4,13 +4,15 @@ import { SupplierProfile } from '../../infrastructure/database/models/SupplierPr
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
+import type { OnboardInput } from './auth.routes';
 
 export class AuthController {
   // POST /auth/sync — called immediately after Firebase OTP verified
-  // Creates the user in MongoDB if first time, or returns existing user
+  // Creates the user in MongoDB if first time, or returns existing user.
+  // Identity (uid + phone) comes only from the verified Firebase token; the body is ignored.
   async sync(req: Request, res: Response, next: NextFunction) {
     try {
-      const { uid, phone } = req.auth!;
+      const { uid, phone } = req.firebase!;
 
       const user = await User.findOneAndUpdate(
         { firebaseUid: uid },
@@ -26,6 +28,8 @@ export class AuthController {
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
 
+      if (!user.isActive) throw AppError.forbidden('Account suspended. Contact support.');
+
       res.json(
         ok({
           id: user._id,
@@ -35,52 +39,71 @@ export class AuthController {
           onboardingComplete: user.onboardingComplete,
         })
       );
-    } catch (err) {
+    } catch (err: any) {
+      // Same phone already linked to a different Firebase account (e.g. account re-created)
+      if (err?.code === 11000) {
+        return next(AppError.conflict('This phone number is already linked to another account. Contact support.'));
+      }
       next(err);
     }
   }
 
-  // POST /auth/onboard — set name, role, supplier profile
+  // POST /auth/onboard — set name, role and the role's profile.
+  // Ordered so a failure at any step leaves the user NOT onboarded and the call can be retried:
+  //   1. upsert the role profile (idempotent, unique per userId)
+  //   2. atomically flip the user to onboarded — only succeeds once
+  //   3. remove stale profiles left by an abandoned attempt with a different role
   async onboard(req: Request, res: Response, next: NextFunction) {
     try {
-      const { uid } = req.auth!;
-      const { name, role, businessName, whatsappNumber, deliveryRadiusKm, serviceAreas, vehicleType, vehicleNumber, licenseNumber } = req.body;
+      const { userId } = req.auth!;
+      const body = req.body as OnboardInput;
 
-      const user = await User.findOne({ firebaseUid: uid });
-      if (!user) throw AppError.notFound('User');
-      if (user.onboardingComplete) throw AppError.conflict('Onboarding already complete');
+      const existing = await User.findById(userId).select('onboardingComplete').lean();
+      if (!existing) throw AppError.notFound('User');
+      if (existing.onboardingComplete) throw AppError.conflict('Onboarding already complete');
 
-      user.name = name;
-      user.role = role;
-      user.onboardingComplete = true;
-      await user.save();
+      const profileOpts = { upsert: true, new: true, runValidators: true, setDefaultsOnInsert: true };
 
-      if (role === 'SUPPLIER') {
-        if (!businessName || !whatsappNumber) {
-          throw AppError.badRequest('businessName and whatsappNumber required for suppliers');
-        }
-        await SupplierProfile.create({
-          userId: user._id,
-          businessName,
-          whatsappNumber,
-          deliveryRadiusKm: deliveryRadiusKm ?? 30,
-          serviceAreas: serviceAreas ?? [],
-          verificationStatus: 'PENDING',
-        });
+      if (body.role === 'SUPPLIER') {
+        await SupplierProfile.findOneAndUpdate(
+          { userId },
+          {
+            $set: {
+              businessName: body.businessName,
+              whatsappNumber: body.whatsappNumber,
+              deliveryRadiusKm: body.deliveryRadiusKm ?? 30,
+              serviceAreas: body.serviceAreas ?? [],
+            },
+            $setOnInsert: { verificationStatus: 'PENDING' },
+          },
+          profileOpts
+        );
       }
 
-      if (role === 'DELIVERY_PARTNER') {
-        if (!vehicleType || !vehicleNumber || !licenseNumber) {
-          throw AppError.badRequest('vehicleType, vehicleNumber, licenseNumber required for delivery partners');
-        }
-        await DeliveryPartner.create({
-          userId: user._id,
-          vehicleType,
-          vehicleNumber: vehicleNumber.trim().toUpperCase(),
-          licenseNumber: licenseNumber.trim().toUpperCase(),
-          serviceAreas: serviceAreas ?? [],
-        });
+      if (body.role === 'DELIVERY_PARTNER') {
+        await DeliveryPartner.findOneAndUpdate(
+          { userId },
+          {
+            $set: {
+              vehicleType: body.vehicleType,
+              vehicleNumber: body.vehicleNumber,
+              licenseNumber: body.licenseNumber,
+              serviceAreas: body.serviceAreas ?? [],
+            },
+          },
+          profileOpts
+        );
       }
+
+      const user = await User.findOneAndUpdate(
+        { _id: userId, onboardingComplete: false },
+        { $set: { name: body.name, role: body.role, onboardingComplete: true } },
+        { new: true, runValidators: true }
+      ).lean();
+      if (!user) throw AppError.conflict('Onboarding already complete');
+
+      if (body.role !== 'SUPPLIER') await SupplierProfile.deleteOne({ userId });
+      if (body.role !== 'DELIVERY_PARTNER') await DeliveryPartner.deleteOne({ userId });
 
       res.json(
         ok({

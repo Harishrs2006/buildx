@@ -22,11 +22,13 @@ export const authRateLimit = rateLimit({
   },
 });
 
+// Mount after requireAuth: keyed per user so carrier-NAT users sharing an IP don't throttle each other
 export const aiRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 20,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req) => (req.auth ? `user:${req.auth.userId}` : req.ip ?? 'unknown'),
   handler: (_req, _res, next) => {
     next(AppError.tooManyRequests('AI request limit exceeded'));
   },

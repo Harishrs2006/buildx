@@ -6,20 +6,7 @@ import { connectRedis, redis } from "./infrastructure/cache/redis.client";
 import { logger } from "./shared/logger/logger";
 import { env } from "./config/env";
 
-// Feature routes
-import { Request, Response } from "express";
-import { errorMiddleware } from "./shared/middleware/error.middleware";
-import { authRoutes } from "./features/auth/auth.routes";
-import { userRoutes } from "./features/users/user.routes";
-import { categoryRoutes } from "./features/categories/category.routes";
-import { productRoutes } from "./features/products/product.routes";
-import { supplierRoutes } from "./features/suppliers/supplier.routes";
-import { orderRoutes } from "./features/orders/order.routes";
-import { paymentRoutes } from "./features/payments/payment.routes";
-import { uploadRoutes } from "./features/upload/upload.routes";
-import { deliveryRoutes } from "./features/delivery/delivery.routes";
-import { aiRoutes } from "./features/ai/ai.routes";
-import { reviewRoutes } from "./features/reviews/review.routes";
+import { registerRoutes } from "./routes";
 
 async function bootstrap(): Promise<void> {
   // Init Firebase Admin before anything else
@@ -27,25 +14,7 @@ async function bootstrap(): Promise<void> {
 
   const app = createApp();
 
-  // Register routes
-  const base = `/api/${env.API_VERSION}`;
-  app.use(`${base}/auth`, authRoutes);
-  app.use(`${base}/users`, userRoutes);
-  app.use(`${base}/categories`, categoryRoutes);
-  app.use(`${base}/products`, productRoutes);
-  app.use(`${base}/suppliers`, supplierRoutes);
-  app.use(`${base}/orders`, orderRoutes);
-  app.use(`${base}/payments`, paymentRoutes);
-  app.use(`${base}/upload`, uploadRoutes);
-  app.use(`${base}/delivery`, deliveryRoutes);
-  app.use(`${base}/ai`, aiRoutes);
-  app.use(`${base}/reviews`, reviewRoutes);
-
-  // 404 + error handlers must come AFTER all routes
-  app.use((_req: Request, res: Response) => {
-    res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Route not found" } });
-  });
-  app.use(errorMiddleware);
+  registerRoutes(app);
 
   await connectDatabase(env.MONGODB_URI);
   await connectRedis();

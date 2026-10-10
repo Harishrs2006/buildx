@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../../shared/middleware/auth.middleware';
+import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
 import {
   getProfile, updateProfile, getStats, getAnalytics,
   listSupplierOrders, updateOrderStatus,
@@ -8,7 +8,8 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
+// Supplier-only; every handler resolves the caller's own SupplierProfile
+router.use(requireAuth, requireRole('SUPPLIER'));
 
 router.get('/me', getProfile);
 router.patch('/me', updateProfile);

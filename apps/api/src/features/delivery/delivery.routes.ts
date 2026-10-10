@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../../shared/middleware/auth.middleware';
+import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
 import {
   listAvailableOrders, assignOrder,
   listMyOrders, updateDeliveryStatus,
@@ -8,9 +8,10 @@ import {
 
 const router = Router();
 
-router.use(requireAuth);
+// Delivery partners only — buyers/suppliers must not see pickup addresses or self-assign
+router.use(requireAuth, requireRole('DELIVERY_PARTNER'));
 
-// Available pickups (any driver can see)
+// Available pickups (any delivery partner can see)
 router.get('/available', listAvailableOrders);
 
 // Driver self-assign
