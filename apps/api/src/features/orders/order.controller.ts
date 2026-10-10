@@ -17,7 +17,7 @@ function notifySupplier(supplierProfileId: unknown, payload: Parameters<typeof n
 // POST /orders/quote — server-priced summary for the checkout screen
 export async function quote(req: Request, res: Response, next: NextFunction) {
   try {
-    res.json(ok(await quoteOrder(req.body.items)));
+    res.json(ok(await quoteOrder(req.body.items, req.body.deliveryPincode)));
   } catch (err) {
     next(err);
   }

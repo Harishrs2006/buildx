@@ -9,6 +9,18 @@ import {
   type OrderStatus, type DeliveryMode, type Actor,
 } from './order-state';
 import type { CartItemsInput, CreateOrderInput } from './order.schemas';
+import { env } from '../../config/env';
+import { checkSupplier, notServiceable, resolveDestination, type Destination } from '../serviceability/serviceability.service';
+
+/**
+ * Destination step shared by quote and order: with a PIN, validate it and check the supplier
+ * serves it; without one (older mobile clients), only check the supplier may take orders at
+ * all. Never treats a missing PIN or missing supplier coverage as "serves everywhere".
+ */
+async function assertSupplierCanServe(supplierId: Types.ObjectId, destination: Destination | null, session?: ClientSession) {
+  const result = await checkSupplier({ supplierProfileId: supplierId, pincode: destination?.pincode, session });
+  if (!result.serviceable) throw notServiceable(result.reason, destination?.pincode);
+}
 
 type LeanOrder = IOrder & { _id: Types.ObjectId };
 
@@ -96,10 +108,14 @@ function lineView(p: PricedCart['products'][number], line: PricedOrder['lines'][
 }
 
 // POST /orders/quote — same pricing as order creation, no writes
-export async function quoteOrder(items: CartItemsInput) {
+export async function quoteOrder(items: CartItemsInput, deliveryPincode?: string) {
+  const destination = deliveryPincode !== undefined ? await resolveDestination(deliveryPincode) : null;
   const { supplierId, products, priced } = await priceCart(items);
+  await assertSupplierCanServe(supplierId, destination);
   return {
     supplierId,
+    // null for legacy quotes without a PIN; the order will re-check coverage anyway
+    delivery: destination ? { ...destination, serviceable: true } : null,
     items: products.map((p, i) => ({
       ...lineView(p, priced.lines[i]),
       inStock: p.stockQuantity >= priced.lines[i].quantity,
@@ -144,9 +160,20 @@ export async function createOrder(params: {
   const replay = await findReplay(buyerId, idempotencyKey, requestHash);
   if (replay) return { order: replay, replayed: true };
 
+  const pincode = input.deliveryAddress.pincode;
+  if (pincode === undefined && env.ORDERS_REQUIRE_DELIVERY_PINCODE) {
+    throw new AppError('A confirmed delivery PIN code is required. Please update the app.', 'PINCODE_REQUIRED', 400);
+  }
+  // Postal validity is reference data — check it before opening the transaction
+  const destination = pincode !== undefined ? await resolveDestination(pincode) : null;
+
   try {
     const order = await inTransaction(async (session) => {
       const { supplierId, products, priced } = await priceCart(input.items, session);
+
+      // Re-checked here, inside the transaction, regardless of any earlier quote: a supplier
+      // who dropped this PIN since the quote makes the whole order (and stock change) roll back
+      await assertSupplierCanServe(supplierId, destination, session);
 
       if (input.expectedTotal !== undefined && toPaise(input.expectedTotal) !== priced.totalPaise) {
         throw AppError.conflict('Prices changed since you reviewed your order. Please check the new total.');
@@ -172,7 +199,10 @@ export async function createOrder(params: {
             buyerId,
             supplierId,
             items: products.map((p, i) => lineView(p, priced.lines[i])),
-            deliveryAddress: input.deliveryAddress,
+            deliveryAddress: destination
+              ? { ...input.deliveryAddress, district: destination.district, state: destination.state }
+              : input.deliveryAddress,
+            serviceabilityCheck: destination ? 'VERIFIED' : 'SKIPPED_NO_PINCODE',
             deliveryMethod: input.deliveryMethod,
             deliveryCharge: 0,
             subtotal: paiseToRupees(priced.subtotalPaise),

@@ -37,6 +37,10 @@ const envSchema = z.object({
   // Google Maps
   GOOGLE_MAPS_API_KEY: z.string().optional(),
 
+  // Compatibility switch: while older mobile builds (which send no PIN code) are in use, orders
+  // without a delivery PIN are accepted and flagged for ops. Set to "true" to require a PIN.
+  ORDERS_REQUIRE_DELIVERY_PINCODE: z.enum(['true', 'false']).default('false').transform((v) => v === 'true'),
+
   API_RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900000),
   API_RATE_LIMIT_MAX: z.coerce.number().default(100),
 });

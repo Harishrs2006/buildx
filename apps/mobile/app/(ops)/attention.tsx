@@ -10,6 +10,7 @@ const QUEUES: { key: keyof OpsSummary['attention']; title: string; hint: (t: Rec
   { key: 'notDispatched', title: 'Supplier not dispatched', hint: (t) => `Confirmed > ${t.CONFIRMED_MINUTES} min — call the supplier` },
   { key: 'longInDelivery', title: 'Delivery taking long', hint: (t) => `On the road > ${Math.round(t.IN_DELIVERY_MINUTES / 60)} h` },
   { key: 'codPending', title: 'Cash not confirmed', hint: () => 'Delivered COD orders with no (or partial) cash recorded' },
+  { key: 'uncheckedDestination', title: 'Delivery area not checked', hint: () => 'Placed from an older app without a PIN code — confirm the supplier delivers there' },
 ];
 
 export default function AttentionScreen() {

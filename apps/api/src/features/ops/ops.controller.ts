@@ -61,7 +61,7 @@ export async function summary(_req: Request, res: Response, next: NextFunction) 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const [byStatus, todayOrders, notDispatched, unassigned, notPickedUp, longInDelivery, codPending] = await Promise.all([
+    const [byStatus, todayOrders, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination] = await Promise.all([
       Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
       Order.countDocuments({ createdAt: { $gte: startOfDay } }),
       queue({ status: 'CONFIRMED', updatedAt: { $lt: minutesAgo(ATTENTION.CONFIRMED_MINUTES) } }),
@@ -69,13 +69,15 @@ export async function summary(_req: Request, res: Response, next: NextFunction) 
       queue({ status: 'ASSIGNED', updatedAt: { $lt: minutesAgo(ATTENTION.ASSIGNED_MINUTES) } }),
       queue({ status: { $in: ['PICKED_UP', 'IN_TRANSIT'] }, updatedAt: { $lt: minutesAgo(ATTENTION.IN_DELIVERY_MINUTES) } }),
       queue({ status: 'DELIVERED', paymentMethod: 'COD', paymentStatus: { $in: ['PENDING', 'PARTIAL'] } }),
+      // Legacy app orders without a PIN: coverage was never checked — confirm with the supplier
+      queue({ serviceabilityCheck: 'SKIPPED_NO_PINCODE', status: { $in: ['CONFIRMED', 'READY_FOR_PICKUP'] } }),
     ]);
 
     res.json(ok({
       counts: Object.fromEntries(byStatus.map((b) => [b._id, b.count])),
       todayOrders,
       thresholds: ATTENTION,
-      attention: { notDispatched, unassigned, notPickedUp, longInDelivery, codPending },
+      attention: { notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination },
     }));
   } catch (err) { next(err); }
 }

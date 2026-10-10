@@ -7,7 +7,10 @@ export interface ISupplierProfile extends Document {
   description?: string;
   categories: string[];
   deliveryRadiusKm: number;
-  serviceAreas: string[];
+  serviceAreas: string[];   // free-text town names, display only (mobile shows them)
+  // PIN codes this supplier delivers to; each validated against the India Post directory when
+  // added (features/serviceability). Empty = serves nowhere — never "everywhere".
+  servicePincodes: string[];
   logoUrl?: string;
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
   kycDocuments: {
@@ -34,6 +37,10 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
     categories: [{ type: String }],
     deliveryRadiusKm: { type: Number, default: 30 },
     serviceAreas: [String],
+    servicePincodes: {
+      type: [{ type: String, match: /^[1-9]\d{5}$/ }],
+      default: [],
+    },
     logoUrl: String,
     verificationStatus: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED'], default: 'PENDING' },
     kycDocuments: [
@@ -53,5 +60,8 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
   },
   { timestamps: true }
 );
+
+// Which suppliers serve a PIN (multikey)
+supplierProfileSchema.index({ servicePincodes: 1, verificationStatus: 1, isActive: 1 });
 
 export const SupplierProfile = model<ISupplierProfile>('SupplierProfile', supplierProfileSchema);
