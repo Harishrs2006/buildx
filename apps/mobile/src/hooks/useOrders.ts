@@ -44,8 +44,9 @@ export type CreateOrderPayload = {
   deliveryAddress: {
     label: string;
     fullAddress: string;
-    lat: number;
-    lng: number;
+    // Only from a real device location; the API accepts orders without them
+    lat?: number;
+    lng?: number;
     contactPhone: string;
   };
   notes?: string;
