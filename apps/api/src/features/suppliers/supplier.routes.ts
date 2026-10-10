@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
+import { validate } from '../../shared/middleware/validate.middleware';
+import { supplierStatusSchema } from '../orders/order.schemas';
 import {
   getProfile, updateProfile, getStats, getAnalytics,
   listSupplierOrders, updateOrderStatus,
@@ -17,7 +19,7 @@ router.get('/me/stats', getStats);
 router.get('/me/analytics', getAnalytics);
 
 router.get('/me/orders', listSupplierOrders);
-router.patch('/me/orders/:id/status', updateOrderStatus);
+router.patch('/me/orders/:id/status', validate(supplierStatusSchema), updateOrderStatus);
 
 router.get('/me/products', listSupplierProducts);
 router.post('/me/products', createProduct);

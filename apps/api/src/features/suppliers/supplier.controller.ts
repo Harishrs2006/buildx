@@ -7,6 +7,7 @@ import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPa
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
+import { cancelOrder, transitionOrder } from '../orders/order.service';
 
 async function getSupplierProfile(userId: string) {
   const profile = await SupplierProfile.findOne({ userId }).lean();
@@ -133,38 +134,24 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
   } catch (err) { next(err); }
 }
 
+// PATCH /suppliers/me/orders/:id/status — READY_FOR_PICKUP, or CANCELLED (reject; restores stock).
+// Delivery progress belongs to the assigned driver; suppliers can't mark IN_TRANSIT/DELIVERED.
 export async function updateOrderStatus(req: Request, res: Response, next: NextFunction) {
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
     const profile = await getSupplierProfile(req.auth!.userId);
-    const { status } = req.body as { status: string };
+    const { status, reason } = req.body as { status: 'READY_FOR_PICKUP' | 'CANCELLED'; reason?: string };
+    const filter = { _id: req.params.id, supplierId: profile._id };
+    const userId = req.auth!.userId;
 
-    const allowed = ['READY_FOR_PICKUP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'];
-    if (!allowed.includes(status)) {
-      throw AppError.badRequest(`Status must be one of: ${allowed.join(', ')}`);
-    }
+    const { order, changed } =
+      status === 'CANCELLED'
+        ? await cancelOrder({ filter, actor: 'SUPPLIER', userId, reason })
+        : await transitionOrder({ filter, to: status, actor: 'SUPPLIER', userId });
 
-    const update: Record<string, unknown> = { status };
-    if (status === 'DELIVERED') {
-      update.deliveredAt = new Date();
-      update.paymentStatus = 'CAPTURED';
-    }
-    if (status === 'CANCELLED') {
-      update.cancelledAt = new Date();
-      if (req.body.reason) update.cancellationReason = req.body.reason;
-    }
-
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, supplierId: profile._id },
-      update,
-      { new: true }
-    ).lean();
-
-    if (!order) throw AppError.notFound('Order');
-
-    // Fire-and-forget notifications based on new status
-    if (status === 'READY_FOR_PICKUP') {
+    // Fire-and-forget notifications, only when this request actually changed the order
+    if (changed && status === 'READY_FOR_PICKUP') {
       // Broadcast to all available drivers
       DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
         const driverUserIds = drivers.map((d) => d.userId.toString());
@@ -174,16 +161,10 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
           data: { screen: 'driver_available', orderId: order._id.toString() },
         });
       });
-    } else if (status === 'CANCELLED') {
+    } else if (changed && status === 'CANCELLED') {
       notifyUser(order.buyerId.toString(), {
         title: '❌ Order Cancelled',
         body: `Your order ${order.orderNumber} has been cancelled by the supplier.`,
-        data: { screen: 'buyer_orders', orderId: order._id.toString() },
-      });
-    } else if (status === 'DELIVERED') {
-      notifyUser(order.buyerId.toString(), {
-        title: '✅ Order Delivered',
-        body: `Your order ${order.orderNumber} has been delivered. Thank you!`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     }
@@ -275,10 +256,11 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
       if (req.body[key] !== undefined) update[key] = req.body[key];
     }
 
+    // runValidators: stock/price/GST bounds in the schema apply to edits too
     const product = await Product.findOneAndUpdate(
       { _id: req.params.id, supplierId: profile._id },
       update,
-      { new: true }
+      { new: true, runValidators: true }
     ).lean();
     if (!product) throw AppError.notFound('Product');
     res.json(ok(product));

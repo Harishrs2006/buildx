@@ -22,15 +22,11 @@ function OrderCard({ order, onUpdateStatus }: { order: SupplierOrder; onUpdateSt
         { text: 'Cancel', style: 'cancel' },
         { text: 'Mark Ready', onPress: () => onUpdateStatus(order._id, 'READY_FOR_PICKUP') },
       ]);
-    } else if (order.status === 'IN_TRANSIT') {
-      Alert.alert('Mark Delivered?', 'Confirm that the buyer received this order.', [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Mark Delivered', onPress: () => onUpdateStatus(order._id, 'DELIVERED') },
-      ]);
     }
   }
 
-  const canUpdate = order.status === 'CONFIRMED' || order.status === 'IN_TRANSIT';
+  // Delivery progress (picked up → delivered) is updated by the assigned delivery partner
+  const canUpdate = order.status === 'CONFIRMED';
 
   return (
     <View style={styles.card}>
@@ -62,7 +58,7 @@ function OrderCard({ order, onUpdateStatus }: { order: SupplierOrder; onUpdateSt
         {canUpdate && (
           <TouchableOpacity style={styles.actionBtn} onPress={handleAction}>
             <Text style={styles.actionBtnText}>
-              {order.status === 'CONFIRMED' ? 'Mark Ready for Pickup' : 'Mark Delivered'}
+              Mark Ready for Pickup
             </Text>
           </TouchableOpacity>
         )}

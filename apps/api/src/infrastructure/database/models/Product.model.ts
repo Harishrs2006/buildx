@@ -54,7 +54,13 @@ const productSchema = new Schema<IProduct>(
       default: 'PIECE',
     },
     basePrice: { type: Number, required: true, min: 0 },
-    bulkPricing: [{ minQty: Number, price: Number }],
+    bulkPricing: [
+      {
+        _id: false,
+        minQty: { type: Number, required: true, min: [0.001, 'Bulk tier quantity must be positive'] },
+        price: { type: Number, required: true, min: [0.01, 'Bulk tier price must be positive'] },
+      },
+    ],
     minOrderQuantity: { type: Number, default: 1, min: 1 },
     stockQuantity: { type: Number, default: 0, min: 0 },
     lowStockAlert: { type: Number, default: 10 },
@@ -72,7 +78,7 @@ const productSchema = new Schema<IProduct>(
     totalReviews: { type: Number, default: 0 },
     totalSold: { type: Number, default: 0 },
     isGstInclusive: { type: Boolean, default: true },
-    gstRate: { type: Number, default: 18 },
+    gstRate: { type: Number, default: 18, min: 0, max: 40 },
     deliveryDays: { type: Number, default: 2 },
     location: {
       lat: Number,
