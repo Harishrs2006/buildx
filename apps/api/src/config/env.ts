@@ -5,7 +5,8 @@ dotenv.config();
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  API_PORT: z.coerce.number().default(4000),
+  // Hosting platforms (Render, Railway, Cloud Run) provide PORT; API_PORT overrides it
+  API_PORT: z.coerce.number().default(Number(process.env.PORT) || 4000),
   API_VERSION: z.string().default('v1'),
   FRONTEND_URL: z.string().default('http://localhost:3000'),
 

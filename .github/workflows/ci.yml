@@ -32,6 +32,15 @@ jobs:
         run: npx tsc --noEmit
         working-directory: apps/api
 
+      - name: Build API (production output)
+        run: npm run build --workspace=apps/api
+
+      - name: Built API loads with plain Node
+        run: node -e "require('./dist/app.js')"
+        working-directory: apps/api
+        env:
+          MONGODB_URI: mongodb://127.0.0.1:1/unused
+
   typecheck-mobile:
     name: Mobile Type Check
     runs-on: ubuntu-latest
