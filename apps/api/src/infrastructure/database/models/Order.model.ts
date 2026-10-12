@@ -20,10 +20,12 @@ export interface IOrderItem {
 export type OrderStatusEvent = {
   status: IOrder['status'];
   at: Date;
-  byRole: 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'SYSTEM';
+  byRole: 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'OPERATOR' | 'ADMIN' | 'SYSTEM';
   byUserId?: Types.ObjectId;
   note?: string;
 };
+
+export type OpsNote = { at: Date; byUserId: Types.ObjectId; byRole: 'OPERATOR' | 'ADMIN'; note: string };
 
 export interface IOrder extends Document {
   _id: Types.ObjectId;
@@ -44,10 +46,13 @@ export interface IOrder extends Document {
   gstAmount: number;       // Σ GST
   total: number;           // amount payable
   status: 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
+  // Chosen by the supplier at dispatch: BuildX delivery partner, or supplier's own vehicle
+  deliveryMode?: 'PLATFORM' | 'SUPPLIER';
+  dispatchedAt?: Date;
   driverId?: Types.ObjectId;
   assignedAt?: Date;
   pickedUpAt?: Date;
-  paymentStatus: 'PENDING' | 'CAPTURED' | 'RELEASED' | 'REFUNDED';
+  paymentStatus: 'PENDING' | 'PARTIAL' | 'CAPTURED' | 'RELEASED' | 'REFUNDED';
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
   paymentMethod?: 'UPI' | 'CARD' | 'COD';
@@ -56,15 +61,18 @@ export interface IOrder extends Document {
   deliveredAt?: Date;
   cancelledAt?: Date;
   cancellationReason?: string;
-  cancelledBy?: 'BUYER' | 'SUPPLIER' | 'SYSTEM';
+  cancelledBy?: 'BUYER' | 'SUPPLIER' | 'OPS' | 'SYSTEM';
   // DEDUCTED: stock taken at creation. RESTORED: given back on cancel (exactly once).
-  inventoryState: 'DEDUCTED' | 'RESTORED';
+  // NOT_RESTORED: cancelled by ops after dispatch with goods not returned to stock.
+  inventoryState: 'DEDUCTED' | 'RESTORED' | 'NOT_RESTORED';
   idempotencyKey?: string;
   requestHash?: string;
   codAmountCollected?: number;
   codCollectedAt?: Date;
   codCollectedBy?: Types.ObjectId;
+  codCollectedByRole?: 'DELIVERY_PARTNER' | 'SUPPLIER' | 'OPERATOR' | 'ADMIN';
   statusHistory: OrderStatusEvent[];
+  opsNotes: OpsNote[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -110,12 +118,14 @@ const orderSchema = new Schema<IOrder>(
       default: 'PENDING',
       index: true,
     },
+    deliveryMode: { type: String, enum: ['PLATFORM', 'SUPPLIER'] },
+    dispatchedAt: Date,
     driverId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     assignedAt: Date,
     pickedUpAt: Date,
     paymentStatus: {
       type: String,
-      enum: ['PENDING', 'CAPTURED', 'RELEASED', 'REFUNDED'],
+      enum: ['PENDING', 'PARTIAL', 'CAPTURED', 'RELEASED', 'REFUNDED'],
       default: 'PENDING',
     },
     razorpayOrderId: String,
@@ -126,27 +136,45 @@ const orderSchema = new Schema<IOrder>(
     deliveredAt: Date,
     cancelledAt: Date,
     cancellationReason: String,
-    cancelledBy: { type: String, enum: ['BUYER', 'SUPPLIER', 'SYSTEM'] },
+    cancelledBy: { type: String, enum: ['BUYER', 'SUPPLIER', 'OPS', 'SYSTEM'] },
     // Orders created before this field existed had stock deducted at creation too
-    inventoryState: { type: String, enum: ['DEDUCTED', 'RESTORED'], default: 'DEDUCTED' },
+    inventoryState: { type: String, enum: ['DEDUCTED', 'RESTORED', 'NOT_RESTORED'], default: 'DEDUCTED' },
     idempotencyKey: String,
     requestHash: String,
     codAmountCollected: Number,
     codCollectedAt: Date,
     codCollectedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    codCollectedByRole: { type: String, enum: ['DELIVERY_PARTNER', 'SUPPLIER', 'OPERATOR', 'ADMIN'] },
     statusHistory: [
       {
         _id: false,
         status: String,
         at: Date,
-        byRole: { type: String, enum: ['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'SYSTEM'] },
+        byRole: { type: String, enum: ['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN', 'SYSTEM'] },
         byUserId: { type: Schema.Types.ObjectId, ref: 'User' },
         note: String,
       },
     ],
+    // Internal notes from the operations team. select:false keeps them out of every
+    // buyer/supplier/driver response; ops queries opt in with .select('+opsNotes').
+    opsNotes: {
+      type: [
+        {
+          _id: false,
+          at: Date,
+          byUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+          byRole: { type: String, enum: ['OPERATOR', 'ADMIN'] },
+          note: String,
+        },
+      ],
+      select: false,
+    },
   },
   { timestamps: true }
 );
+
+// Ops "needs attention" queues filter on status + age
+orderSchema.index({ status: 1, updatedAt: 1 });
 
 // One order per (buyer, Idempotency-Key): a retried or double-tapped checkout can't create a second order
 orderSchema.index(

@@ -7,7 +7,7 @@ import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPa
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
-import { cancelOrder, transitionOrder } from '../orders/order.service';
+import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
 
 async function getSupplierProfile(userId: string) {
   const profile = await SupplierProfile.findOne({ userId }).lean();
@@ -134,24 +134,39 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
   } catch (err) { next(err); }
 }
 
-// PATCH /suppliers/me/orders/:id/status — READY_FOR_PICKUP, or CANCELLED (reject; restores stock).
-// Delivery progress belongs to the assigned driver; suppliers can't mark IN_TRANSIT/DELIVERED.
+// PATCH /suppliers/me/orders/:id/status
+//   READY_FOR_PICKUP — dispatch via a BuildX delivery partner (PLATFORM mode)
+//   IN_TRANSIT       — dispatch with the supplier's own vehicle (SUPPLIER mode); also takes over
+//                      a READY_FOR_PICKUP order no driver has accepted yet
+//   DELIVERED        — only for orders the supplier is delivering themselves
+//   CANCELLED        — reject before dispatch; restores stock
+// Delivery progress on PLATFORM orders belongs to the assigned driver.
 export async function updateOrderStatus(req: Request, res: Response, next: NextFunction) {
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
     const profile = await getSupplierProfile(req.auth!.userId);
-    const { status, reason } = req.body as { status: 'READY_FOR_PICKUP' | 'CANCELLED'; reason?: string };
+    const { status, reason } = req.body as {
+      status: 'READY_FOR_PICKUP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
+      reason?: string;
+    };
     const filter = { _id: req.params.id, supplierId: profile._id };
     const userId = req.auth!.userId;
+    const now = new Date();
 
     const { order, changed } =
       status === 'CANCELLED'
         ? await cancelOrder({ filter, actor: 'SUPPLIER', userId, reason })
-        : await transitionOrder({ filter, to: status, actor: 'SUPPLIER', userId });
+        : status === 'READY_FOR_PICKUP'
+          ? await transitionOrder({ filter, to: status, actor: 'SUPPLIER', mode: 'PLATFORM', userId, set: { deliveryMode: 'PLATFORM' } })
+          : status === 'IN_TRANSIT'
+            ? await transitionOrder({ filter, to: status, actor: 'SUPPLIER', mode: 'SUPPLIER', userId, set: { deliveryMode: 'SUPPLIER', dispatchedAt: now } })
+            : await transitionOrder({ filter, to: status, actor: 'SUPPLIER', mode: 'SUPPLIER', userId, set: { deliveredAt: now } });
 
     // Fire-and-forget notifications, only when this request actually changed the order
-    if (changed && status === 'READY_FOR_PICKUP') {
+    if (!changed) {
+      // no-op
+    } else if (status === 'READY_FOR_PICKUP') {
       // Broadcast to all available drivers
       DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
         const driverUserIds = drivers.map((d) => d.userId.toString());
@@ -161,7 +176,19 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
           data: { screen: 'driver_available', orderId: order._id.toString() },
         });
       });
-    } else if (changed && status === 'CANCELLED') {
+    } else if (status === 'IN_TRANSIT') {
+      notifyUser(order.buyerId.toString(), {
+        title: '🚚 On the way',
+        body: `${profile.businessName} is delivering your order ${order.orderNumber}.`,
+        data: { screen: 'buyer_orders', orderId: order._id.toString() },
+      });
+    } else if (status === 'DELIVERED') {
+      notifyUser(order.buyerId.toString(), {
+        title: '✅ Delivered!',
+        body: `Order ${order.orderNumber} delivered. Please pay ₹${order.total.toLocaleString('en-IN')} cash to ${profile.businessName}.`,
+        data: { screen: 'buyer_orders', orderId: order._id.toString() },
+      });
+    } else if (status === 'CANCELLED') {
       notifyUser(order.buyerId.toString(), {
         title: '❌ Order Cancelled',
         body: `Your order ${order.orderNumber} has been cancelled by the supplier.`,
@@ -169,6 +196,21 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       });
     }
 
+    res.json(ok(order));
+  } catch (err) { next(err); }
+}
+
+// POST /suppliers/me/orders/:id/cod — supplier confirms exact COD amount on an order they delivered
+export async function confirmCodCollected(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    const profile = await getSupplierProfile(req.auth!.userId);
+    const { order } = await recordCodCollected({
+      filter: { _id: req.params.id, supplierId: profile._id, deliveryMode: 'SUPPLIER' },
+      collectorUserId: req.auth!.userId,
+      collectorRole: 'SUPPLIER',
+      amount: req.body.amount,
+    });
     res.json(ok(order));
   } catch (err) { next(err); }
 }

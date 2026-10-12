@@ -3,7 +3,7 @@ import { api } from '../lib/api';
 import type { CartItem } from '../store/cart.store';
 
 export type OrderStatus = 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
-export type PaymentStatus = 'PENDING' | 'CAPTURED' | 'RELEASED' | 'REFUNDED';
+export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'CAPTURED' | 'RELEASED' | 'REFUNDED';
 
 export type OrderItem = {
   productId: string;
@@ -32,6 +32,7 @@ export type Order = {
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: 'COD';
+  deliveryMode?: 'PLATFORM' | 'SUPPLIER';
   notes?: string;
   createdAt: string;
   confirmedAt?: string;

@@ -53,6 +53,8 @@ function AuthGate() {
       if (segments[0] !== '(supplier)') router.replace('/(supplier)/home');
     } else if (user.role === 'DELIVERY_PARTNER' && !inAuth && !inOnboarding) {
       if (segments[0] !== '(driver)') router.replace('/(driver)/available');
+    } else if ((user.role === 'OPERATOR' || user.role === 'ADMIN') && !inAuth && !inOnboarding) {
+      if (segments[0] !== '(ops)') router.replace('/(ops)/attention');
     } else if (!inAuth && !inOnboarding) {
       if (segments[0] !== '(buyer)') router.replace('/(buyer)/home');
     }
@@ -72,6 +74,7 @@ export default function RootLayout() {
           <Stack.Screen name="(buyer)" />
           <Stack.Screen name="(supplier)" />
           <Stack.Screen name="(driver)" />
+          <Stack.Screen name="(ops)" />
         </Stack>
         <StatusBar style="dark" />
       </QueryClientProvider>

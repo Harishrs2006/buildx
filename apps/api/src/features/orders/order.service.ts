@@ -4,11 +4,13 @@ import { Product, IProduct } from '../../infrastructure/database/models/Product.
 import { Order, IOrder, OrderStatusEvent } from '../../infrastructure/database/models/Order.model';
 import { AppError } from '../../shared/errors/AppError';
 import { PricingError, priceOrder, paiseToRupees, toPaise, PricedOrder } from './pricing';
-import { allowedSources, OrderStatus } from './order-state';
+import {
+  allowedSources, cancelSources, sourceFilter, PRE_DISPATCH,
+  type OrderStatus, type DeliveryMode, type Actor,
+} from './order-state';
 import type { CartItemsInput, CreateOrderInput } from './order.schemas';
 
 type LeanOrder = IOrder & { _id: Types.ObjectId };
-type Actor = OrderStatusEvent['byRole'];
 
 function generateOrderNumber(): string {
   const ts = Date.now().toString(36).toUpperCase();
@@ -204,74 +206,101 @@ export async function createOrder(params: {
 
 // ─── Status transitions ─────────────────────────────────────────────────────
 
-function historyEntry(status: OrderStatus, byRole: Actor, userId?: string, note?: string): OrderStatusEvent {
+type HistoryRole = OrderStatusEvent['byRole'];
+
+function historyEntry(status: OrderStatus, byRole: HistoryRole, userId?: string, note?: string): OrderStatusEvent {
   return { status, at: new Date(), byRole, byUserId: userId ? new Types.ObjectId(userId) : undefined, note };
 }
 
-async function resolveFailedTransition(filter: Record<string, unknown>, to: OrderStatus): Promise<LeanOrder> {
+function modeOf(order: Pick<LeanOrder, 'deliveryMode'>): DeliveryMode {
+  return order.deliveryMode === 'SUPPLIER' ? 'SUPPLIER' : 'PLATFORM';
+}
+
+async function resolveFailedTransition(
+  filter: Record<string, unknown>,
+  to: OrderStatus,
+  mode?: DeliveryMode
+): Promise<LeanOrder> {
   const current = await Order.findOne(filter).lean<LeanOrder>();
   if (!current) throw AppError.notFound('Order');
-  if (current.status === to) return current; // repeated request: already done, no side effects
+  // Repeated request: already done (in the same delivery mode), no side effects
+  if (current.status === to && (!mode || PRE_DISPATCH.includes(to) || modeOf(current) === mode)) return current;
   throw AppError.conflict(`Order is ${current.status} and can't be moved to ${to}`);
 }
 
 /**
  * Compare-and-set transition. `filter` must scope the order to the caller (ownership);
- * the allowed source statuses come from order-state.ts.
+ * allowed sources (and, after dispatch, the delivery mode) come from order-state.ts.
  * Returns changed=false when the order was already in the target status.
  */
 export async function transitionOrder(params: {
   filter: Record<string, unknown>;
   to: Exclude<OrderStatus, 'CANCELLED'>;
-  actor: 'SUPPLIER' | 'DELIVERY_PARTNER';
+  actor: Exclude<Actor, 'BUYER'>;
+  mode: DeliveryMode;
   userId: string;
+  historyRole?: HistoryRole;
   set?: Record<string, unknown>;
+  unset?: string[];
+  note?: string;
 }): Promise<{ order: LeanOrder; changed: boolean }> {
-  const { filter, to, actor, userId, set = {} } = params;
-  const sources = allowedSources(to, actor);
+  const { filter, to, actor, mode, userId, set = {}, unset = [], note } = params;
+  const historyRole = params.historyRole ?? (actor as HistoryRole);
+  const sources = allowedSources(to, actor, mode);
   if (sources.length === 0) throw AppError.forbidden(`${actor} can't set status ${to}`);
 
+  const update: Record<string, unknown> = {
+    $set: { status: to, ...set },
+    $push: { statusHistory: historyEntry(to, historyRole, userId, note) },
+  };
+  if (unset.length) update.$unset = Object.fromEntries(unset.map((k) => [k, '']));
+
   const order = await Order.findOneAndUpdate(
-    { ...filter, status: { $in: sources } },
-    { $set: { status: to, ...set }, $push: { statusHistory: historyEntry(to, actor, userId) } },
+    { $and: [filter, sourceFilter(sources, mode)] },
+    update,
     { new: true }
   ).lean<LeanOrder>();
   if (order) return { order, changed: true };
-  return { order: await resolveFailedTransition(filter, to), changed: false };
+  return { order: await resolveFailedTransition(filter, to, mode), changed: false };
 }
 
 /**
- * Cancels and returns stock in one transaction. `inventoryState` flips to RESTORED in the
- * same compare-and-set that changes the status, so stock is given back exactly once even
- * under retries or concurrent cancel requests.
+ * Cancels in one transaction. `inventoryState` changes in the same compare-and-set as the
+ * status, so stock is given back exactly once even under retries or concurrent requests.
+ * Only ops may cancel after dispatch, and must say whether the goods came back (restock).
  */
 export async function cancelOrder(params: {
   filter: Record<string, unknown>;
-  actor: 'BUYER' | 'SUPPLIER';
+  actor: 'BUYER' | 'SUPPLIER' | 'OPS';
   userId: string;
+  historyRole?: HistoryRole;
   reason?: string;
+  restock?: boolean;
+  /** Extra condition applied only to the compare-and-set (e.g. "not yet picked up") */
+  guard?: Record<string, unknown>;
 }): Promise<{ order: LeanOrder; changed: boolean }> {
-  const { filter, actor, userId, reason } = params;
-  const sources = allowedSources('CANCELLED', actor);
+  const { filter, actor, userId, reason, restock = true, guard = {} } = params;
+  const historyRole = params.historyRole ?? (actor as HistoryRole);
+  const sources = cancelSources(actor);
 
   const cancelled = await inTransaction(async (session) => {
     const order = await Order.findOneAndUpdate(
-      { ...filter, status: { $in: sources }, inventoryState: { $ne: 'RESTORED' } },
+      { $and: [filter, guard, { status: { $in: sources }, inventoryState: { $nin: ['RESTORED', 'NOT_RESTORED'] } }] },
       {
         $set: {
           status: 'CANCELLED',
           cancelledAt: new Date(),
           cancelledBy: actor,
           cancellationReason: reason,
-          inventoryState: 'RESTORED',
+          inventoryState: restock ? 'RESTORED' : 'NOT_RESTORED',
         },
-        $push: { statusHistory: historyEntry('CANCELLED', actor, userId, reason) },
+        $push: { statusHistory: historyEntry('CANCELLED', historyRole, userId, reason) },
       },
       { new: true, session }
     ).lean<LeanOrder>();
     if (!order) return null;
 
-    if (order.items.length > 0) {
+    if (restock && order.items.length > 0) {
       await Product.bulkWrite(
         order.items.map((item) => ({
           updateOne: {
@@ -290,20 +319,28 @@ export async function cancelOrder(params: {
 }
 
 /**
- * COD is collected only when the assigned driver explicitly confirms the exact amount
- * after delivery. Delivery alone never changes paymentStatus.
+ * COD is collected only when whoever delivered (assigned driver, or the supplier in SUPPLIER
+ * mode) explicitly confirms the exact amount after delivery. Delivery alone never changes
+ * paymentStatus. `filter` must scope the order to that collector.
  */
-export async function recordCodCollected(params: { orderId: string; driverUserId: string; amount: number }) {
-  const { orderId, driverUserId, amount } = params;
-  const filter = { _id: orderId, driverId: driverUserId };
+export async function recordCodCollected(params: {
+  filter: Record<string, unknown>;
+  collectorUserId: string;
+  collectorRole: 'DELIVERY_PARTNER' | 'SUPPLIER';
+  amount: number;
+}) {
+  const { filter, collectorUserId, collectorRole, amount } = params;
 
   const current = await Order.findOne(filter).lean<LeanOrder>();
   if (!current) throw AppError.notFound('Order');
   if (current.paymentMethod !== 'COD') throw AppError.conflict('This order is not cash on delivery');
   if (current.paymentStatus === 'CAPTURED') return { order: current, changed: false };
   if (current.status !== 'DELIVERED') throw AppError.conflict('Mark the order delivered before confirming cash');
+  if (current.paymentStatus !== 'PENDING') throw AppError.conflict('Payment is being handled by BuildX support');
   if (toPaise(amount) !== toPaise(current.total)) {
-    throw AppError.badRequest(`Collected amount must equal the order total of ₹${current.total}`);
+    throw AppError.badRequest(
+      `Collected amount must equal the order total of ₹${current.total}. For a short payment, contact BuildX support.`
+    );
   }
 
   const order = await Order.findOneAndUpdate(
@@ -313,7 +350,8 @@ export async function recordCodCollected(params: { orderId: string; driverUserId
         paymentStatus: 'CAPTURED',
         codAmountCollected: current.total,
         codCollectedAt: new Date(),
-        codCollectedBy: driverUserId,
+        codCollectedBy: collectorUserId,
+        codCollectedByRole: collectorRole,
       },
     },
     { new: true }
@@ -323,4 +361,50 @@ export async function recordCodCollected(params: { orderId: string; driverUserId
   const latest = await Order.findOne(filter).lean<LeanOrder>();
   if (latest?.paymentStatus === 'CAPTURED') return { order: latest, changed: false };
   throw AppError.conflict('Order changed while confirming payment. Please refresh.');
+}
+
+/**
+ * Ops records the total cash actually received for a delivered COD order — used when the
+ * collector forgot to confirm, or the buyer paid short (→ PARTIAL). A note is mandatory.
+ */
+export async function recordCodByOps(params: {
+  orderId: string;
+  amount: number;
+  note: string;
+  opsUserId: string;
+  opsRole: 'OPERATOR' | 'ADMIN';
+}) {
+  const { orderId, amount, note, opsUserId, opsRole } = params;
+  const current = await Order.findById(orderId).lean<LeanOrder>();
+  if (!current) throw AppError.notFound('Order');
+  if (current.paymentMethod !== 'COD') throw AppError.conflict('This order is not cash on delivery');
+  if (current.status !== 'DELIVERED') throw AppError.conflict('Cash can only be recorded for delivered orders');
+  const paid = toPaise(amount);
+  const total = toPaise(current.total);
+  if (paid <= 0 || paid > total) {
+    throw AppError.badRequest(`Amount must be between ₹0.01 and the order total ₹${current.total}`);
+  }
+  if (current.paymentStatus === 'CAPTURED') {
+    if (paid === total) return { order: current, changed: false };
+    throw AppError.conflict('This order is already fully paid');
+  }
+
+  const order = await Order.findOneAndUpdate(
+    { _id: orderId, status: 'DELIVERED', paymentMethod: 'COD', paymentStatus: { $in: ['PENDING', 'PARTIAL'] } },
+    {
+      $set: {
+        paymentStatus: paid === total ? 'CAPTURED' : 'PARTIAL',
+        codAmountCollected: paiseToRupees(paid),
+        codCollectedAt: new Date(),
+        codCollectedBy: opsUserId,
+        codCollectedByRole: opsRole,
+      },
+      $push: {
+        opsNotes: { at: new Date(), byUserId: opsUserId, byRole: opsRole, note: `COD recorded ₹${paiseToRupees(paid)}: ${note}` },
+      },
+    },
+    { new: true }
+  ).lean<LeanOrder>();
+  if (!order) throw AppError.conflict('Order changed while recording payment. Please refresh.');
+  return { order, changed: true };
 }

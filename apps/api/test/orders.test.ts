@@ -373,15 +373,19 @@ describe('cancellation restores stock exactly once', () => {
 // ─── State machine ──────────────────────────────────────────────────────────
 
 describe('order state machine', () => {
-  it('suppliers cannot skip delivery steps', async () => {
+  it('suppliers cannot skip delivery steps or drive a platform delivery', async () => {
     const { orderId } = await placedOrder();
-    for (const status of ['IN_TRANSIT', 'DELIVERED', 'ASSIGNED', 'PICKED_UP']) {
+    for (const status of ['ASSIGNED', 'PICKED_UP']) {
       expect((await supplierStatus(supplier, orderId, status)).status, status).toBe(400);
     }
+    // Must dispatch before delivering
+    expect((await supplierStatus(supplier, orderId, 'DELIVERED')).status).toBe(409);
     await supplierStatus(supplier, orderId, 'READY_FOR_PICKUP');
     await assign(driver, orderId);
     await driverStatus(driver, orderId, 'PICKED_UP');
-    expect((await supplierStatus(supplier, orderId, 'DELIVERED')).status).toBe(400);
+    // Once a BuildX driver has it, the supplier can't move it
+    expect((await supplierStatus(supplier, orderId, 'IN_TRANSIT')).status).toBe(409);
+    expect((await supplierStatus(supplier, orderId, 'DELIVERED')).status).toBe(409);
     expect((await Order.findById(orderId).lean())!.status).toBe('PICKED_UP');
   });
 

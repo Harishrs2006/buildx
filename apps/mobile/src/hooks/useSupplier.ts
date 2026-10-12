@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import type { OrderStatus } from './useOrders';
+import type { OrderStatus, PaymentStatus } from './useOrders';
 
 export type SupplierProfile = {
   _id: string;
@@ -37,6 +37,8 @@ export type SupplierOrder = {
   total: number;
   status: OrderStatus;
   paymentMethod: 'COD';
+  paymentStatus: PaymentStatus;
+  deliveryMode?: 'PLATFORM' | 'SUPPLIER';
   notes?: string;
   createdAt: string;
   deliveredAt?: string;
@@ -104,6 +106,18 @@ export function useUpdateOrderStatus() {
   return useMutation<unknown, Error, { id: string; status: string; reason?: string }>({
     mutationFn: ({ id, status, reason }) =>
       api.patch(`/suppliers/me/orders/${id}/status`, { status, reason }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['supplier-orders'] });
+      qc.invalidateQueries({ queryKey: ['supplier-stats'] });
+    },
+  });
+}
+
+// Supplier confirms the exact COD amount on an order they delivered with their own vehicle
+export function useConfirmSupplierCod() {
+  const qc = useQueryClient();
+  return useMutation<unknown, Error, { id: string; amount: number }>({
+    mutationFn: ({ id, amount }) => api.post(`/suppliers/me/orders/${id}/cod`, { amount }).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['supplier-orders'] });
       qc.invalidateQueries({ queryKey: ['supplier-stats'] });
