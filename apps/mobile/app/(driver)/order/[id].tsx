@@ -3,11 +3,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMyDeliveries, useUpdateDeliveryStatus, type DeliveryOrder } from '../../../src/hooks/useDelivery';
-import { ORDER_STATUS_LABELS } from '../../../src/hooks/useOrders';
+import { useMyDeliveries, useUpdateDeliveryStatus, useConfirmCodCollected, type DeliveryOrder } from '../../../src/hooks/useDelivery';
+import { ORDER_STATUS_LABELS, type OrderStatus } from '../../../src/hooks/useOrders';
 import { Colors } from '../../../src/constants/colors';
 
-const NEXT_STATUS: Record<string, { label: string; status: string; color: string } | null> = {
+const NEXT_STATUS: Record<string, { label: string; status: OrderStatus; color: string } | null> = {
   ASSIGNED:  { label: 'Mark as Picked Up', status: 'PICKED_UP', color: Colors.warning },
   PICKED_UP: { label: 'Mark as In Transit', status: 'IN_TRANSIT', color: Colors.info },
   IN_TRANSIT:{ label: 'Mark as Delivered', status: 'DELIVERED', color: Colors.success },
@@ -18,6 +18,7 @@ export default function DriverOrderDetail() {
   const router = useRouter();
   const { data, isLoading } = useMyDeliveries();
   const { mutate: updateStatus, isPending } = useUpdateDeliveryStatus();
+  const { mutate: confirmCod, isPending: codPending } = useConfirmCodCollected();
 
   const order: DeliveryOrder | undefined = data?.data.find((o) => o._id === id);
 
@@ -27,16 +28,35 @@ export default function DriverOrderDetail() {
     if (!next) return;
     Alert.alert(
       next.label,
-      `Update this order to "${ORDER_STATUS_LABELS[next.status as any]}"?`,
+      `Update this order to "${ORDER_STATUS_LABELS[next.status]}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Confirm',
           onPress: () =>
+            // After DELIVERED the screen stays open so the driver can confirm the cash
             updateStatus({ id: order._id, status: next.status }, {
-              onSuccess: () => {
-                if (next.status === 'DELIVERED') router.back();
-              },
+              onError: (err) => Alert.alert('Error', err.message),
+            }),
+        },
+      ]
+    );
+  }
+
+  // Delivery doesn't mark COD as paid — the driver confirms the exact amount separately
+  function handleConfirmCash() {
+    if (!order) return;
+    const amount = order.total;
+    Alert.alert(
+      'Cash collected?',
+      `Confirm you received exactly ₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })} in cash from the buyer.`,
+      [
+        { text: 'Not yet', style: 'cancel' },
+        {
+          text: 'Yes, collected',
+          onPress: () =>
+            confirmCod({ id: order._id, amount }, {
+              onSuccess: () => router.back(),
               onError: (err) => Alert.alert('Error', err.message),
             }),
         },
@@ -70,6 +90,8 @@ export default function DriverOrderDetail() {
 
   const supplier = order.supplierId as any;
   const next = NEXT_STATUS[order.status];
+  const cashPending = order.status === 'DELIVERED' && order.paymentStatus === 'PENDING';
+  const cashCollected = order.paymentStatus === 'CAPTURED';
 
   return (
     <SafeAreaView style={s.safe}>
@@ -116,8 +138,10 @@ export default function DriverOrderDetail() {
         {/* COD amount */}
         <View style={[s.card, { backgroundColor: Colors.successLight, borderColor: Colors.success }]}>
           <Text style={[s.cardLabel, { color: Colors.success }]}>COLLECT ON DELIVERY (COD)</Text>
-          <Text style={s.codAmount}>₹{order.total.toLocaleString('en-IN')}</Text>
-          <Text style={s.codNote}>Collect cash from buyer at delivery site</Text>
+          <Text style={s.codAmount}>₹{order.total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</Text>
+          <Text style={s.codNote}>
+            {cashCollected ? '✓ Cash collected' : 'Collect cash from buyer at delivery site'}
+          </Text>
         </View>
 
         {order.notes && (
@@ -152,6 +176,25 @@ export default function DriverOrderDetail() {
             activeOpacity={0.85}
           >
             {isPending ? <ActivityIndicator color="#fff" /> : <Text style={s.actionBtnText}>{next.label}</Text>}
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {!next && cashPending && (
+        <View style={s.stickyBar}>
+          <TouchableOpacity
+            style={[s.actionBtn, { backgroundColor: Colors.success }, codPending && s.actionBtnDisabled]}
+            onPress={handleConfirmCash}
+            disabled={codPending}
+            activeOpacity={0.85}
+          >
+            {codPending ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={s.actionBtnText}>
+                Confirm ₹{order.total.toLocaleString('en-IN', { maximumFractionDigits: 2 })} Cash Collected
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       )}

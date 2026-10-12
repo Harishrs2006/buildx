@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useCartStore } from '../../src/store/cart.store';
 import { useAuthStore } from '../../src/store/auth.store';
-import { useCreateOrder, cartItemsToOrderPayload } from '../../src/hooks/useOrders';
+import { useCreateOrder, useOrderQuote, cartItemsToOrderPayload, newIdempotencyKey } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
 
 type DeliveryAddress = {
@@ -22,12 +22,12 @@ export default function CheckoutScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const items = useCartStore((s) => s.items);
-  const subtotal = useCartStore((s) => s.subtotal());
-  const gstTotal = useCartStore((s) => s.gstTotal());
-  const grandTotal = useCartStore((s) => s.grandTotal());
+  const estimatedTotal = useCartStore((s) => s.grandTotal());
   const clearCart = useCartStore((s) => s.clear);
 
   const { mutateAsync: createOrder, isPending } = useCreateOrder();
+  // One key per checkout attempt: retries/double-taps reuse it, so the server creates one order
+  const [idempotencyKey] = useState(newIdempotencyKey);
 
   const [address, setAddress] = useState<DeliveryAddress>({
     label: 'Site',
@@ -39,14 +39,23 @@ export default function CheckoutScreen() {
   const [notes, setNotes] = useState('');
   const [step, setStep] = useState<'address' | 'summary'>('address');
 
+  // Prices shown on the summary come from the server (GST-inclusive/exclusive, bulk tiers)
+  const orderItems = cartItemsToOrderPayload(items);
+  const quoteQuery = useOrderQuote(orderItems, step === 'summary');
+  const quote = quoteQuery.data?.data;
+  const grandTotal = step === 'summary' && quote ? quote.total : estimatedTotal;
+
   const supplierName = items[0]?.supplierName ?? 'Supplier';
 
   async function handlePlaceOrder() {
+    if (!quote) return;
     try {
       const res = await createOrder({
-        items: cartItemsToOrderPayload(items),
+        items: orderItems,
         deliveryAddress: address,
         notes: notes.trim() || undefined,
+        expectedTotal: quote.total,
+        idempotencyKey,
       });
 
       clearCart();
@@ -56,6 +65,7 @@ export default function CheckoutScreen() {
       } as never);
     } catch (err: any) {
       Alert.alert('Order failed', err?.message ?? 'Something went wrong. Please try again.');
+      quoteQuery.refetch(); // stock or prices may have changed
     }
   }
 
@@ -89,15 +99,27 @@ export default function CheckoutScreen() {
               onNotesChange={setNotes}
             />
           ) : (
-            <OrderSummaryView
-              items={items}
-              supplierName={supplierName}
-              address={address}
-              subtotal={subtotal}
-              gstTotal={gstTotal}
-              grandTotal={grandTotal}
-              notes={notes}
-            />
+            quote ? (
+              <OrderSummaryView
+                items={quote.items}
+                supplierName={supplierName}
+                address={address}
+                subtotal={quote.subtotal}
+                gstTotal={quote.gstAmount}
+                grandTotal={quote.total}
+                notes={notes}
+              />
+            ) : quoteQuery.isError ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Couldn't price your order</Text>
+                <Text style={styles.addressMeta}>{quoteQuery.error.message}</Text>
+                <TouchableOpacity onPress={() => quoteQuery.refetch()}>
+                  <Text style={[styles.addressMeta, { color: Colors.primary }]}>Try again</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ActivityIndicator color={Colors.primary} style={{ marginTop: 32 }} />
+            )
           )}
           <View style={{ height: 100 }} />
         </ScrollView>
@@ -107,7 +129,7 @@ export default function CheckoutScreen() {
           <View>
             <Text style={styles.totalLabel}>Total payable</Text>
             <Text style={styles.totalValue}>
-              ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+              ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
             </Text>
           </View>
 
@@ -127,9 +149,9 @@ export default function CheckoutScreen() {
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
-              style={[styles.btn, isPending && styles.btnDisabled]}
+              style={[styles.btn, (isPending || !quote) && styles.btnDisabled]}
               onPress={handlePlaceOrder}
-              disabled={isPending}
+              disabled={isPending || !quote}
             >
               {isPending ? (
                 <ActivityIndicator color="#fff" />
@@ -220,11 +242,12 @@ function OrderSummaryView({ items, supplierName, address, subtotal, gstTotal, gr
             <View style={{ flex: 1 }}>
               <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
               <Text style={styles.itemMeta}>
-                {item.quantity} {item.unit} × ₹{item.basePrice.toLocaleString('en-IN')}
+                {item.quantity} {item.unit} × ₹{item.pricePerUnit.toLocaleString('en-IN')}
+                {item.isGstInclusive ? ' (incl. GST)' : ''}
               </Text>
             </View>
             <Text style={styles.itemTotal}>
-              ₹{(item.basePrice * item.quantity).toLocaleString('en-IN')}
+              ₹{item.subtotal.toLocaleString('en-IN')}
             </Text>
           </View>
         ))}
@@ -249,13 +272,13 @@ function OrderSummaryView({ items, supplierName, address, subtotal, gstTotal, gr
         <View style={styles.priceRow}>
           <Text style={styles.priceLabel}>Subtotal</Text>
           <Text style={styles.priceValue}>
-            ₹{subtotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            ₹{subtotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </Text>
         </View>
         <View style={styles.priceRow}>
           <Text style={styles.priceLabel}>GST</Text>
           <Text style={styles.priceValue}>
-            ₹{gstTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            ₹{gstTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </Text>
         </View>
         <View style={styles.priceRow}>
@@ -265,7 +288,7 @@ function OrderSummaryView({ items, supplierName, address, subtotal, gstTotal, gr
         <View style={[styles.priceRow, styles.priceRowTotal]}>
           <Text style={styles.priceTotalLabel}>Total</Text>
           <Text style={styles.priceTotalValue}>
-            ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
+            ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </Text>
         </View>
       </View>
@@ -276,7 +299,7 @@ function OrderSummaryView({ items, supplierName, address, subtotal, gstTotal, gr
         <View style={{ flex: 1 }}>
           <Text style={styles.codTitle}>Cash on Delivery</Text>
           <Text style={styles.codSub}>
-            Pay ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })} in cash when
+            Pay ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })} in cash when
             your materials arrive at the site.
           </Text>
         </View>

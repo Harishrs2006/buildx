@@ -1,7 +1,20 @@
 import { Request, Response, NextFunction } from 'express';
+import mongoose from 'mongoose';
 import { AppError } from '../errors/AppError';
 import { logger } from '../logger/logger';
 import { env } from '../../config/env';
+
+// Schema validation / bad ID casts are client errors, not server faults
+function fromMongoose(err: Error): Error {
+  if (err instanceof mongoose.Error.ValidationError) {
+    const details = Object.values(err.errors).map((e) => ({ field: e.path, message: e.message }));
+    return AppError.badRequest('Validation failed', details);
+  }
+  if (err instanceof mongoose.Error.CastError) {
+    return AppError.badRequest(`Invalid value for ${err.path}`);
+  }
+  return err;
+}
 
 interface ErrorResponse {
   success: false;
@@ -19,6 +32,7 @@ export function errorMiddleware(
   res: Response,
   _next: NextFunction
 ): void {
+  err = fromMongoose(err);
   if (err instanceof AppError && err.isOperational) {
     logger.warn(`[${err.code}] ${err.message}`, {
       path: req.path,

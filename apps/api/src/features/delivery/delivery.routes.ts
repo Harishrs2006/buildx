@@ -1,8 +1,10 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
+import { validate } from '../../shared/middleware/validate.middleware';
+import { driverStatusSchema, codCollectedSchema } from '../orders/order.schemas';
 import {
   listAvailableOrders, assignOrder,
-  listMyOrders, updateDeliveryStatus,
+  listMyOrders, updateDeliveryStatus, confirmCodCollected,
   getProfile, updateProfile, getStats,
 } from './delivery.controller';
 
@@ -19,7 +21,8 @@ router.post('/orders/:id/assign', assignOrder);
 
 // Driver's own orders
 router.get('/my-orders', listMyOrders);
-router.patch('/orders/:id/status', updateDeliveryStatus);
+router.patch('/orders/:id/status', validate(driverStatusSchema), updateDeliveryStatus);
+router.post('/orders/:id/cod', validate(codCollectedSchema), confirmCodCollected);
 
 // Driver profile
 router.get('/me', getProfile);

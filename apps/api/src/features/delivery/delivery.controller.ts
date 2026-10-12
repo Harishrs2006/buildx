@@ -5,6 +5,8 @@ import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPa
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 import { notifyUser } from '../../shared/services/notification.service';
+import { transitionOrder, recordCodCollected } from '../orders/order.service';
+import { allowedSources } from '../orders/order-state';
 
 async function getDriverProfile(userId: string) {
   const profile = await DeliveryPartner.findOne({ userId }).lean();
@@ -42,12 +44,20 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
     await getDriverProfile(driverUserId);
 
     const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, status: 'READY_FOR_PICKUP', driverId: { $exists: false } },
-      { status: 'ASSIGNED', driverId: driverUserId, assignedAt: new Date() },
+      { _id: req.params.id, status: { $in: allowedSources('ASSIGNED', 'DELIVERY_PARTNER') }, driverId: { $exists: false } },
+      {
+        $set: { status: 'ASSIGNED', driverId: driverUserId, assignedAt: new Date() },
+        $push: { statusHistory: { status: 'ASSIGNED', at: new Date(), byRole: 'DELIVERY_PARTNER', byUserId: driverUserId } },
+      },
       { new: true }
     ).lean();
 
-    if (!order) throw AppError.conflict('Order is no longer available for pickup');
+    if (!order) {
+      // Retry by the driver who already holds it is fine; anyone else lost the race
+      const mine = await Order.findOne({ _id: req.params.id, driverId: driverUserId, status: 'ASSIGNED' }).lean();
+      if (mine) return res.json(ok(mine));
+      throw AppError.conflict('Order is no longer available for pickup');
+    }
 
     // Notify buyer that a driver has been assigned
     notifyUser(order.buyerId.toString(), {
@@ -85,67 +95,57 @@ export async function listMyOrders(req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 }
 
-// Driver-controlled transitions: target status → statuses it may be reached from
-const DRIVER_TRANSITIONS: Record<string, string[]> = {
-  PICKED_UP: ['ASSIGNED'],
-  IN_TRANSIT: ['PICKED_UP'],
-  DELIVERED: ['PICKED_UP', 'IN_TRANSIT'],
-};
-
-// PATCH /delivery/orders/:id/status — driver marks PICKED_UP, IN_TRANSIT or DELIVERED
+// PATCH /delivery/orders/:id/status — assigned driver marks PICKED_UP, IN_TRANSIT or DELIVERED.
+// Delivery never touches paymentStatus: cash is confirmed separately via POST /orders/:id/cod.
 export async function updateDeliveryStatus(req: Request, res: Response, next: NextFunction) {
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
-    const { status } = req.body as { status: string };
-    const allowed = Object.keys(DRIVER_TRANSITIONS);
-    if (!allowed.includes(status)) {
-      throw AppError.badRequest(`Status must be one of: ${allowed.join(', ')}`);
+    const { status } = req.body as { status: 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' };
+    const set: Record<string, unknown> = {};
+    if (status === 'PICKED_UP') set.pickedUpAt = new Date();
+    if (status === 'DELIVERED') set.deliveredAt = new Date();
+
+    const { order, changed } = await transitionOrder({
+      filter: { _id: req.params.id, driverId: req.auth!.userId },
+      to: status,
+      actor: 'DELIVERY_PARTNER',
+      userId: req.auth!.userId,
+      set,
+    });
+
+    if (changed && status === 'DELIVERED') {
+      // Counted only when this request actually delivered it — retries don't double count
+      await DeliveryPartner.updateOne({ userId: req.auth!.userId }, { $inc: { totalDeliveries: 1 } });
     }
 
-    const update: Record<string, unknown> = { status };
-    if (status === 'PICKED_UP') update.pickedUpAt = new Date();
-    if (status === 'DELIVERED') {
-      update.deliveredAt = new Date();
-      update.paymentStatus = 'CAPTURED';
-    }
-
-    // Only the assigned driver, and only from the preceding state
-    const fromStatuses = DRIVER_TRANSITIONS[status];
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, driverId: req.auth!.userId, status: { $in: fromStatuses } },
-      update,
-      { new: true }
-    ).lean();
-
-    if (!order) {
-      const owned = await Order.exists({ _id: req.params.id, driverId: req.auth!.userId });
-      if (!owned) throw AppError.notFound('Order');
-      throw AppError.conflict(`Order must be ${fromStatuses.join(' or ')} to mark it ${status}`);
-    }
-
-    if (status === 'DELIVERED') {
-      // Counted only after the order actually transitioned
-      await DeliveryPartner.updateOne(
-        { userId: req.auth!.userId },
-        { $inc: { totalDeliveries: 1 } }
-      );
-    }
-
-    if (status === 'PICKED_UP') {
+    if (changed && status === 'PICKED_UP') {
       notifyUser(order.buyerId.toString(), {
         title: '📦 Order Picked Up',
         body: `Your order ${order.orderNumber} has been picked up and is on the way!`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
-    } else if (status === 'DELIVERED') {
+    } else if (changed && status === 'DELIVERED') {
       notifyUser(order.buyerId.toString(), {
         title: '✅ Delivered!',
-        body: `Order ${order.orderNumber} delivered. Please collect and pay ₹${order.total.toLocaleString('en-IN')} cash.`,
+        body: `Order ${order.orderNumber} delivered. Please pay ₹${order.total.toLocaleString('en-IN')} cash to the driver.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     }
 
+    res.json(ok(order));
+  } catch (err) { next(err); }
+}
+
+// POST /delivery/orders/:id/cod — assigned driver confirms the exact COD amount was collected
+export async function confirmCodCollected(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    const { order } = await recordCodCollected({
+      orderId: String(req.params.id),
+      driverUserId: req.auth!.userId,
+      amount: req.body.amount,
+    });
     res.json(ok(order));
   } catch (err) { next(err); }
 }

@@ -6,10 +6,24 @@ export interface IOrderItem {
   imageUrl: string;
   unit: string;
   quantity: number;
-  pricePerUnit: number;
+  pricePerUnit: number;    // unit price applied (bulk tier or base), as listed
+  listPrice: number;       // product basePrice at order time
+  tierMinQty?: number;     // bulk tier applied, if any
   gstRate: number;
-  subtotal: number;
+  isGstInclusive: boolean;
+  subtotal: number;        // pricePerUnit × quantity, as listed
+  taxableValue: number;
+  gstAmount: number;
+  lineTotal: number;
 }
+
+export type OrderStatusEvent = {
+  status: IOrder['status'];
+  at: Date;
+  byRole: 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'SYSTEM';
+  byUserId?: Types.ObjectId;
+  note?: string;
+};
 
 export interface IOrder extends Document {
   _id: Types.ObjectId;
@@ -26,9 +40,9 @@ export interface IOrder extends Document {
   };
   deliveryMethod: 'STANDARD' | 'EXPRESS';
   deliveryCharge: number;
-  subtotal: number;
-  gstAmount: number;
-  total: number;
+  subtotal: number;        // Σ taxable value
+  gstAmount: number;       // Σ GST
+  total: number;           // amount payable
   status: 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
   driverId?: Types.ObjectId;
   assignedAt?: Date;
@@ -42,6 +56,15 @@ export interface IOrder extends Document {
   deliveredAt?: Date;
   cancelledAt?: Date;
   cancellationReason?: string;
+  cancelledBy?: 'BUYER' | 'SUPPLIER' | 'SYSTEM';
+  // DEDUCTED: stock taken at creation. RESTORED: given back on cancel (exactly once).
+  inventoryState: 'DEDUCTED' | 'RESTORED';
+  idempotencyKey?: string;
+  requestHash?: string;
+  codAmountCollected?: number;
+  codCollectedAt?: Date;
+  codCollectedBy?: Types.ObjectId;
+  statusHistory: OrderStatusEvent[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,8 +82,14 @@ const orderSchema = new Schema<IOrder>(
         unit: String,
         quantity: Number,
         pricePerUnit: Number,
+        listPrice: Number,
+        tierMinQty: Number,
         gstRate: { type: Number, default: 18 },
+        isGstInclusive: Boolean,
         subtotal: Number,
+        taxableValue: Number,
+        gstAmount: Number,
+        lineTotal: Number,
       },
     ],
     deliveryAddress: {
@@ -97,8 +126,32 @@ const orderSchema = new Schema<IOrder>(
     deliveredAt: Date,
     cancelledAt: Date,
     cancellationReason: String,
+    cancelledBy: { type: String, enum: ['BUYER', 'SUPPLIER', 'SYSTEM'] },
+    // Orders created before this field existed had stock deducted at creation too
+    inventoryState: { type: String, enum: ['DEDUCTED', 'RESTORED'], default: 'DEDUCTED' },
+    idempotencyKey: String,
+    requestHash: String,
+    codAmountCollected: Number,
+    codCollectedAt: Date,
+    codCollectedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    statusHistory: [
+      {
+        _id: false,
+        status: String,
+        at: Date,
+        byRole: { type: String, enum: ['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'SYSTEM'] },
+        byUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+        note: String,
+      },
+    ],
   },
   { timestamps: true }
+);
+
+// One order per (buyer, Idempotency-Key): a retried or double-tapped checkout can't create a second order
+orderSchema.index(
+  { buyerId: 1, idempotencyKey: 1 },
+  { unique: true, partialFilterExpression: { idempotencyKey: { $type: 'string' } } }
 );
 
 export const Order = model<IOrder>('Order', orderSchema);

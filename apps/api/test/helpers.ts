@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server-core';
+import { MongoMemoryReplSet } from 'mongodb-memory-server-core';
 import type { Application } from 'express';
 import { createApp } from '../src/app';
 import { registerRoutes } from '../src/routes';
@@ -8,6 +8,8 @@ import { User } from '../src/infrastructure/database/models/User.model';
 import { SupplierProfile } from '../src/infrastructure/database/models/SupplierProfile.model';
 import { DeliveryPartner } from '../src/infrastructure/database/models/DeliveryPartner.model';
 import { Order } from '../src/infrastructure/database/models/Order.model';
+import { Product } from '../src/infrastructure/database/models/Product.model';
+import { Category } from '../src/infrastructure/database/models/Category.model';
 import type { UserRole } from '@buildx/shared';
 
 // ─── Firebase token fake ────────────────────────────────────────────────────
@@ -69,13 +71,14 @@ function phoneFor(_uid: string) {
 
 // ─── App + DB ───────────────────────────────────────────────────────────────
 
-let mongod: MongoMemoryServer | undefined;
+// Single-node replica set: order creation/cancellation use MongoDB transactions (as on Atlas)
+let mongod: MongoMemoryReplSet | undefined;
 
 export async function startDb() {
-  mongod = await MongoMemoryServer.create();
+  mongod = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });
   await mongoose.connect(mongod.getUri(), { dbName: 'buildx-test' });
-  // Unique indexes (firebaseUid, phone, profile userId) are part of what's under test
-  await Promise.all([User.init(), SupplierProfile.init(), DeliveryPartner.init(), Order.init()]);
+  // Unique indexes (firebaseUid, phone, profile userId, idempotency key) are part of what's under test
+  await Promise.all([User.init(), SupplierProfile.init(), DeliveryPartner.init(), Order.init(), Product.init(), Category.init()]);
 }
 
 export async function stopDb() {
@@ -149,3 +152,43 @@ export async function seedOrder(buyerId: mongoose.Types.ObjectId, supplierProfil
     ...extra,
   });
 }
+
+let productSeq = 0;
+export async function seedProduct(supplierProfileId: mongoose.Types.ObjectId, extra: Record<string, unknown> = {}) {
+  productSeq += 1;
+  const category = await Category.findOneAndUpdate(
+    { slug: 'cement-concrete' },
+    { $setOnInsert: { name: 'Cement & Concrete', slug: 'cement-concrete' } },
+    { upsert: true, new: true }
+  );
+  return Product.create({
+    supplierId: supplierProfileId,
+    categoryId: category._id,
+    name: `Test Product ${productSeq}`,
+    slug: `test-product-${productSeq}`,
+    description: 'Test product',
+    unit: 'BAG',
+    basePrice: 400,
+    gstRate: 28,
+    isGstInclusive: false,
+    stockQuantity: 100,
+    minOrderQuantity: 1,
+    status: 'ACTIVE',
+    ...extra,
+  });
+}
+
+let keySeq = 0;
+/** A fresh, valid Idempotency-Key */
+export function newKey() {
+  keySeq += 1;
+  return `test-key-${Date.now()}-${keySeq}-abcdef`;
+}
+
+export const SITE = {
+  label: 'Site',
+  fullAddress: 'Plot 12, SIT Road, Tumakuru 572103',
+  lat: 13.34,
+  lng: 77.1,
+  contactPhone: '+919876500000',
+};

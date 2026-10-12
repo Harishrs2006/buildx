@@ -185,11 +185,12 @@ describe('delivery assignment and status', () => {
     expect((await status(driverA, 'PICKED_UP')).status).toBe(200);
     expect((await status(driverA, 'IN_TRANSIT')).status).toBe(200);
     expect((await status(driverA, 'DELIVERED')).status).toBe(200);
-    expect((await status(driverA, 'DELIVERED')).status).toBe(409); // not counted twice
+    expect((await status(driverA, 'DELIVERED')).status).toBe(200); // retry is idempotent…
 
     const after = (await DeliveryPartner.findById(driverA.profile._id).lean())!.totalDeliveries;
-    expect(after).toBe(before + 1);
-    expect(await Order.findById(order._id).lean()).toMatchObject({ status: 'DELIVERED', paymentStatus: 'CAPTURED' });
+    expect(after).toBe(before + 1); // …and not counted twice
+    // Delivery alone never marks COD as collected
+    expect(await Order.findById(order._id).lean()).toMatchObject({ status: 'DELIVERED', paymentStatus: 'PENDING' });
   });
 
   it('a driver cannot inflate their delivery count via orders they do not own', async () => {

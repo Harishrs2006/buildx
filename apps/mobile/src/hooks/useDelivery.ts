@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
-import type { OrderStatus } from './useOrders';
+import type { OrderStatus, PaymentStatus } from './useOrders';
 
 export type DriverProfile = {
   _id: string;
@@ -33,6 +33,7 @@ export type DeliveryOrder = {
   total: number;
   status: OrderStatus;
   paymentMethod: 'COD';
+  paymentStatus: PaymentStatus;
   notes?: string;
   createdAt: string;
   assignedAt?: string;
@@ -116,6 +117,15 @@ export function useUpdateDeliveryStatus() {
       qc.invalidateQueries({ queryKey: ['my-deliveries'] });
       qc.invalidateQueries({ queryKey: ['driver-stats'] });
     },
+  });
+}
+
+// Driver confirms the exact COD amount after delivery — delivery alone doesn't mark it paid
+export function useConfirmCodCollected() {
+  const qc = useQueryClient();
+  return useMutation<{ data: DeliveryOrder }, Error, { id: string; amount: number }>({
+    mutationFn: ({ id, amount }) => api.post(`/delivery/orders/${id}/cod`, { amount }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-deliveries'] }),
   });
 }
 
