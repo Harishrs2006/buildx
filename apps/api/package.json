@@ -13,6 +13,11 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/scripts/seed.ts"
   },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "7.0.14"
+    }
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
     "@buildx/shared": "*",
@@ -42,6 +47,9 @@
     "@types/morgan": "^1.9.9",
     "@types/multer": "^1.4.12",
     "@types/node": "^22.10.5",
+    "@types/supertest": "^6.0.3",
+    "mongodb-memory-server-core": "^10.4.3",
+    "supertest": "^7.3.1",
     "tsx": "^4.22.4",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"

@@ -17,9 +17,17 @@ export const CACHE_TTL = {
   USER: 900,
 } as const;
 
+// Must match the `role` enum on the API's User model.
 export const ROLES = {
   BUYER: 'BUYER',
   SUPPLIER: 'SUPPLIER',
+  DELIVERY_PARTNER: 'DELIVERY_PARTNER',
+  OPERATOR: 'OPERATOR',
   ADMIN: 'ADMIN',
-  SUPER_ADMIN: 'SUPER_ADMIN',
 } as const;
+
+export type UserRole = (typeof ROLES)[keyof typeof ROLES];
+
+// Roles a user may pick for themselves during onboarding.
+// OPERATOR and ADMIN are only ever granted server-side.
+export const SELF_ASSIGNABLE_ROLES = [ROLES.BUYER, ROLES.SUPPLIER, ROLES.DELIVERY_PARTNER] as const;

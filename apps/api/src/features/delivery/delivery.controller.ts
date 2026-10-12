@@ -38,6 +38,8 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
     const driverUserId = req.auth!.userId;
+    // Role alone isn't enough — the driver must have completed onboarding with a profile
+    await getDriverProfile(driverUserId);
 
     const order = await Order.findOneAndUpdate(
       { _id: req.params.id, status: 'READY_FOR_PICKUP', driverId: { $exists: false } },
@@ -83,13 +85,20 @@ export async function listMyOrders(req: Request, res: Response, next: NextFuncti
   } catch (err) { next(err); }
 }
 
-// PATCH /delivery/orders/:id/status — driver marks PICKED_UP or DELIVERED
+// Driver-controlled transitions: target status → statuses it may be reached from
+const DRIVER_TRANSITIONS: Record<string, string[]> = {
+  PICKED_UP: ['ASSIGNED'],
+  IN_TRANSIT: ['PICKED_UP'],
+  DELIVERED: ['PICKED_UP', 'IN_TRANSIT'],
+};
+
+// PATCH /delivery/orders/:id/status — driver marks PICKED_UP, IN_TRANSIT or DELIVERED
 export async function updateDeliveryStatus(req: Request, res: Response, next: NextFunction) {
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
     const { status } = req.body as { status: string };
-    const allowed = ['PICKED_UP', 'DELIVERED'];
+    const allowed = Object.keys(DRIVER_TRANSITIONS);
     if (!allowed.includes(status)) {
       throw AppError.badRequest(`Status must be one of: ${allowed.join(', ')}`);
     }
@@ -99,21 +108,29 @@ export async function updateDeliveryStatus(req: Request, res: Response, next: Ne
     if (status === 'DELIVERED') {
       update.deliveredAt = new Date();
       update.paymentStatus = 'CAPTURED';
+    }
 
-      // Increment driver delivery count
+    // Only the assigned driver, and only from the preceding state
+    const fromStatuses = DRIVER_TRANSITIONS[status];
+    const order = await Order.findOneAndUpdate(
+      { _id: req.params.id, driverId: req.auth!.userId, status: { $in: fromStatuses } },
+      update,
+      { new: true }
+    ).lean();
+
+    if (!order) {
+      const owned = await Order.exists({ _id: req.params.id, driverId: req.auth!.userId });
+      if (!owned) throw AppError.notFound('Order');
+      throw AppError.conflict(`Order must be ${fromStatuses.join(' or ')} to mark it ${status}`);
+    }
+
+    if (status === 'DELIVERED') {
+      // Counted only after the order actually transitioned
       await DeliveryPartner.updateOne(
         { userId: req.auth!.userId },
         { $inc: { totalDeliveries: 1 } }
       );
     }
-
-    const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, driverId: req.auth!.userId },
-      update,
-      { new: true }
-    ).lean();
-
-    if (!order) throw AppError.notFound('Order');
 
     if (status === 'PICKED_UP') {
       notifyUser(order.buyerId.toString(), {
