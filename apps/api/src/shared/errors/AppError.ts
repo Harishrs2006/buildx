@@ -14,7 +14,10 @@ export type ErrorCode =
   | 'LOOKUP_UNAVAILABLE'
   | 'LOCATION_NOT_RESOLVED'
   | 'OUTSIDE_INDIA'
-  | 'GEOLOCATION_UNAVAILABLE';
+  | 'GEOLOCATION_UNAVAILABLE'
+  // Serviceability (features/serviceability)
+  | 'NOT_SERVICEABLE'
+  | 'PINCODE_REQUIRED';
 
 export class AppError extends Error {
   public readonly statusCode: number;

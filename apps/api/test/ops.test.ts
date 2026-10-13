@@ -253,13 +253,14 @@ describe('COD exceptions', () => {
 
 describe('suppliers and accounts', () => {
   it('verifies or rejects suppliers', async () => {
+    const newcomer = await seedSupplier('newcomer', { verificationStatus: 'PENDING' });
     const pending = await ops.get(operator, '/suppliers?verification=PENDING');
-    expect(pending.body.data.map((s: any) => s._id)).toContain(supplier.profile._id.toString());
+    expect(pending.body.data.map((s: any) => s._id)).toEqual([newcomer.profile._id.toString()]);
 
-    const res = await ops.patch(operator, `/suppliers/${supplier.profile._id}/verification`, { status: 'VERIFIED' });
+    const res = await ops.patch(operator, `/suppliers/${newcomer.profile._id}/verification`, { status: 'VERIFIED' });
     expect(res.status).toBe(200);
-    expect((await SupplierProfile.findById(supplier.profile._id).lean())!.verificationStatus).toBe('VERIFIED');
-    expect((await ops.patch(operator, `/suppliers/${supplier.profile._id}/verification`, { status: 'PENDING' })).status).toBe(400);
+    expect((await SupplierProfile.findById(newcomer.profile._id).lean())!.verificationStatus).toBe('VERIFIED');
+    expect((await ops.patch(operator, `/suppliers/${newcomer.profile._id}/verification`, { status: 'PENDING' })).status).toBe(400);
   });
 
   it('only admins can suspend accounts, never themselves or other admins', async () => {

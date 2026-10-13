@@ -114,12 +114,18 @@ export async function seedUser(uid: string, opts: SeedUserOpts = {}) {
   return { user, token: tokenFor(uid, phone), headers: bearer(tokenFor(uid, phone)) };
 }
 
-export async function seedSupplier(uid: string) {
+// Defaults to a VERIFIED supplier (an approved seller); pass verificationStatus to test others
+export async function seedSupplier(
+  uid: string,
+  opts: { verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED'; servicePincodes?: string[] } = {}
+) {
   const seeded = await seedUser(uid, { role: 'SUPPLIER' });
   const profile = await SupplierProfile.create({
     userId: seeded.user._id,
     businessName: `${uid} Traders`,
     whatsappNumber: '9876543210',
+    verificationStatus: opts.verificationStatus ?? 'VERIFIED',
+    servicePincodes: opts.servicePincodes ?? [],
   });
   return { ...seeded, profile };
 }

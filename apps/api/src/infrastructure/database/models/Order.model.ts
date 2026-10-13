@@ -36,10 +36,16 @@ export interface IOrder extends Document {
   deliveryAddress: {
     label: string;
     fullAddress: string;
-    lat: number;
-    lng: number;
+    lat?: number;           // only when the buyer pinned/shared a location
+    lng?: number;
     contactPhone: string;
+    pincode?: string;       // confirmed delivery PIN (absent on legacy mobile orders)
+    district?: string;      // postal snapshot at order time
+    state?: string;
   };
+  // VERIFIED: supplier coverage checked for deliveryAddress.pincode inside the order transaction.
+  // SKIPPED_NO_PINCODE: legacy client sent no PIN (see ORDERS_REQUIRE_DELIVERY_PINCODE).
+  serviceabilityCheck?: 'VERIFIED' | 'SKIPPED_NO_PINCODE';
   deliveryMethod: 'STANDARD' | 'EXPRESS';
   deliveryCharge: number;
   subtotal: number;        // Σ taxable value
@@ -106,7 +112,11 @@ const orderSchema = new Schema<IOrder>(
       lat: Number,
       lng: Number,
       contactPhone: String,
+      pincode: { type: String, match: /^[1-9]\d{5}$/ },
+      district: String,
+      state: String,
     },
+    serviceabilityCheck: { type: String, enum: ['VERIFIED', 'SKIPPED_NO_PINCODE'] },
     deliveryMethod: { type: String, enum: ['STANDARD', 'EXPRESS'], default: 'STANDARD' },
     deliveryCharge: { type: Number, default: 0 },
     subtotal: { type: Number, required: true },

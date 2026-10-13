@@ -12,15 +12,25 @@ const cartItems = z
   .max(50)
   .refine((items) => new Set(items.map((i) => i.productId)).size === items.length, 'Each product may appear only once');
 
-export const quoteSchema = z.object({ items: cartItems });
+// Format is checked by the serviceability service so every client gets PINCODE_INVALID
+const pincodeInput = z.string().trim().max(10);
+
+export const quoteSchema = z.object({
+  items: cartItems,
+  // Confirmed delivery PIN. Optional only for older mobile clients.
+  deliveryPincode: pincodeInput.optional(),
+});
 
 export const createOrderSchema = z.object({
   items: cartItems,
   deliveryAddress: z.object({
     label: z.string().trim().min(1).max(50),
     fullAddress: z.string().trim().min(5).max(500),
-    lat: z.number().min(-90).max(90),
-    lng: z.number().min(-180).max(180),
+    // Optional: websites only send coordinates the buyer actually shared
+    lat: z.number().min(-90).max(90).optional(),
+    lng: z.number().min(-180).max(180).optional(),
+    // Required for website orders; older mobile builds omit it (see ORDERS_REQUIRE_DELIVERY_PINCODE)
+    pincode: pincodeInput.optional(),
     // The app pre-fills the account phone, which Firebase stores as +91XXXXXXXXXX
     contactPhone: z
       .string()

@@ -4,6 +4,7 @@ import { AppError } from '../../shared/errors/AppError';
 import { lookupPincode, PINCODE_RE, PostalLookupUnavailable, type PostalLookup } from './postal-directory.service';
 import { reverseGeocode, GeocoderUnavailable } from './geocoding.service';
 import { inIndiaBbox } from './postal-import';
+import { checkDestination } from '../serviceability/serviceability.service';
 
 const RETRY_AFTER_SECONDS = '30';
 
@@ -87,4 +88,18 @@ export async function reverse(req: Request, res: Response, next: NextFunction) {
       requiresConfirmation: true,
     }));
   } catch (err) { next(err); }
+}
+
+// GET /locations/pincode/:pincode/serviceability — does any eligible supplier deliver here?
+// Separate from the postal lookup: a valid PIN with no suppliers is a normal, clear answer.
+export async function getServiceability(req: Request, res: Response, next: NextFunction) {
+  try {
+    const result = await checkDestination(String(req.params.pincode));
+    // Coverage changes as suppliers edit their lists — keep caches short
+    res.set('Cache-Control', 'public, max-age=60');
+    res.json(ok(result));
+  } catch (err) {
+    if (err instanceof AppError && err.code === 'LOOKUP_UNAVAILABLE') res.set('Retry-After', RETRY_AFTER_SECONDS);
+    next(err);
+  }
 }

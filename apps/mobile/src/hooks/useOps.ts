@@ -38,7 +38,7 @@ export type OpsSummary = {
   counts: Partial<Record<OrderStatus, number>>;
   todayOrders: number;
   thresholds: Record<string, number>;
-  attention: Record<'notDispatched' | 'unassigned' | 'notPickedUp' | 'longInDelivery' | 'codPending', OpsOrderSummary[]>;
+  attention: Record<'notDispatched' | 'unassigned' | 'notPickedUp' | 'longInDelivery' | 'codPending' | 'uncheckedDestination', OpsOrderSummary[]>;
 };
 
 export type OpsDriver = {

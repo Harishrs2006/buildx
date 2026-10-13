@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { validate } from '../../shared/middleware/validate.middleware';
 import { AppError } from '../../shared/errors/AppError';
-import { getPincode, reverse } from './locations.controller';
+import { getPincode, reverse, getServiceability } from './locations.controller';
 
 // Public (buyers pick a location before signing in), so rate-limited per IP. Reverse lookups
 // call a paid provider and get a tighter limit.
@@ -24,7 +24,9 @@ const reverseSchema = z.object({
 // A factory so each app instance gets its own limiter state
 export function createLocationRoutes() {
   const router = Router();
-  router.get('/pincode/:pincode', limiter(60, 'Too many PIN code lookups. Please wait a minute.'), getPincode);
+  const lookupLimit = limiter(60, 'Too many PIN code lookups. Please wait a minute.');
+  router.get('/pincode/:pincode', lookupLimit, getPincode);
+  router.get('/pincode/:pincode/serviceability', lookupLimit, getServiceability);
   router.post('/reverse', limiter(10, 'Too many location requests. Please wait a minute.'), validate(reverseSchema), reverse);
   return router;
 }

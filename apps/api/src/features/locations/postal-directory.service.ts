@@ -88,3 +88,33 @@ export async function lookupPincode(pincode: string): Promise<PostalLookup | nul
     source: { attribution: POSTAL_ATTRIBUTION, datasetVersion: dataset.version },
   };
 }
+
+export type PincodeSummary = { pincode: string; district: string; state: string; hasDeliveryOffice: boolean };
+
+/**
+ * Batch postal check (one query) for validating supplier coverage lists.
+ * Returns a map containing only the PINs found in the active directory.
+ * @throws PostalLookupUnavailable when no directory is loaded or the DB can't be read
+ */
+export async function summarisePincodes(pincodes: string[]): Promise<Map<string, PincodeSummary>> {
+  const unique = [...new Set(pincodes)].filter((p) => PINCODE_RE.test(p));
+  let rows: { _id: string; districts: string[]; states: string[]; deliveries: (string | null)[] }[];
+  try {
+    const dataset = await PostalDataset.findOne({ active: true }).select('version').lean();
+    if (!dataset) throw new PostalLookupUnavailable('No postal directory has been imported');
+    if (unique.length === 0) return new Map();
+    rows = await PostalOffice.aggregate([
+      { $match: { datasetVersion: dataset.version, pincode: { $in: unique } } },
+      { $group: { _id: '$pincode', districts: { $push: '$district' }, states: { $push: '$state' }, deliveries: { $push: '$deliveryStatus' } } },
+    ]);
+  } catch (err) {
+    if (err instanceof PostalLookupUnavailable) throw err;
+    throw new PostalLookupUnavailable('Postal directory could not be read');
+  }
+  return new Map(rows.map((r) => [r._id, {
+    pincode: r._id,
+    district: mostCommon(r.districts),
+    state: mostCommon(r.states),
+    hasDeliveryOffice: r.deliveries.some((d) => /^delivery$/i.test(d ?? '')),
+  }]));
+}
