@@ -28,24 +28,35 @@ export class AuthController {
         { upsert: true, new: true, setDefaultsOnInsert: true }
       );
 
-      if (!user.isActive) throw AppError.forbidden('Account suspended. Contact support.');
-
-      res.json(
-        ok({
-          id: user._id,
-          phone: user.phone,
-          name: user.name,
-          role: user.role,
-          onboardingComplete: user.onboardingComplete,
-        })
-      );
+      this.sendSynced(user, res);
     } catch (err: any) {
-      // Same phone already linked to a different Firebase account (e.g. account re-created)
       if (err?.code === 11000) {
+        // Concurrent first syncs (double tap, client retry) race to insert the same user and the
+        // loser hits a duplicate key. If this Firebase account exists now, that was the race.
+        try {
+          const existing = await User.findOne({ firebaseUid: req.firebase!.uid });
+          if (existing) return this.sendSynced(existing, res);
+        } catch (lookupErr) {
+          return next(lookupErr);
+        }
+        // Otherwise the phone is linked to a different Firebase account (e.g. account re-created)
         return next(AppError.conflict('This phone number is already linked to another account. Contact support.'));
       }
       next(err);
     }
+  }
+
+  private sendSynced(user: { _id: unknown; phone: string; name: string; role: string; onboardingComplete: boolean; isActive: boolean }, res: Response) {
+    if (!user.isActive) throw AppError.forbidden('Account suspended. Contact support.');
+    res.json(
+      ok({
+        id: user._id,
+        phone: user.phone,
+        name: user.name,
+        role: user.role,
+        onboardingComplete: user.onboardingComplete,
+      })
+    );
   }
 
   // POST /auth/onboard — set name, role and the role's profile.
