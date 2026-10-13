@@ -1,0 +1,14 @@
+{
+  // Production build: compiles src/ only, to dist/server.js. @buildx/shared resolves to its
+  // compiled package (packages/shared/dist) instead of the source path used by tsconfig.json.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "paths": {},
+    "declaration": false,
+    "declarationMap": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

@@ -7,6 +7,7 @@ import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPa
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
+import { logger } from '../../shared/logger/logger';
 import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
 
 async function getSupplierProfile(userId: string) {
@@ -170,11 +171,13 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       // Broadcast to all available drivers
       DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
         const driverUserIds = drivers.map((d) => d.userId.toString());
-        notifyUsers(driverUserIds, {
+        return notifyUsers(driverUserIds, {
           title: '📦 Order Ready for Pickup',
           body: `Order ${order.orderNumber} is ready · ₹${order.total.toLocaleString('en-IN')} COD`,
           data: { screen: 'driver_available', orderId: order._id.toString() },
         });
+      }).catch((err) => {
+        logger.error('Driver notification lookup failed', { orderId: order._id.toString(), error: err?.message });
       });
     } else if (status === 'IN_TRANSIT') {
       notifyUser(order.buyerId.toString(), {

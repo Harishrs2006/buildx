@@ -5,13 +5,16 @@ import { SupplierProfile } from '../../infrastructure/database/models/SupplierPr
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@buildx/shared';
 import { notifyUser } from '../../shared/services/notification.service';
+import { logger } from '../../shared/logger/logger';
 import { createOrder as createOrderTx, quoteOrder, cancelOrder as cancelOrderTx } from './order.service';
 import { IDEMPOTENCY_KEY, type CreateOrderInput } from './order.schemas';
 
 function notifySupplier(supplierProfileId: unknown, payload: Parameters<typeof notifyUser>[1]) {
   SupplierProfile.findById(supplierProfileId).select('userId').lean().then((sp) => {
-    if (sp?.userId) notifyUser(sp.userId.toString(), payload);
-  }).catch(() => {});
+    if (sp?.userId) return notifyUser(sp.userId.toString(), payload);
+  }).catch((err) => {
+    logger.error('Supplier notification lookup failed', { supplierProfileId: String(supplierProfileId), error: err?.message });
+  });
 }
 
 // POST /orders/quote — server-priced summary for the checkout screen
