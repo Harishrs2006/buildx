@@ -9,14 +9,11 @@ import { useCartStore } from '../../src/store/cart.store';
 import { useAuthStore } from '../../src/store/auth.store';
 import { useCreateOrder, useOrderQuote, cartItemsToOrderPayload, newIdempotencyKey } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
+import { buildDeliveryAddress, type DeliveryAddressForm } from '../../src/lib/deliveryAddress';
 
-type DeliveryAddress = {
-  label: string;
-  fullAddress: string;
-  lat: number;
-  lng: number;
-  contactPhone: string;
-};
+// What the buyer types. Coordinates are not part of the form: the app has no location
+// provider, so none are ever sent (see src/lib/deliveryAddress.ts).
+type DeliveryAddress = DeliveryAddressForm;
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -32,8 +29,6 @@ export default function CheckoutScreen() {
   const [address, setAddress] = useState<DeliveryAddress>({
     label: 'Site',
     fullAddress: '',
-    lat: 13.3400,
-    lng: 77.1006,
     contactPhone: user?.phone ?? '',
   });
   const [notes, setNotes] = useState('');
@@ -52,7 +47,8 @@ export default function CheckoutScreen() {
     try {
       const res = await createOrder({
         items: orderItems,
-        deliveryAddress: address,
+        // No device location is available in the app → no coordinates, never a default
+        deliveryAddress: buildDeliveryAddress(address, null),
         notes: notes.trim() || undefined,
         expectedTotal: quote.total,
         idempotencyKey,

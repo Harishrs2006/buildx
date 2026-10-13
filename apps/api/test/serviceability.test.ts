@@ -415,6 +415,18 @@ describe('quote and order serviceability', () => {
       expect(res.body.data.items[0]).toMatchObject({ quantity: 10, pricePerUnit: 400 });
     });
 
+    it('accepts the current mobile payload: no coordinates and no PIN, and stores no coordinates', async () => {
+      const { lat: _lat, lng: _lng, ...noCoords } = SITE;
+      const res = await request(app).post(api('/orders')).set(buyer.headers).set('Idempotency-Key', newKey())
+        .send({ items: items(), deliveryAddress: noCoords });
+      expect(res.status).toBe(201);
+      const saved = await Order.findById(res.body.data.orderId).lean();
+      expect(saved!.serviceabilityCheck).toBe('SKIPPED_NO_PINCODE');
+      expect(saved!.deliveryAddress.lat).toBeUndefined();
+      expect(saved!.deliveryAddress.lng).toBeUndefined();
+      expect(saved!.deliveryAddress.pincode).toBeUndefined();
+    });
+
     it('orders are still accepted, flagged, and queued for ops', async () => {
       const res = await order(undefined);
       expect(res.status).toBe(201);

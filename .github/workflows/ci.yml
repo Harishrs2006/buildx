@@ -98,3 +98,8 @@ jobs:
 
       - run: npm ci
       - run: npm test --workspace=apps/api
+
+      # Mobile has no test framework; pure-logic tests use Node's test runner via tsx
+      # (installed at the root by `npm ci`)
+      - name: Mobile unit tests
+        run: npx tsx --test apps/mobile/src/lib/deliveryAddress.test.ts
