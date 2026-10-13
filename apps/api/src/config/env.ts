@@ -54,5 +54,18 @@ if (!parsed.success) {
   process.exit(1);
 }
 
+// In production, sign-in needs the Firebase service account. Without it firebase-admin falls back
+// to default credentials that hosts like Render don't have, so the API would start and then reject
+// every login. Fail the deploy instead.
+if (parsed.data.NODE_ENV === 'production') {
+  const missing = (['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'] as const).filter(
+    (key) => !parsed.data[key]
+  );
+  if (missing.length > 0) {
+    console.error(`Missing required production environment variables: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+}
+
 export const env = parsed.data;
 export type Env = typeof env;
