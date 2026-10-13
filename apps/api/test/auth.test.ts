@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import { verifyIdToken, bearer, tokenFor, seedUser, startDb, stopDb, clearDb, makeApp } from './helpers';
 import { User } from '../src/infrastructure/database/models/User.model';
@@ -79,6 +79,18 @@ describe('new-user authentication', () => {
     const again = await request(app).post(SYNC).set(token);
     expect(again.body.data.id).toBe(results[0].body.data.id);
     expect(await User.countDocuments({ firebaseUid: 'dup-uid' })).toBe(1);
+  });
+
+  it('returns the user when a concurrent first sync created it first (duplicate key race)', async () => {
+    // The other request won the insert; this one's upsert then fails on the unique phone index
+    const { user, token } = await seedUser('race-uid');
+    const dupKey = Object.assign(new Error('E11000 duplicate key error'), { code: 11000, keyPattern: { phone: 1 } });
+    const spy = vi.spyOn(User, 'findOneAndUpdate').mockRejectedValueOnce(dupKey);
+    const res = await request(app).post(SYNC).set(bearer(token));
+    spy.mockRestore();
+    expect(res.status).toBe(200);
+    expect(res.body.data.id).toBe(user._id.toString());
+    expect(await User.countDocuments({ firebaseUid: 'race-uid' })).toBe(1);
   });
 
   it('can reach protected routes right after its first sync', async () => {
