@@ -60,6 +60,25 @@ jobs:
         run: npx tsc --noEmit
         working-directory: apps/mobile
 
+  web-core:
+    name: Web Core (shared web package)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Type check web-core
+        run: npm run typecheck --workspace=packages/web-core
+
+      - name: Test web-core
+        run: npm test --workspace=packages/web-core
+
   test-api:
     name: API Tests
     runs-on: ubuntu-latest
