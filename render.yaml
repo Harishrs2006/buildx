@@ -1,0 +1,45 @@
+# Render Blueprint for the BuildX API (https://render.com/docs/blueprint-spec).
+# Secrets are marked `sync: false`: Render asks for their values in the dashboard; they are
+# never stored in this file.
+services:
+  - type: web
+    name: buildx-api
+    runtime: docker
+    # Closest Render region to the Atlas cluster (AWS Mumbai, ap-south-1)
+    region: singapore
+    # Free instances sleep when idle; move to a paid plan before real customers
+    plan: free
+    branch: main
+    dockerContext: .
+    dockerfilePath: ./apps/api/Dockerfile
+    healthCheckPath: /health
+    # Redeploy only when the API or the code it bundles changes
+    buildFilter:
+      paths:
+        - apps/api/**
+        - packages/shared/**
+        - package.json
+        - package-lock.json
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Keep PIN enforcement off until a mobile release that sends PIN codes is out
+      - key: ORDERS_REQUIRE_DELIVERY_PINCODE
+        value: "false"
+      - key: MONGODB_URI
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      # Browser origin allowed by CORS (the future website). Mobile apps are not affected by CORS.
+      - key: FRONTEND_URL
+        sync: false
+      # Optional: AI chat stays disabled without it
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Optional: GPS-to-PIN lookup stays disabled without it
+      - key: GOOGLE_MAPS_API_KEY
+        sync: false
