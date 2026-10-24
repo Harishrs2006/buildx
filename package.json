@@ -1,15 +1,17 @@
-﻿{
+{
   "name": "buildx",
   "version": "0.1.0",
   "private": true,
   "workspaces": [
     "apps/api",
     "apps/web",
+    "apps/buyer-web",
     "packages/*"
   ],
   "scripts": {
     "dev:api": "cd apps/api && npm run dev",
     "dev:web": "cd apps/web && npm run dev",
+    "dev:buyer-web": "cd apps/buyer-web && npm run dev",
     "dev:mobile": "cd apps/mobile && npx expo start",
     "build": "turbo run build --filter=./apps/api --filter=./apps/web",
     "test": "turbo run test",

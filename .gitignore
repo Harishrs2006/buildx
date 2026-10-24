@@ -45,3 +45,4 @@ yarn-error.log*
 
 # Docker
 infrastructure/docker/data/
+*.tsbuildinfo
