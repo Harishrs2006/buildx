@@ -80,6 +80,17 @@ export async function placeOrder(
 
 const orderItemSchema = z.object({ name: z.string(), unit: z.string(), quantity: z.number(), lineTotal: z.number() }).passthrough();
 
+export const orderStatusSchema = z.enum([
+  'PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DISPUTED',
+]);
+
+const statusEventSchema = z.object({
+  status: orderStatusSchema,
+  at: z.string(),
+  byRole: z.enum(['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN', 'SYSTEM']),
+  note: z.string().optional(),
+});
+
 export const orderSchema = z
   .object({
     _id: z.string(),
@@ -89,7 +100,9 @@ export const orderSchema = z
     subtotal: z.number(),
     gstAmount: z.number(),
     total: z.number(),
-    status: z.enum(['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DISPUTED']),
+    status: orderStatusSchema,
+    deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
+    statusHistory: z.array(statusEventSchema).optional(),
     createdAt: z.string(),
   })
   .passthrough();

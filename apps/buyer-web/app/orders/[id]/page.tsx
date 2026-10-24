@@ -7,6 +7,7 @@ import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { fetchOrder, cancelBuyerOrder, type BuyerOrder } from '@/lib/orders';
+import { OrderTimeline } from '@/components/OrderTimeline';
 
 const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 
@@ -51,6 +52,10 @@ function OrderDetail({ id }: { id: string }) {
       </div>
 
       <div className="rounded-xl bg-surface-container-low p-5">
+        <OrderTimeline order={order} />
+      </div>
+
+      <div className="rounded-xl bg-surface-container-low p-5">
         <h2 className="font-headline font-bold">Items</h2>
         <ul className="mt-3 flex flex-col gap-2 font-body text-sm">
           {order.items.map((item, i) => (
@@ -64,6 +69,7 @@ function OrderDetail({ id }: { id: string }) {
           <span>Total</span>
           <span>{rupees.format(order.total)}</span>
         </div>
+        <p className="mt-2 font-body text-xs text-on-surface-variant">Payment: Cash on Delivery</p>
       </div>
 
       <div className="rounded-xl bg-surface-container-low p-5">
