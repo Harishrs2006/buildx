@@ -15,9 +15,12 @@ export function createApp(): Application {
   app.set("trust proxy", 1);
   app.disable("x-powered-by");
 
+  // FRONTEND_URL may be a single origin or a comma-separated list (e.g. a local dev server
+  // plus the deployed site), so each web app can reach the API without opening it to everyone.
+  const allowedOrigins = env.FRONTEND_URL.split(",").map((o) => o.trim()).filter(Boolean);
   app.use(
     cors({
-      origin: env.FRONTEND_URL,
+      origin: allowedOrigins,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],
