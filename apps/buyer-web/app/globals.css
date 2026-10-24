@@ -9,3 +9,11 @@
 body {
   min-height: max(884px, 100dvh);
 }
+
+/* Invisible reCAPTCHA container Firebase needs somewhere in the DOM — never shown */
+#recaptcha-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+}

@@ -1,4 +1,12 @@
+'use client';
+
+import Link from 'next/link';
+import { useCart } from '../lib/cart';
+
 export function Header() {
+  const cart = useCart();
+  const cartCount = cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
+
   return (
     <header className="fixed top-0 left-0 w-full flex items-center justify-between px-6 py-4 bg-surface-bright/80 backdrop-blur-lg z-50">
       <div className="flex items-center gap-4">
@@ -24,6 +32,18 @@ export function Header() {
         <button className="p-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150" aria-label="Filters">
           <span className="material-symbols-outlined text-on-surface">tune</span>
         </button>
+        <Link
+          href="/cart"
+          className="relative p-2 rounded-full hover:bg-surface-container-high transition-colors active:scale-95 duration-150"
+          aria-label="Cart"
+        >
+          <span className="material-symbols-outlined text-on-surface">shopping_cart</span>
+          {cartCount > 0 && (
+            <span className="absolute top-0 right-0 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 font-body text-[9px] font-bold text-on-error">
+              {cartCount}
+            </span>
+          )}
+        </Link>
       </div>
     </header>
   );

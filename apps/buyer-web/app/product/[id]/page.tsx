@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { ProductGallery } from '@/components/ProductGallery';
 import { useProduct } from '@/lib/products';
 import { useSupplierReviews } from '@/lib/reviews';
+import { addToCart } from '@/lib/cart';
 
 const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 const relativeDate = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
@@ -33,6 +34,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [checkedPincode, setCheckedPincode] = useState<string | null>(remembered?.pincode ?? null);
   const [pincodeError, setPincodeError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [cartNotice, setCartNotice] = useState<string | null>(null);
 
   const product = useProduct(id, checkedPincode);
   const supplierId = product.status === 'success' ? product.data.supplierId?._id : undefined;
@@ -55,12 +57,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     setCheckedPincode(v.pincode);
   }
 
-  const whatsappHref = (() => {
-    if (!data?.supplierId?.whatsappNumber) return null;
-    const message = `Hi, I'd like to order ${quantity} ${data.unit.toLowerCase()} of "${data.name}" via BuildX (est. ${rupees.format(unitPrice * quantity)}).`;
-    const digits = data.supplierId.whatsappNumber.replace(/\D/g, '');
-    return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
-  })();
+  function handleAddToCart() {
+    if (!data) return;
+    const result = addToCart(data.supplierId?._id ?? 'unknown', data.supplierId?.businessName ?? 'Supplier', {
+      productId: data._id,
+      name: data.name,
+      imageUrl: data.images?.find((img) => img.isPrimary)?.url ?? data.images?.[0]?.url,
+      unit: data.unit,
+      basePrice: unitPrice,
+      quantity,
+      minOrderQuantity: data.minOrderQuantity ?? 1,
+    });
+    setCartNotice(
+      result === 'replaced'
+        ? `Your cart had items from another supplier, so it was replaced with ${data.name}.`
+        : `Added ${quantity} ${data.unit.toLowerCase()} to cart.`
+    );
+  }
 
   return (
     <>
@@ -208,22 +221,24 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </div>
               </div>
 
-              {/* Actions — no cart/checkout yet (sign-in isn't built), so WhatsApp is the real action */}
-              <div className="grid grid-cols-1 gap-4">
-                {whatsappHref ? (
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-[#25D366] text-white py-5 rounded-xl font-bold tracking-tighter flex items-center justify-center gap-2 transition-transform active:scale-95 font-headline"
-                  >
-                    <span className="material-symbols-outlined">chat</span>
-                    ORDER VIA WHATSAPP
-                  </a>
-                ) : (
-                  <p className="text-on-surface-variant text-sm text-center font-body">This supplier hasn't set up WhatsApp ordering.</p>
+              {/* Actions */}
+              <div className="grid grid-cols-1 gap-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={(data.stockQuantity ?? 0) <= 0}
+                  className="bg-primary text-on-primary py-5 rounded-xl font-bold tracking-tighter flex items-center justify-center gap-2 transition-transform active:scale-95 font-headline disabled:opacity-50"
+                >
+                  <span className="material-symbols-outlined">add_shopping_cart</span>
+                  ADD TO CART
+                </button>
+                {cartNotice && (
+                  <div className="flex items-center justify-between gap-3 rounded-lg bg-surface-container-high px-4 py-3">
+                    <p className="text-sm font-body text-on-surface">{cartNotice}</p>
+                    <Link href="/cart" className="shrink-0 font-bold text-primary text-sm font-body">
+                      View cart
+                    </Link>
+                  </div>
                 )}
-                <p className="text-outline text-xs text-center font-body">Sign-in and online checkout aren't built yet — coming soon.</p>
               </div>
             </div>
           </div>
