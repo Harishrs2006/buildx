@@ -6,12 +6,14 @@
     "apps/api",
     "apps/web",
     "apps/buyer-web",
+    "apps/seller-web",
     "packages/*"
   ],
   "scripts": {
     "dev:api": "cd apps/api && npm run dev",
     "dev:web": "cd apps/web && npm run dev",
     "dev:buyer-web": "cd apps/buyer-web && npm run dev",
+    "dev:seller-web": "cd apps/seller-web && npm run dev",
     "dev:mobile": "cd apps/mobile && npx expo start",
     "build": "turbo run build --filter=./apps/api --filter=./apps/web",
     "test": "turbo run test",
@@ -25,6 +27,9 @@
     "turbo": "^2.3.3",
     "prettier": "^3.4.2",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "@grpc/grpc-js": "^1.14.4"
   },
   "engines": {
     "node": ">=20.0.0",

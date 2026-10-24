@@ -242,6 +242,19 @@ export async function listSupplierProducts(req: Request, res: Response, next: Ne
   } catch (err) { next(err); }
 }
 
+export async function getSupplierProduct(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid product ID');
+    const profile = await getSupplierProfile(req.auth!.userId);
+
+    const product = await Product.findOne({ _id: req.params.id, supplierId: profile._id })
+      .populate('categoryId', 'name slug')
+      .lean();
+    if (!product) throw AppError.notFound('Product');
+    res.json(ok(product));
+  } catch (err) { next(err); }
+}
+
 function slugify(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
@@ -251,7 +264,7 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
     const profile = await getSupplierProfile(req.auth!.userId);
 
     const { name, categoryId, description, shortDescription, unit, basePrice, gstRate, isGstInclusive,
-      stockQuantity, minOrderQuantity, deliveryDays, tags, specifications } = req.body;
+      stockQuantity, minOrderQuantity, deliveryDays, tags, specifications, images } = req.body;
 
     if (!name || !categoryId || !description || !unit || basePrice == null) {
       throw AppError.badRequest('name, categoryId, description, unit, basePrice are required');
@@ -281,6 +294,7 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
       deliveryDays: deliveryDays ?? 2,
       tags: tags ?? [],
       specifications: specifications ?? {},
+      images: images ?? [],
       status: 'ACTIVE',
     });
 
@@ -295,7 +309,7 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     const profile = await getSupplierProfile(req.auth!.userId);
 
     const editable = ['name', 'description', 'shortDescription', 'basePrice', 'gstRate', 'isGstInclusive',
-      'stockQuantity', 'minOrderQuantity', 'deliveryDays', 'tags', 'specifications', 'status', 'unit'];
+      'stockQuantity', 'minOrderQuantity', 'deliveryDays', 'tags', 'specifications', 'status', 'unit', 'images'];
     const update: Record<string, unknown> = {};
     for (const key of editable) {
       if (req.body[key] !== undefined) update[key] = req.body[key];

@@ -1,0 +1,28 @@
+{
+  "name": "@buildx/seller-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "BuildX seller portal — suppliers manage their product catalog and incoming orders.",
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@buildx/web-core": "*",
+    "firebase": "^13.1.0",
+    "next": "15.5.28",
+    "react": "^19.0.9",
+    "react-dom": "^19.0.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.0.3",
+    "@types/react-dom": "^19.0.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3"
+  }
+}

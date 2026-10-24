@@ -5,7 +5,7 @@ import { supplierStatusSchema, codCollectedSchema } from '../orders/order.schema
 import {
   getProfile, updateProfile, getStats, getAnalytics,
   listSupplierOrders, updateOrderStatus, confirmCodCollected,
-  listSupplierProducts, createProduct, updateProduct, deleteProduct,
+  listSupplierProducts, getSupplierProduct, createProduct, updateProduct, deleteProduct,
 } from './supplier.controller';
 import { z } from 'zod';
 import {
@@ -33,6 +33,7 @@ router.patch('/me/orders/:id/status', validate(supplierStatusSchema), updateOrde
 router.post('/me/orders/:id/cod', validate(codCollectedSchema), confirmCodCollected);
 
 router.get('/me/products', listSupplierProducts);
+router.get('/me/products/:id', getSupplierProduct);
 router.post('/me/products', createProduct);
 router.patch('/me/products/:id', updateProduct);
 router.delete('/me/products/:id', deleteProduct);

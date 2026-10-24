@@ -54,6 +54,19 @@ describe('API client', () => {
     expect(b).toMatchObject({ code: 'HTTP_ERROR', status: 404, message: 'Product not found' });
   });
 
+  it('requestPage returns data and pagination meta for a list endpoint', async () => {
+    const meta = { total: 25, page: 2, limit: 10, totalPages: 3, hasNext: true, hasPrev: true };
+    const f = mockApi({ 'GET /things': json({ success: true, data: [{ n: 1 }, { n: 2 }], meta }) });
+    const result = await client(f).requestPage('/things', { schema: z.array(z.object({ n: z.number() })), envelope: true });
+    expect(result).toEqual({ data: [{ n: 1 }, { n: 2 }], meta });
+  });
+
+  it('requestPage rejects a response missing meta', async () => {
+    const f = mockApi({ 'GET /things': ok([{ n: 1 }]) });
+    const err = await client(f).requestPage('/things', { schema: z.array(z.object({ n: z.number() })), envelope: true }).catch((e) => e);
+    expect(err).toMatchObject({ code: 'INVALID_RESPONSE' });
+  });
+
   it('rejects responses that do not match the expected shape', async () => {
     const f = mockApi({ 'GET /x': ok({ n: 'one' }), 'GET /y': json({ data: 1 }), 'GET /z': () => new Response('<html>', { status: 200 }) });
     for (const [path, envelope] of [['/x', true], ['/y', true], ['/z', false]] as const) {

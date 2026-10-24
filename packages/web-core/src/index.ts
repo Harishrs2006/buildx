@@ -2,7 +2,7 @@
 // Not used by the React Native apps.
 
 export { createApiClient, ApiClientError, isAbortError } from './api/client';
-export type { ApiClient, ApiClientOptions, RequestOptions } from './api/client';
+export type { ApiClient, ApiClientOptions, RequestOptions, PaginationMeta } from './api/client';
 export {
   postalLookupSchema, serviceabilitySchema, reverseLookupSchema, productListSchema, productSummarySchema,
 } from './api/schemas';
