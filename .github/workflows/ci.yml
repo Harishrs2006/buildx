@@ -79,6 +79,25 @@ jobs:
       - name: Test web-core
         run: npm test --workspace=packages/web-core
 
+  typecheck-web-apps:
+    name: Web Apps Type Check (buyer-web, seller-web)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Type check buyer-web
+        run: npm run typecheck --workspace=apps/buyer-web
+
+      - name: Type check seller-web
+        run: npm run typecheck --workspace=apps/seller-web
+
   test-api:
     name: API Tests
     runs-on: ubuntu-latest

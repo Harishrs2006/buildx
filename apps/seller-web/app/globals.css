@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+/* Invisible reCAPTCHA container Firebase needs somewhere in the DOM — never shown */
+#recaptcha-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  visibility: hidden;
+}

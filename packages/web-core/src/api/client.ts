@@ -48,8 +48,19 @@ export class ApiClientError extends Error {
 /** True when the caller aborted the request (e.g. the buyer typed a new PIN) */
 export const isAbortError = (err: unknown) => err instanceof DOMException && err.name === 'AbortError';
 
+export type PaginationMeta = {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+};
+
 export type ApiClient = {
   request<T>(path: string, options: RequestOptions<T>): Promise<T>;
+  /** Like `request`, but for paginated list endpoints that also need `meta` (total, hasNext, ...). */
+  requestPage<T>(path: string, options: RequestOptions<T>): Promise<{ data: T; meta: PaginationMeta }>;
   readonly baseUrl: string;
 };
 
@@ -69,7 +80,10 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   const doFetch = options.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
 
-  async function request<T>(path: string, req: RequestOptions<T>): Promise<T> {
+  // Fetches and JSON-decodes a response, raising the client's normal errors; does not touch the
+  // `{ success, data }` envelope or validate against a schema — both `request` and `requestPage`
+  // do that themselves, since they unwrap to different shapes.
+  async function fetchJson(path: string, req: Pick<RequestOptions<unknown>, 'method' | 'query' | 'body' | 'signal' | 'auth' | 'cache'>): Promise<{ json: unknown; res: Response }> {
     const url = new URL(baseUrl + (path.startsWith('/') ? path : `/${path}`));
     for (const [k, v] of Object.entries(req.query ?? {})) {
       if (v !== undefined && v !== '') url.searchParams.set(k, String(v));
@@ -130,6 +144,20 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       throw new ApiClientError(message, code, res.status, body?.error?.details, retryAfterSeconds);
     }
 
+    return { json, res };
+  }
+
+  function parseOrThrow<T>(payload: unknown, schema: RequestOptions<T>['schema'], status: number): T {
+    const parsed = schema.safeParse(payload);
+    if (!parsed.success) {
+      throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', status, parsed.error.issues.slice(0, 3));
+    }
+    return parsed.data;
+  }
+
+  async function request<T>(path: string, req: RequestOptions<T>): Promise<T> {
+    const { json, res } = await fetchJson(path, req);
+
     let payload: unknown = json;
     if (req.envelope) {
       const env = json as { success?: unknown; data?: unknown } | null;
@@ -139,12 +167,20 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       payload = env.data;
     }
 
-    const parsed = req.schema.safeParse(payload);
-    if (!parsed.success) {
-      throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', res.status, parsed.error.issues.slice(0, 3));
-    }
-    return parsed.data;
+    return parseOrThrow(payload, req.schema, res.status);
   }
 
-  return { request, baseUrl };
+  async function requestPage<T>(path: string, req: RequestOptions<T>): Promise<{ data: T; meta: PaginationMeta }> {
+    const { json, res } = await fetchJson(path, req);
+
+    const env = json as { success?: unknown; data?: unknown; meta?: unknown } | null;
+    if (env?.success !== true || !('data' in (env ?? {})) || !env.meta || typeof env.meta !== 'object') {
+      throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', res.status);
+    }
+
+    const data = parseOrThrow(env.data, req.schema, res.status);
+    return { data, meta: env.meta as PaginationMeta };
+  }
+
+  return { request, requestPage, baseUrl };
 }
