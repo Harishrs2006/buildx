@@ -28,6 +28,8 @@ export type RequestOptions<T> = {
   auth?: boolean;
   /** e.g. 'no-store' to bypass HTTP caching (checkout re-checks) */
   cache?: RequestCache;
+  /** Extra headers (e.g. Idempotency-Key on order creation); never overrides Accept/Content-Type/Authorization */
+  headers?: Record<string, string>;
 };
 
 /** Error with the API's machine-readable code (or a client-side one). */
@@ -83,7 +85,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   // Fetches and JSON-decodes a response, raising the client's normal errors; does not touch the
   // `{ success, data }` envelope or validate against a schema — both `request` and `requestPage`
   // do that themselves, since they unwrap to different shapes.
-  async function fetchJson(path: string, req: Pick<RequestOptions<unknown>, 'method' | 'query' | 'body' | 'signal' | 'auth' | 'cache'>): Promise<{ json: unknown; res: Response }> {
+  async function fetchJson(path: string, req: Pick<RequestOptions<unknown>, 'method' | 'query' | 'body' | 'signal' | 'auth' | 'cache' | 'headers'>): Promise<{ json: unknown; res: Response }> {
     const url = new URL(baseUrl + (path.startsWith('/') ? path : `/${path}`));
     for (const [k, v] of Object.entries(req.query ?? {})) {
       if (v !== undefined && v !== '') url.searchParams.set(k, String(v));
@@ -97,7 +99,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     if (req.signal?.aborted) controller.abort();
     req.signal?.addEventListener('abort', onCallerAbort);
 
-    const headers: Record<string, string> = { Accept: 'application/json' };
+    const headers: Record<string, string> = { ...req.headers, Accept: 'application/json' };
     if (req.body !== undefined) headers['Content-Type'] = 'application/json';
     if (req.auth && options.getAuthToken) {
       const token = await options.getAuthToken();

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@buildx/web-core": "*",
+    "firebase": "^13.1.0",
     "next": "15.5.28",
     "react": "^19.0.9",
     "react-dom": "^19.0.9"

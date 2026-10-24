@@ -54,6 +54,24 @@ describe('API client', () => {
     expect(b).toMatchObject({ code: 'HTTP_ERROR', status: 404, message: 'Product not found' });
   });
 
+  it('sends custom headers but never lets them override Accept/Content-Type/Authorization', async () => {
+    let seen: Headers | undefined;
+    const f = mockApi({
+      'POST /orders': (_url, init) => { seen = new Headers(init.headers); return ok({ orderId: '1' }); },
+    });
+    await client(f).request('/orders', {
+      method: 'POST',
+      body: { items: [] },
+      auth: true,
+      envelope: true,
+      schema: z.any(),
+      headers: { 'Idempotency-Key': 'abc123', Accept: 'text/plain', 'Content-Type': 'text/plain' },
+    });
+    expect(seen?.get('Idempotency-Key')).toBe('abc123');
+    expect(seen?.get('Accept')).toBe('application/json');
+    expect(seen?.get('Content-Type')).toBe('application/json');
+  });
+
   it('requestPage returns data and pagination meta for a list endpoint', async () => {
     const meta = { total: 25, page: 2, limit: 10, totalPages: 3, hasNext: true, hasPrev: true };
     const f = mockApi({ 'GET /things': json({ success: true, data: [{ n: 1 }, { n: 2 }], meta }) });

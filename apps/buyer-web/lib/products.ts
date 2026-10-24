@@ -11,7 +11,6 @@ const supplierSchema = z
     _id: z.string(),
     businessName: z.string(),
     avgRating: z.number().optional(),
-    whatsappNumber: z.string().optional(),
     verificationStatus: z.string().optional(),
   })
   .passthrough();
