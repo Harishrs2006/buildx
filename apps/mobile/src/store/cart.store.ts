@@ -9,10 +9,51 @@ export type CartItem = {
   unit: string;
   basePrice: number;
   gstRate: number;
+  // Whether basePrice already contains GST (taxable value is backed out) or GST is added on
+  // top. Mirrors apps/api/src/features/orders/pricing.ts so the cart's displayed total matches
+  // what the server will actually charge. Call sites that don't know this (e.g. the AI chat
+  // add-to-cart flow) omit it and fall back to GST-exclusive, matching this field's old,
+  // implicit default.
+  isGstInclusive?: boolean;
+  // Same tiers as the product: the tier with the highest minQty <= quantity replaces basePrice.
+  // Omitted where the call site doesn't have tier data; the cart then always uses basePrice.
+  bulkPricing?: { minQty: number; price: number }[];
   supplierId: string;
   supplierName: string;
   quantity: number;
 };
+
+type ItemPricing = {
+  unitPrice: number;
+  gross: number;
+  taxable: number;
+  gst: number;
+};
+
+/**
+ * Mirrors the server's pricing rules (apps/api/src/features/orders/pricing.ts) closely enough
+ * for display purposes: pick the applicable bulk tier, then split gross into taxable + GST
+ * according to isGstInclusive. This is NOT used to place the order — the server re-prices the
+ * cart from trusted product data and is the only source of truth for the actual charge.
+ */
+function priceItem(item: CartItem): ItemPricing {
+  let unitPrice = item.basePrice;
+  let bestMinQty = -1;
+  for (const tier of item.bulkPricing ?? []) {
+    if (item.quantity >= tier.minQty && tier.minQty > bestMinQty) {
+      unitPrice = tier.price;
+      bestMinQty = tier.minQty;
+    }
+  }
+
+  const gross = unitPrice * item.quantity;
+  if (item.isGstInclusive) {
+    const taxable = gross / (1 + item.gstRate / 100);
+    return { unitPrice, gross, taxable, gst: gross - taxable };
+  }
+  const gst = gross * (item.gstRate / 100);
+  return { unitPrice, gross, taxable: gross, gst };
+}
 
 type CartStore = {
   items: CartItem[];
@@ -20,6 +61,7 @@ type CartStore = {
   removeItem: (productId: string) => void;
   updateQty: (productId: string, qty: number) => void;
   clear: () => void;
+  lineTotal: (productId: string) => number;
   subtotal: () => number;
   gstTotal: () => number;
   grandTotal: () => number;
@@ -59,10 +101,14 @@ export const useCartStore = create<CartStore>()(
 
       clear: () => set({ items: [] }),
 
-      subtotal: () => get().items.reduce((sum, i) => sum + i.basePrice * i.quantity, 0),
+      lineTotal: (productId) => {
+        const item = get().items.find((i) => i.productId === productId);
+        return item ? priceItem(item).gross : 0;
+      },
 
-      gstTotal: () =>
-        get().items.reduce((sum, i) => sum + i.basePrice * i.quantity * (i.gstRate / 100), 0),
+      subtotal: () => get().items.reduce((sum, i) => sum + priceItem(i).taxable, 0),
+
+      gstTotal: () => get().items.reduce((sum, i) => sum + priceItem(i).gst, 0),
 
       grandTotal: () => {
         const s = get();

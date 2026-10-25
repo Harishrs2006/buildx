@@ -81,6 +81,8 @@ export default function ProductDetailScreen() {
       unit: product.unit,
       basePrice: product.basePrice,
       gstRate: product.gstRate,
+      isGstInclusive: product.isGstInclusive,
+      bulkPricing: product.bulkPricing,
       supplierId: product.supplierId?._id ?? '',
       supplierName: product.supplierId?.businessName ?? '',
     }, qty);
@@ -119,8 +121,11 @@ export default function ProductDetailScreen() {
     return product.basePrice;
   })();
 
-  const lineTotal = effectivePrice * qty;
-  const gstAmount = lineTotal * (product.gstRate / 100);
+  // GST-inclusive products already contain tax in their price; back it out instead of adding
+  // more on top. Mirrors apps/api/src/features/orders/pricing.ts and src/store/cart.store.ts.
+  const gross = effectivePrice * qty;
+  const lineTotal = product.isGstInclusive ? gross / (1 + product.gstRate / 100) : gross;
+  const gstAmount = product.isGstInclusive ? gross - lineTotal : gross * (product.gstRate / 100);
 
   const specs = product.specifications
     ? Object.entries(product.specifications as Record<string, string>)

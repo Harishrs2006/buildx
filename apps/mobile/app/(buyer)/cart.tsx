@@ -9,6 +9,7 @@ import { Colors } from '../../src/constants/colors';
 function CartRow({ item }: { item: CartItem }) {
   const updateQty = useCartStore((s) => s.updateQty);
   const removeItem = useCartStore((s) => s.removeItem);
+  const lineTotal = useCartStore((s) => s.lineTotal(item.productId));
 
   return (
     <View style={styles.row}>
@@ -30,7 +31,7 @@ function CartRow({ item }: { item: CartItem }) {
             <Text style={styles.qtyBtnText}>+</Text>
           </TouchableOpacity>
           <Text style={styles.rowLineTotal}>
-            = ₹{(item.basePrice * item.quantity).toLocaleString('en-IN')}
+            = ₹{lineTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
           </Text>
         </View>
       </View>

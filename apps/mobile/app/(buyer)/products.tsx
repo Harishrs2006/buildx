@@ -42,6 +42,8 @@ function ProductCard({ item }: { item: Product }) {
               unit: item.unit,
               basePrice: item.basePrice,
               gstRate: item.gstRate,
+              isGstInclusive: item.isGstInclusive,
+              bulkPricing: item.bulkPricing,
               supplierId: item.supplierId?._id ?? '',
               supplierName: item.supplierId?.businessName ?? '',
             }),
@@ -57,6 +59,8 @@ function ProductCard({ item }: { item: Product }) {
       unit: item.unit,
       basePrice: item.basePrice,
       gstRate: item.gstRate,
+      isGstInclusive: item.isGstInclusive,
+      bulkPricing: item.bulkPricing,
       supplierId: item.supplierId?._id ?? '',
       supplierName: item.supplierId?.businessName ?? '',
     });
