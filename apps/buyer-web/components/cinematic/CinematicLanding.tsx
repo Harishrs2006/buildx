@@ -2,38 +2,34 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import Link from 'next/link';
 import { LogoMark } from '@/components/brand/Logo';
 import { CHAPTERS, LAST_CHAPTER, resolveChapterLinks, type Chapter } from './chapters';
 import { useMotionTier } from './motionTier';
 import { SCROLL_TUNING, useChapterScroll, useSmoothScroll } from './useChapterScroll';
 
-const SiteScene = dynamic(() => import('./SiteScene'), { ssr: false });
+const PhotoStage = dynamic(() => import('./PhotoStage'), { ssr: false });
 
 type Categories = { slug: string; name: string }[] | null;
 
-// Pre-rendered stills of the 3D scene (public/cinematic). Used as the hero poster while
-// WebGL loads, and as the whole story on phones, low-power devices and reduced motion.
-export function posterSrc(i: number, portrait = false) {
-  return `/cinematic/chapter-${i}${portrait ? '-portrait' : ''}.webp`;
-}
-
-function Poster({ i, priority = false, className = '', style }: { i: number; priority?: boolean; className?: string; style?: React.CSSProperties }) {
+// A chapter photo as an optimised, responsive <img> (WebP/AVIF, sized to the screen). Used as
+// the first paint while WebGL loads, and as the whole story on phones and reduced motion.
+function Poster({ i, priority = false }: { i: number; priority?: boolean }) {
+  const chapter = CHAPTERS[i];
+  if (!chapter?.photo) return null;
   return (
-    <picture>
-      <source media="(max-aspect-ratio: 4/5)" srcSet={posterSrc(i, true)} />
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={posterSrc(i)}
-        alt=""
-        aria-hidden="true"
-        loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : 'auto'}
-        decoding="async"
-        className={`absolute inset-0 h-full w-full object-cover ${className}`}
-        style={style}
-      />
-    </picture>
+    <Image
+      src={chapter.photo}
+      alt=""
+      aria-hidden="true"
+      fill
+      sizes="100vw"
+      quality={78}
+      priority={priority}
+      className="object-cover"
+      style={{ objectPosition: chapter.focus ?? '50% 50%' }}
+    />
   );
 }
 
@@ -145,7 +141,7 @@ function StaticStory({ categories }: { categories: Categories }) {
       {CHAPTERS.map((chapter, i) => (
         <div key={chapter.id} className="relative isolate min-h-[100svh] overflow-hidden">
           <Poster i={i} priority={i === 0} />
-          <div className={`absolute inset-0 bg-ink ${i === 0 ? 'opacity-[0.78]' : 'opacity-40'}`} aria-hidden="true" />
+          <div className={`absolute inset-0 bg-ink ${i === 0 ? 'opacity-50' : 'opacity-25'}`} aria-hidden="true" />
           <div className="absolute inset-y-0 left-0 hidden w-[55%] bg-[linear-gradient(90deg,rgba(11,12,10,0.55),transparent)] lg:block" aria-hidden="true" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,10,0.55)_0%,rgba(11,12,10,0.25)_40%,rgba(11,12,10,0.85)_100%)]" aria-hidden="true" />
           <div className="relative">
@@ -197,11 +193,11 @@ function PinnedStory({ tier, categories }: { tier: 'full' | 'lite' | null; categ
       const w = Math.max(0, 1 - Math.abs(d));
       el.style.opacity = String(Math.min(1, w * 1.4));
       el.style.visibility = w <= 0.001 ? 'hidden' : 'visible';
-      el.style.transform = `perspective(1200px) translate3d(${(-d * 40).toFixed(1)}px, 0, ${(-Math.abs(d) * 220).toFixed(1)}px) rotateY(${(d * -7).toFixed(2)}deg) scale(${(1.08 - 0.08 * w + Math.abs(d) * 0.05).toFixed(3)})`;
+      el.style.transform = `perspective(1200px) translate3d(${(-d * 40).toFixed(1)}px, 0, ${(-Math.abs(d) * 220).toFixed(1)}px) rotateY(${(d * -7).toFixed(2)}deg) scale(${(1.12 - 0.06 * w + Math.abs(d) * 0.06).toFixed(3)})`;
     });
     if (bar.current) bar.current.style.transform = `scaleY(${(p / LAST_CHAPTER).toFixed(4)})`;
     // darkest on the hero (centred white type), lighter once the side-aligned chapters start
-    if (dim.current) dim.current.style.opacity = String(0.38 + 0.4 * Math.max(0, 1 - p * 1.4));
+    if (dim.current) dim.current.style.opacity = String(0.22 + 0.3 * Math.max(0, 1 - p * 1.4));
     const active = Math.round(p);
     if (active !== lastActive.current) {
       lastActive.current = active;
@@ -238,7 +234,7 @@ function PinnedStory({ tier, categories }: { tier: 'full' | 'lite' | null; categ
               <div className={`absolute inset-0 transition-opacity duration-1000 ${sceneReady ? 'opacity-0' : 'opacity-100'}`}>
                 <Poster i={0} priority />
               </div>
-              <SiteScene progress={progress} active={inView} onReady={() => setSceneReady(true)} />
+              <PhotoStage progress={progress} active={inView} onReady={() => setSceneReady(true)} />
             </>
           ) : (
             <div className="absolute inset-0 [perspective:1200px]">
@@ -250,7 +246,7 @@ function PinnedStory({ tier, categories }: { tier: 'full' | 'lite' | null; categ
             </div>
           )}
           {/* readability: overall dim, top band for the header, heavier towards the bottom, soft vignette */}
-          <div ref={dim} className="pointer-events-none absolute inset-0 bg-ink" style={{ opacity: 0.78 }} />
+          <div ref={dim} className="pointer-events-none absolute inset-0 bg-ink" style={{ opacity: 0.52 }} />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,10,0.6)_0%,rgba(11,12,10,0)_22%,rgba(11,12,10,0)_45%,rgba(11,12,10,0.78)_100%)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(11,12,10,0.55)_100%)]" />
           <div className="grain pointer-events-none absolute inset-0" />
@@ -314,14 +310,4 @@ export function CinematicLanding({ categories }: { categories: Categories }) {
   const tier = useMotionTier();
   if (tier === 'static') return <StaticStory categories={categories} />;
   return <PinnedStory tier={tier} categories={categories} />;
-}
-
-// Development-only poster renderer: /?still=<chapter> shows just the 3D stage frozen at that chapter
-export function StillStage({ chapter }: { chapter: number }) {
-  const progress = useRef({ current: chapter }).current;
-  return (
-    <div className="fixed inset-0 bg-ink">
-      <SiteScene progress={progress} still={chapter} />
-    </div>
-  );
 }

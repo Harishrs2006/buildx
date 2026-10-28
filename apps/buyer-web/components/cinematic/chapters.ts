@@ -1,20 +1,22 @@
 // The landing page story: one chapter per full-screen scroll step. Chapter 0 is the hero.
 // Category links point at slugs from GET /categories; a chapter only shows a button for a
 // slug the live API actually returned (see resolveChapterLinks), so nothing here is invented.
-
-export type Vec3 = [number, number, number];
+// Photos live in public/cinematic (see ASSETS.md). A chapter without a photo is left out of
+// the story until its photo is added.
 
 export type Chapter = {
   id: string;
   eyebrow: string;
   title: string;
-  accent?: string; // one serif-italic word appended to the title
+  accent?: string; // serif-italic words appended to the title
   body: string;
   categorySlugs: string[];
-  camera: { position: Vec3; target: Vec3 };
+  photo?: string;
+  // which part of the photo to keep in frame when the screen crops it (CSS object-position)
+  focus?: string;
 };
 
-export const CHAPTERS: Chapter[] = [
+const ALL_CHAPTERS: Chapter[] = [
   {
     id: 'hero',
     eyebrow: 'Construction materials marketplace',
@@ -22,7 +24,8 @@ export const CHAPTERS: Chapter[] = [
     accent: 'Order materials in minutes.',
     body: 'Cement, steel, bricks, tiles, paint, electrical and plumbing from verified suppliers near you.',
     categorySlugs: [],
-    camera: { position: [36, 13, 42], target: [0, 7, 0] },
+    photo: '/cinematic/hero.jpg',
+    focus: '55% 60%',
   },
   {
     id: 'trucks',
@@ -31,7 +34,8 @@ export const CHAPTERS: Chapter[] = [
     accent: 'site gate.',
     body: 'Steel, sand and aggregates from suppliers who have set up delivery to your PIN code.',
     categorySlugs: ['steel-tmt-bars', 'sand-aggregates'],
-    camera: { position: [-27, 7, 27], target: [-11, 2, 11] },
+    photo: '/cinematic/trucks.jpg',
+    focus: '60% 50%',
   },
   {
     id: 'concrete',
@@ -40,7 +44,8 @@ export const CHAPTERS: Chapter[] = [
     accent: 'confidence.',
     body: 'Cement and concrete with the unit, minimum order and price shown before you order.',
     categorySlugs: ['cement-concrete'],
-    camera: { position: [-4, 6.5, 25], target: [2.2, 1.3, 13.6] },
+    photo: '/cinematic/concrete.jpg',
+    focus: '50% 50%',
   },
   {
     id: 'bricks',
@@ -49,7 +54,8 @@ export const CHAPTERS: Chapter[] = [
     accent: 'wall.',
     body: 'Red bricks, fly ash bricks, AAC and concrete blocks for every wall on site.',
     categorySlugs: ['bricks-blocks'],
-    camera: { position: [27, 6, 15], target: [14, 1.8, 7] },
+    photo: '/cinematic/bricks.jpg',
+    focus: '50% 40%',
   },
   {
     id: 'interiors',
@@ -58,7 +64,8 @@ export const CHAPTERS: Chapter[] = [
     accent: 'finish it.',
     body: 'Tiles, flooring, plywood and timber for the rooms people will live and work in.',
     categorySlugs: ['tiles-flooring', 'plywood-timber'],
-    camera: { position: [26, 5.5, 1], target: [14.5, 0.8, -6.5] },
+    photo: '/cinematic/interiors.jpg',
+    focus: '55% 50%',
   },
   {
     id: 'paint',
@@ -67,7 +74,6 @@ export const CHAPTERS: Chapter[] = [
     accent: 'wall.',
     body: 'Paints, primers and finishing chemicals for the final coat.',
     categorySlugs: ['paints-chemicals'],
-    camera: { position: [-3, 4.6, -5.6], target: [3.8, 1.8, -14] },
   },
   {
     id: 'electrical',
@@ -76,7 +82,6 @@ export const CHAPTERS: Chapter[] = [
     accent: 'light.',
     body: 'Wires, switches and fittings to power every room, from the first circuit to the last bulb.',
     categorySlugs: ['electricals'],
-    camera: { position: [-14, 6, -28], target: [-9, 3, -14] },
   },
   {
     id: 'plumbing',
@@ -85,7 +90,6 @@ export const CHAPTERS: Chapter[] = [
     accent: 'where it belongs.',
     body: 'Pipes, fittings, tanks and pumps, all the way to a hotel-grade bathroom.',
     categorySlugs: ['plumbing'],
-    camera: { position: [-27, 5, 3], target: [-16, 1.6, -2] },
   },
   {
     id: 'skyline',
@@ -94,10 +98,13 @@ export const CHAPTERS: Chapter[] = [
     accent: 'starts here.',
     body: 'Check which suppliers deliver to your site, then order with cash on delivery.',
     categorySlugs: [],
-    camera: { position: [-46, 36, 54], target: [0, 12, 0] },
+    // until a dedicated skyline photo is added, the closing chapter reuses the hero site at golden hour
+    photo: '/cinematic/hero.jpg',
+    focus: '30% 40%',
   },
 ];
 
+export const CHAPTERS: Chapter[] = ALL_CHAPTERS.filter((c) => c.photo);
 export const LAST_CHAPTER = CHAPTERS.length - 1;
 
 export type ChapterLink = { slug: string; name: string };
@@ -120,4 +127,9 @@ export function chapterWeight(p: number, i: number): number {
 // 0 -> 1 ramp as the story approaches and settles on chapter i (starts 0.7 before it)
 export function chapterRamp(p: number, i: number): number {
   return Math.min(1, Math.max(0, (p - (i - 0.7)) / 0.8));
+}
+
+// Optimised, responsive URL for a chapter photo (Next.js image optimiser, WebP/AVIF when supported)
+export function photoUrl(src: string, width: 828 | 1200 | 1920 = 1920, quality = 78): string {
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=${quality}`;
 }

@@ -1,13 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LocationSelector } from '@buildx/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { CategoryGrid, CategoryGridSkeleton } from '@/components/CategoryGrid';
-import { CinematicLanding, StillStage } from '@/components/cinematic/CinematicLanding';
+import { CinematicLanding } from '@/components/cinematic/CinematicLanding';
 import { Reveal } from '@/components/motion/Reveal';
 import { useCategories } from '@/lib/categories';
 import { SITE } from '@/lib/site';
@@ -55,22 +54,8 @@ const PRINCIPLES = [
   { icon: 'lock', title: 'Phone sign-in, no passwords', body: 'One-time codes over SMS. Nothing to remember, nothing to leak.' },
 ];
 
-// Development only: /?still=<chapter> renders the bare 3D stage for capturing poster images
-function useStillChapter(): number | null {
-  const [still, setStill] = useState<number | null>(null);
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'development') return;
-    const v = new URLSearchParams(window.location.search).get('still');
-    if (v !== null && !Number.isNaN(Number(v))) setStill(Number(v));
-  }, []);
-  return still;
-}
-
 export default function HomePage() {
   const categories = useCategories();
-  const still = useStillChapter();
-
-  if (still !== null) return <StillStage chapter={still} />;
 
   return (
     <>
