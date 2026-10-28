@@ -138,10 +138,18 @@ export function ConcreteMixer() {
     ].map(([r, y]) => new THREE.Vector2(r, y));
     return new THREE.LatheGeometry(pts, 28);
   }, []);
-  const a = useMemo(() => new THREE.Vector3(2.4, 3.0, 15.5), []);
+  const a = useMemo(() => new THREE.Vector3(2.9, 2.85, 15.5), []);
   const b = useMemo(() => new THREE.Vector3(1.0, 1.55, 13.7), []);
   const c = useMemo(() => new THREE.Vector3(0.6, 0.55, 13.1), []);
   const drops = 46;
+  const chute = useMemo(() => {
+    const dir = b.clone().sub(a);
+    return {
+      mid: a.clone().add(b).multiplyScalar(0.5).add(new THREE.Vector3(0, -0.12, 0)),
+      quat: new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize()),
+      length: dir.length() + 0.3,
+    };
+  }, [a, b]);
 
   useFrame((state) => {
     const { p, t } = read(state.clock.elapsedTime);
@@ -198,12 +206,13 @@ export function ConcreteMixer() {
             })}
           </group>
         </group>
-        {/* chute */}
-        <mesh position={[-3.95, 2.3, -0.9]} rotation={[0.55, 0.62, 0.5]} castShadow>
-          <boxGeometry args={[0.35, 0.12, 2.6]} />
-          <meshStandardMaterial color="#6F6F68" metalness={0.5} roughness={0.4} />
-        </mesh>
       </group>
+
+      {/* chute from the drum mouth down to the formwork */}
+      <mesh position={chute.mid} quaternion={chute.quat} castShadow>
+        <boxGeometry args={[0.42, chute.length, 0.1]} />
+        <meshStandardMaterial color="#6F6F68" metalness={0.5} roughness={0.4} />
+      </mesh>
 
       <instancedMesh ref={flow} args={[undefined, undefined, drops]}>
         <sphereGeometry args={[0.13, 8, 6]} />
@@ -385,7 +394,7 @@ export function TileRoom() {
         <meshStandardMaterial color={C.cobalt} roughness={0.6} />
       </mesh>
       {/* plywood sheets */}
-      <group position={[4.6, 0, 2.4]} rotation={[0, 0.3, 0]}>
+      <group position={[4.4, 0, -2.4]} rotation={[0, 0.3, 0]}>
         {Array.from({ length: 9 }, (_, k) => (
           <mesh key={k} position={[0, 0.06 + k * 0.08, 0]} castShadow>
             <boxGeometry args={[2.4, 0.07, 1.2]} />
@@ -429,7 +438,7 @@ export function PaintWall() {
   });
 
   return (
-    <group position={[4, 0, -14]}>
+    <group position={[4, 0, -14]} rotation={[0, Math.PI, 0]}>
       {PAINTS.map((color, k) => {
         const x = -((PAINTS.length - 1) * W) / 2 + k * W;
         return (

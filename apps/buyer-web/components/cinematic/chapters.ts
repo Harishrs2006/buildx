@@ -22,7 +22,7 @@ export const CHAPTERS: Chapter[] = [
     accent: 'Order materials in minutes.',
     body: 'Cement, steel, bricks, tiles, paint, electrical and plumbing from verified suppliers near you.',
     categorySlugs: [],
-    camera: { position: [34, 24, 40], target: [0, 6, 0] },
+    camera: { position: [36, 13, 42], target: [0, 7, 0] },
   },
   {
     id: 'trucks',
@@ -40,7 +40,7 @@ export const CHAPTERS: Chapter[] = [
     accent: 'confidence.',
     body: 'Cement and concrete with the unit, minimum order and price shown before you order.',
     categorySlugs: ['cement-concrete'],
-    camera: { position: [9, 6, 27], target: [2, 1.6, 13] },
+    camera: { position: [-4, 6.5, 25], target: [2.2, 1.3, 13.6] },
   },
   {
     id: 'bricks',
@@ -58,7 +58,7 @@ export const CHAPTERS: Chapter[] = [
     accent: 'finish it.',
     body: 'Tiles, flooring, plywood and timber for the rooms people will live and work in.',
     categorySlugs: ['tiles-flooring', 'plywood-timber'],
-    camera: { position: [27, 9, -7], target: [15, 0.6, -6] },
+    camera: { position: [26, 5.5, 1], target: [14.5, 0.8, -6.5] },
   },
   {
     id: 'paint',
@@ -67,7 +67,7 @@ export const CHAPTERS: Chapter[] = [
     accent: 'wall.',
     body: 'Paints, primers and finishing chemicals for the final coat.',
     categorySlugs: ['paints-chemicals'],
-    camera: { position: [9, 5, -27], target: [4, 2.2, -15] },
+    camera: { position: [-3, 4.6, -5.6], target: [3.8, 1.8, -14] },
   },
   {
     id: 'electrical',

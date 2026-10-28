@@ -15,7 +15,7 @@ export function nightAt(p: number) {
 // Camera flies chapter to chapter: holds near each chapter, swoops up in between,
 // orbits slowly on the hero and follows the pointer a little on desktop.
 export function CameraRig() {
-  const { camera, pointer } = useThree();
+  const { camera, pointer, size } = useThree();
   const { read, high } = useStory();
   const pos = useMemo(() => new THREE.Vector3(), []);
   const look = useMemo(() => new THREE.Vector3(), []);
@@ -52,6 +52,15 @@ export function CameraRig() {
       pos.y += smoothPointer.current.y * 0.9;
     }
 
+    // Portrait screens: widen the vertical field of view so the scene is not a thin slice
+    const persp = camera as THREE.PerspectiveCamera;
+    const aspect = size.width / size.height;
+    const fov = aspect >= 1 ? 38 : Math.min(70, (2 * Math.atan((Math.tan((19 * Math.PI) / 180) * 0.95) / aspect) * 180) / Math.PI);
+    if (Math.abs(persp.fov - fov) > 0.01) {
+      persp.fov = fov;
+      persp.updateProjectionMatrix();
+    }
+
     camera.position.copy(pos);
     camera.lookAt(look);
   });
@@ -68,7 +77,7 @@ export function Environment() {
   const fogNight = useMemo(() => new THREE.Color('#2A2236'), []);
 
   useLayoutEffect(() => {
-    scene.fog = new THREE.Fog('#E9D3AE', 70, 260);
+    scene.fog = new THREE.Fog('#E9D3AE', 55, 230);
     return () => {
       scene.fog = null;
     };
@@ -94,7 +103,7 @@ export function Environment() {
       <hemisphereLight ref={hemi} args={['#FFE9C7', '#5A4E3A', 0.95]} />
       <directionalLight
         ref={sun}
-        position={[-38, 34, 26]}
+        position={[-30, 55, 22]}
         intensity={2.6}
         castShadow={high}
         shadow-mapSize={[2048, 2048]}
@@ -219,7 +228,7 @@ export function Building() {
             <meshStandardMaterial color={C.concrete} roughness={0.85} />
           </mesh>
           {/* glazing on the finished lower floors */}
-          {k < 7 && (
+          {k < FLOORS - 1 && (
             <mesh position={[0, FLOOR_H / 2 + 0.1, 0]} material={glass}>
               <boxGeometry args={[8.2, FLOOR_H - 0.45, 8.2]} />
             </mesh>
@@ -305,7 +314,7 @@ export function City() {
   const ref = useRef<THREE.InstancedMesh>(null);
   const mat = useMemo(makeCityMaterial, []);
   const { read } = useStory();
-  const count = 170;
+  const count = 150;
 
   useLayoutEffect(() => {
     const mesh = ref.current;
@@ -315,8 +324,8 @@ export function City() {
     const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
     for (let i = 0; i < count; i++) {
       const angle = rand() * Math.PI * 2;
-      const r = 62 + rand() * 80;
-      const h = 8 + Math.pow(rand(), 1.6) * 58;
+      const r = 105 + rand() * 120;
+      const h = 10 + Math.pow(rand(), 2.2) * 70;
       const w = 5 + rand() * 7;
       tmp.position.set(Math.cos(angle) * r, h / 2, Math.sin(angle) * r);
       tmp.rotation.set(0, rand() * Math.PI, 0);
