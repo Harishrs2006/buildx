@@ -97,3 +97,14 @@ export function useProduct(id: string) {
     enabled: !!id,
   });
 }
+
+export type Category = { _id: string; name: string; slug: string; description?: string };
+
+// GET /categories returns a bare array of top-level categories (no { success, data } envelope)
+export function useCategories() {
+  return useQuery<Category[]>({
+    queryKey: ['categories'],
+    queryFn: () => api.get('/categories').then((r) => r.data),
+    staleTime: 10 * 60_000,
+  });
+}

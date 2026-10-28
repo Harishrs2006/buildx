@@ -1,35 +1,60 @@
-// BuildX design system — matches PRD "Industrial Sophistication" brand
+// BuildX "Hi-Vis" design system, shared with the websites (docs/DESIGN_SYSTEM.md).
+// Ink and sand carry the screen; signal lime marks the one thing to act on; cobalt is for info.
+// The older semantic names (primary, surface, text...) are kept so every screen picks up the
+// new palette; new code can use the brand names (ink, sand, lime, cobalt, stone) directly.
+
+const ink = '#0B0C0A';
+const sand = '#F2EFE7';
+const lime = '#C8FF3D';
+
 export const Colors = {
-  primary: '#F97316',       // Orange 500 — the BuildX brand
-  primaryDark: '#EA580C',   // Orange 600
-  primaryLight: '#FED7AA',  // Orange 200
+  // brand primitives
+  ink,
+  ink2: '#141512',
+  ink3: '#1D1F1A',
+  sand,
+  sand2: '#FAF8F3',
+  sand3: '#E8E4D9',
+  sand4: '#DCD7C9',
+  lime,
+  limeDeep: '#A6E01C',
+  limeSoft: '#EEFFC2',
+  cobalt: '#2457FF',
+  cobaltSoft: '#E3EAFF',
+  stone: '#5E5B52',
+  stoneLight: '#A3A197',
 
-  surface: '#FFFFFF',
-  surfaceAlt: '#F9FAFB',    // Gray 50
-  border: '#E5E7EB',        // Gray 200
-  borderStrong: '#D1D5DB',  // Gray 300
+  // semantic (used across existing screens)
+  primary: ink, // primary actions on light: ink fill, light text
+  primaryDark: '#000000',
+  primaryLight: '#EEFFC2', // soft lime tint behind selected chips and highlights
 
-  text: '#111827',          // Gray 900
-  textSecondary: '#6B7280', // Gray 500
-  textMuted: '#9CA3AF',     // Gray 400
-  textInverse: '#FFFFFF',
+  surface: '#FAF8F3', // cards and screens
+  surfaceAlt: sand, // page background, grouped sections
+  border: '#DCD7C9',
+  borderStrong: '#C9C4B5',
 
-  success: '#10B981',
-  successLight: '#D1FAE5',
-  error: '#EF4444',
-  errorLight: '#FEE2E2',
-  warning: '#F59E0B',
-  warningLight: '#FEF3C7',
-  info: '#3B82F6',
-  infoLight: '#DBEAFE',
+  text: ink,
+  textSecondary: '#5E5B52',
+  textMuted: '#8A877D',
+  textInverse: sand,
 
-  // Status chips
-  statusDraft: { bg: '#FEF3C7', text: '#92400E' },
-  statusActive: { bg: '#D1FAE5', text: '#065F46' },
-  statusInactive: { bg: '#F3F4F6', text: '#6B7280' },
-  statusPending: { bg: '#DBEAFE', text: '#1E40AF' },
-  statusDelivered: { bg: '#D1FAE5', text: '#065F46' },
-  statusCancelled: { bg: '#FEE2E2', text: '#991B1B' },
+  success: '#1F7A3A',
+  successLight: '#E3F4E8',
+  error: '#C8282E',
+  errorLight: '#FDE3E3',
+  warning: '#B26B00',
+  warningLight: '#FFF4D6',
+  info: '#2457FF',
+  infoLight: '#E3EAFF',
+
+  // status chips
+  statusDraft: { bg: '#E8E4D9', text: '#5E5B52' },
+  statusActive: { bg: lime, text: ink },
+  statusInactive: { bg: '#E8E4D9', text: '#5E5B52' },
+  statusPending: { bg: '#FFF4D6', text: '#5C4300' },
+  statusDelivered: { bg: ink, text: lime },
+  statusCancelled: { bg: '#FDE3E3', text: '#7A0E12' },
 };
 
 export type ColorKey = keyof typeof Colors;

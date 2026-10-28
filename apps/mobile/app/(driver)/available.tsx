@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   codBadge: { backgroundColor: Colors.successLight, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
   codText: { fontSize: 13, fontWeight: '700', color: Colors.success },
   locationBlock: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#6B7280', marginTop: 4 },
+  dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.stone, marginTop: 4 },
   line: { width: 1, height: 20, backgroundColor: Colors.border, marginLeft: 4.5, marginVertical: 4 },
   locationLabel: { fontSize: 10, fontWeight: '700', color: Colors.textMuted, letterSpacing: 0.8, marginBottom: 2 },
   locationValue: { fontSize: 14, fontWeight: '600', color: Colors.text },

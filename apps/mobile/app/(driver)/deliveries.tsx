@@ -15,7 +15,7 @@ const TABS = [
 
 function DeliveryCard({ order, onUpdate }: { order: DeliveryOrder; onUpdate: (id: string, status: string) => void }) {
   const router = useRouter();
-  const colors = ORDER_STATUS_COLORS[order.status] ?? { bg: '#F3F4F6', text: '#6B7280' };
+  const colors = ORDER_STATUS_COLORS[order.status] ?? { bg: Colors.sand3, text: Colors.stone };
   const supplier = order.supplierId as any;
   const buyer = order.buyerId as any;
 

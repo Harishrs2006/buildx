@@ -1,15 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Alert,
-} from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
 import { useAuthStore } from '../../src/store/auth.store';
+import { Eyebrow, type } from '../../src/components/ui';
 
 const OTP_LENGTH = 6;
+const RESEND_SECONDS = 30;
 
 export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -19,42 +18,46 @@ export default function OtpScreen() {
 
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const [resendTimer, setResendTimer] = useState(30);
+  const [error, setError] = useState<string | null>(null);
+  const [resendTimer, setResendTimer] = useState(RESEND_SECONDS);
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
-    setTimeout(() => inputRef.current?.focus(), 300);
-    const interval = setInterval(() => {
-      setResendTimer((t) => (t > 0 ? t - 1 : 0));
-    }, 1000);
-    return () => clearInterval(interval);
+    const focus = setTimeout(() => inputRef.current?.focus(), 300);
+    const interval = setInterval(() => setResendTimer((t) => (t > 0 ? t - 1 : 0)), 1000);
+    return () => {
+      clearTimeout(focus);
+      clearInterval(interval);
+    };
   }, []);
 
   async function resendOtp() {
     if (resendTimer > 0) return;
+    setError(null);
     try {
       const confirmation = await auth().signInWithPhoneNumber(`+91${phone}`);
       setPendingConfirmation(confirmation);
-      setResendTimer(30);
+      setResendTimer(RESEND_SECONDS);
       setOtp('');
-    } catch (err: any) {
-      Alert.alert('Error', err.message);
+    } catch {
+      setError('We could not send a new code right now. Please try again.');
     }
   }
 
   async function verifyOtp(code: string) {
     if (code.length !== OTP_LENGTH) return;
     if (!pendingConfirmation) {
-      Alert.alert('Session expired', 'Please go back and request a new OTP.');
+      setError('This code has expired. Go back and request a new one.');
       return;
     }
+    setError(null);
     setLoading(true);
     try {
       await pendingConfirmation.confirm(code);
-      // onAuthStateChanged in _layout.tsx fires here and calls syncWithBackend()
-      // which sets the user and triggers navigation — nothing to do manually
+      // onAuthStateChanged in _layout.tsx fires here and calls syncWithBackend(),
+      // which sets the user and navigates; nothing to do manually
     } catch (err: any) {
-      Alert.alert('Invalid OTP', err.message ?? 'Please check the code and try again');
+      setError(err?.code === 'auth/code-expired' ? 'That code expired. Request a new one.' : 'That code is incorrect. Check the SMS and try again.');
       setOtp('');
     } finally {
       setLoading(false);
@@ -66,78 +69,82 @@ export default function OtpScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
+        <Pressable onPress={() => router.back()} style={styles.back} accessibilityRole="button" hitSlop={12}>
+          <Text style={styles.backText}>‹ Change number</Text>
+        </Pressable>
 
-        <Text style={styles.heading}>Enter OTP</Text>
-        <Text style={styles.sub}>
-          Sent to <Text style={styles.phone}>+91 {phone}</Text>
+        <Eyebrow>Step 2 of 2</Eyebrow>
+        <Text style={[type.title, styles.heading]}>Enter the code</Text>
+        <Text style={type.body}>
+          We sent a 6-digit code to <Text style={styles.phone}>+91 {phone}</Text>
         </Text>
 
-        {/* Hidden input — drives visible digit boxes */}
+        {/* One real input drives the six boxes; it also receives SMS autofill */}
         <TextInput
           ref={inputRef}
           value={otp}
           onChangeText={(v) => {
             const clean = v.replace(/\D/g, '').slice(0, OTP_LENGTH);
             setOtp(clean);
+            setError(null);
             if (clean.length === OTP_LENGTH) verifyOtp(clean);
           }}
           keyboardType="number-pad"
+          textContentType="oneTimeCode"
+          autoComplete="sms-otp"
           maxLength={OTP_LENGTH}
           style={styles.hiddenInput}
           caretHidden
+          accessibilityLabel="6-digit code"
         />
 
-        {/* Visible digit boxes */}
-        <TouchableOpacity activeOpacity={1} onPress={() => inputRef.current?.focus()} style={styles.boxRow}>
-          {digits.map((d, i) => (
-            <View
-              key={i}
-              style={[
-                styles.box,
-                d ? styles.boxFilled : null,
-                otp.length === i ? styles.boxActive : null,
-              ]}
-            >
-              <Text style={styles.boxText}>{d}</Text>
-            </View>
-          ))}
-        </TouchableOpacity>
+        <Pressable onPress={() => inputRef.current?.focus()} style={styles.boxRow} accessible={false}>
+          {digits.map((d, i) => {
+            const active = otp.length === i && !loading;
+            return (
+              <View key={i} style={[styles.box, d ? styles.boxFilled : null, active ? styles.boxActive : null, error ? styles.boxError : null]}>
+                <Text style={styles.boxText}>{d}</Text>
+              </View>
+            );
+          })}
+        </Pressable>
 
-        {loading && <ActivityIndicator color={Colors.primary} style={styles.spinner} />}
+        {error && <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>}
+        {loading && (
+          <View style={styles.verifying}>
+            <ActivityIndicator color={Colors.ink} />
+            <Text style={styles.verifyingText}>Verifying</Text>
+          </View>
+        )}
 
-        <TouchableOpacity onPress={resendOtp} disabled={resendTimer > 0} style={styles.resend}>
+        <Pressable onPress={resendOtp} disabled={resendTimer > 0} style={styles.resend} accessibilityRole="button">
           <Text style={[styles.resendText, resendTimer > 0 && styles.resendDisabled]}>
-            {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
+            {resendTimer > 0 ? `Resend code in 0:${String(resendTimer).padStart(2, '0')}` : 'Resend code'}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  container: { flex: 1, paddingHorizontal: 24, paddingTop: 16 },
-  back: { marginBottom: 32 },
-  backText: { fontSize: 15, color: Colors.primary, fontWeight: '600' },
-  heading: { fontSize: 26, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  sub: { fontSize: 14, color: Colors.textSecondary, marginBottom: 36 },
-  phone: { color: Colors.text, fontWeight: '600' },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
+  back: { alignSelf: 'flex-start', marginBottom: 32, paddingVertical: 6 },
+  backText: { fontSize: 15, color: Colors.cobalt, fontWeight: '600' },
+  heading: { marginTop: 10, marginBottom: 8 },
+  phone: { color: Colors.ink, fontWeight: '700' },
   hiddenInput: { position: 'absolute', opacity: 0, width: 1, height: 1 },
-  boxRow: { flexDirection: 'row', gap: 12, marginBottom: 32 },
-  box: {
-    flex: 1, height: 56, borderRadius: 12, borderWidth: 1.5,
-    borderColor: Colors.border, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: Colors.surfaceAlt,
-  },
-  boxFilled: { borderColor: Colors.primary, backgroundColor: Colors.surface },
-  boxActive: { borderColor: Colors.primary, borderWidth: 2 },
-  boxText: { fontSize: 22, fontWeight: '700', color: Colors.text },
-  spinner: { marginBottom: 20 },
-  resend: { alignSelf: 'center' },
-  resendText: { fontSize: 14, color: Colors.primary, fontWeight: '600' },
-  resendDisabled: { color: Colors.textMuted },
+  boxRow: { flexDirection: 'row', gap: 10, marginTop: 32 },
+  box: { flex: 1, height: 60, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.sand4, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.sand2 },
+  boxFilled: { borderColor: Colors.ink },
+  boxActive: { borderColor: Colors.ink, borderWidth: 2, shadowColor: Colors.lime, shadowOpacity: 1, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 2 },
+  boxError: { borderColor: Colors.error },
+  boxText: { fontSize: 24, fontWeight: '700', color: Colors.ink },
+  error: { marginTop: 14, fontSize: 14, color: Colors.error },
+  verifying: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
+  verifyingText: { fontSize: 14, color: Colors.stone },
+  resend: { alignSelf: 'center', marginTop: 32, paddingVertical: 8 },
+  resendText: { fontSize: 15, color: Colors.cobalt, fontWeight: '600' },
+  resendDisabled: { color: Colors.stone },
 });

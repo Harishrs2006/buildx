@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 12 },
   tiersRow: { flexDirection: 'row', gap: 10, flexWrap: 'wrap' },
   tierCard: { borderWidth: 1, borderColor: Colors.border, borderRadius: 10, padding: 10, alignItems: 'center', minWidth: 80, backgroundColor: Colors.surfaceAlt },
-  tierCardActive: { borderColor: Colors.primary, backgroundColor: '#FFF7ED' },
+  tierCardActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
   tierQty: { fontSize: 11, color: Colors.textSecondary, marginBottom: 4 },
   tierPrice: { fontSize: 14, fontWeight: '700', color: Colors.text },
   qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
