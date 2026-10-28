@@ -28,7 +28,7 @@ Times are IST.
    orders list, order detail (dark header, timeline, in-page cancel confirm instead of window.confirm), profile.
    Shared: components/account/AccountUI.tsx + OrderRow.tsx, lib/format.ts. Signed-in screens not screenshot-tested
    (need login); user can check with test number 70192 82018 / code 123456.
-5. Apply Hi-Vis to apps/seller-web, then apps/mobile (spec: docs/DESIGN_SYSTEM.md).
+5. Seller-web Hi-Vis DONE (PR feat/seller-hivis). Next: apps/mobile (spec: docs/DESIGN_SYSTEM.md).
 6. Add a strict CSP only together with an end-to-end OTP test.
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
@@ -159,3 +159,14 @@ Times are IST.
   (npm run fix-dashes --workspace=apps/api -- --dry-run | --yes) with test. Dry run on production: 4 fields
   (supplier "placeholder, not a real business", 1 product name, 2 descriptions). Writing to the live DB was blocked by
   the permission classifier: USER must run `npm run fix-dashes --workspace=apps/api -- --yes` (or approve it).
+### 2026-10-29
+- 00:30 Supplier portal redesign (branch feat/seller-hivis): catalogue moved to packages/web-core/src/catalog (shared by
+  buyer + seller; buyer imports from @buildx/web-core; new helpers suggestedListingUnit / suggestedListingName; matcher
+  also matches the material name). Test: every one of the 57 items round-trips choices -> name -> same item.
+  seller-web: buyer tokens/fonts/globals, Logo, components/ui.tsx (PageHead, Chip, Pill, Pager, EmptyState),
+  dark top bar + floating pill tab bar, Overview (greeting, verification banner, live stats, new-orders list, quick
+  actions), Orders (cards, tel link, in-page cancel confirm, inline errors, no alert/confirm), Products (rows, in-page
+  discontinue confirm), ProductForm rebuilt around the catalogue (category -> material -> options/brand -> auto name with
+  "buyers will find this" check -> price/unit/stock/MOQ/delivery days -> photos; sticky save bar), sign-in with 6-box OTP,
+  resend timer and Change number (resetOtp added), onboarding on the split AuthShell. lib/categoryTemplates.ts removed.
+  Friendly sign-in config error (dev detail goes to console). Signed-in screens verified by type-check + build only.
