@@ -51,6 +51,10 @@ function describeAuthError(err: unknown): string {
       return 'That code is incorrect. Check the SMS and try again.';
     case 'auth/code-expired':
       return 'That code expired. Request a new one.';
+    // Project-side SMS problems (Firebase billing off, daily SMS quota used up): not the user's fault
+    case 'auth/billing-not-enabled':
+    case 'auth/quota-exceeded':
+      return 'We cannot send codes right now. Please try again later.';
     default:
       return 'Something went wrong. Please try again.';
   }

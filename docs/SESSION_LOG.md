@@ -14,7 +14,8 @@ Times are IST.
    NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
    Firebase Auth authorized domains (via Identity Toolkit admin API, the console form kept rejecting it). Production
    redeploy triggered by pushing to main (manual Vercel redeploy needs an email-code re-auth). VERIFIED live: /signin
-   shows the phone form + reCAPTCHA. Remaining: user sends a real OTP to their own phone (quota 10 SMS/day on Spark).
+   shows the phone form + reCAPTCHA. BLOCKER: real SMS fails with auth/billing-not-enabled. Firebase needs the Blaze
+   (billing) plan to send SMS; only the 2 test numbers (+917019282018/19, code 123456) work. Waiting on user to enable billing.
 2. Optional env: NEXT_PUBLIC_SUPPORT_EMAIL, NEXT_PUBLIC_SUPPORT_PHONE, NEXT_PUBLIC_LEGAL_NAME, NEXT_PUBLIC_SELLER_PORTAL_URL
    (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
 3. DONE: user chose to keep PRD + images LOCAL in Desktop/BuildX/user-brief (not GitHub). Save new user files there.
@@ -85,3 +86,7 @@ Times are IST.
   manual redeploy needs an email code, so pushed this log to main to trigger the production build.
 - 18:30 Production build with Firebase config is live (key found in bundle). /signin works, reCAPTCHA loads.
   Next: real-phone OTP test by the user, then NEXT STEPS 4 (restyle cart/checkout/orders/profile).
+- 18:45 User: OTP not arriving, page said 'Something went wrong'. Ran the same Firebase call in the live page: error is
+  auth/billing-not-enabled (Spark plan cannot send real SMS; console '10/day' banner is misleading). Test numbers
+  +917019282018/19 (code 123456) are configured in Firebase and skip SMS. Mapped billing-not-enabled + quota-exceeded to
+  a clear message in buyer-web and seller-web AuthProvider. Asked user about upgrading to Blaze (money: user decides).
