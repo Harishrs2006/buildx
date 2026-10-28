@@ -3,84 +3,128 @@
 import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
+import { EmptyState, PageHead, SummaryRow } from '@/components/account/AccountUI';
 import { useCart, setCartQuantity, removeFromCart } from '@/lib/cart';
 import { illustrationFor } from '@/lib/illustrations';
-
-const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+import { rupees } from '@/lib/format';
 
 export default function CartPage() {
   const cart = useCart();
-  const estimatedTotal = cart?.items.reduce((sum, i) => sum + i.basePrice * i.quantity, 0) ?? 0;
+  const items = cart?.items ?? [];
+  const estimatedTotal = items.reduce((sum, i) => sum + i.basePrice * i.quantity, 0);
 
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-3xl px-4 pb-32 pt-24 md:px-8">
-        <h1 className="font-headline text-3xl font-bold tracking-tighter">Your cart</h1>
+      <main id="main" className="container-x min-h-[70vh] pb-32 pt-[calc(var(--header-h)+40px)]">
+        <PageHead eyebrow="Cart" title="Your" accent="order">
+          {items.length > 0 && (
+            <p className="text-[15px] text-stone">
+              {items.length} item{items.length > 1 ? 's' : ''} from <span className="font-semibold text-ink">{cart?.supplierName}</span>
+            </p>
+          )}
+        </PageHead>
 
-        {!cart || cart.items.length === 0 ? (
-          <div className="py-24 text-center">
-            <p className="font-body text-on-surface-variant">Your cart is empty.</p>
-            <Link href="/" className="mt-4 inline-block font-body font-bold text-primary">
-              Browse categories
-            </Link>
+        {items.length === 0 ? (
+          <div className="mt-10">
+            <EmptyState
+              icon="shopping_cart"
+              title="Your cart is empty"
+              body="Pick a category, choose a supplier that delivers to your site, and add what you need."
+              cta={{ href: '/#categories', label: 'Browse materials' }}
+            />
           </div>
         ) : (
-          <div className="mt-6 flex flex-col gap-6">
-            <p className="font-body text-sm text-on-surface-variant">From {cart.supplierName}</p>
+          <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <ul className="flex flex-col gap-3">
+              {items.map((item) => {
+                const atMin = item.quantity <= item.minOrderQuantity;
+                return (
+                  <li key={item.productId} className="card flex gap-4 p-3 sm:p-4">
+                    <Link
+                      href={`/product/${item.productId}`}
+                      className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-sand-3 sm:h-28 sm:w-28"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.imageUrl ?? illustrationFor(item.name)}
+                        alt={item.imageUrl ? item.name : ''}
+                        className="h-full w-full object-cover"
+                      />
+                    </Link>
+                    <div className="flex min-w-0 flex-1 flex-col justify-between gap-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <Link href={`/product/${item.productId}`} className="line-clamp-2 text-[16px] font-semibold leading-snug hover:underline">
+                            {item.name}
+                          </Link>
+                          <p className="mt-1 text-[14px] text-stone">
+                            {rupees.format(item.basePrice)} / {item.unit.toLowerCase()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item.productId)}
+                          className="-mr-1 -mt-1 flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full text-stone transition-colors hover:bg-error-container hover:text-error"
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          <span className="material-symbols-outlined text-[20px]">delete</span>
+                        </button>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center rounded-full border border-sand-4 bg-sand">
+                          <button
+                            onClick={() => setCartQuantity(item.productId, Math.max(item.minOrderQuantity, item.quantity - 1))}
+                            disabled={atMin}
+                            className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-sand-3 disabled:opacity-30"
+                            aria-label={`Decrease quantity of ${item.name}`}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">remove</span>
+                          </button>
+                          <span className="min-w-[3ch] text-center font-mono text-[15px] font-medium tabular-nums" aria-live="polite">
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => setCartQuantity(item.productId, item.quantity + 1)}
+                            className="flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-sand-3"
+                            aria-label={`Increase quantity of ${item.name}`}
+                          >
+                            <span className="material-symbols-outlined text-[18px]">add</span>
+                          </button>
+                        </div>
+                        <span className="font-display text-lg font-bold tabular-nums">{rupees.format(item.basePrice * item.quantity)}</span>
+                      </div>
+                      {atMin && item.minOrderQuantity > 1 && (
+                        <p className="text-[13px] text-stone">Minimum order: {item.minOrderQuantity} {item.unit.toLowerCase()}</p>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
 
-            <div className="flex flex-col gap-3">
-              {cart.items.map((item) => (
-                <div key={item.productId} className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4">
-                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={item.imageUrl ?? illustrationFor(item.name)}
-                      alt={item.imageUrl ? item.name : ''}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-body text-sm font-semibold text-on-surface">{item.name}</p>
-                    <p className="font-body text-xs text-on-surface-variant">
-                      {rupees.format(item.basePrice)}/{item.unit.toLowerCase()}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 rounded-lg bg-surface-container-high p-1">
-                    <button
-                      onClick={() => setCartQuantity(item.productId, Math.max(item.minOrderQuantity, item.quantity - 1))}
-                      className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-surface-variant"
-                      aria-label="Decrease quantity"
-                    >
-                      <span className="material-symbols-outlined text-lg">remove</span>
-                    </button>
-                    <span className="w-8 text-center font-body text-sm font-bold">{item.quantity}</span>
-                    <button
-                      onClick={() => setCartQuantity(item.productId, item.quantity + 1)}
-                      className="flex h-8 w-8 items-center justify-center rounded-md hover:bg-surface-variant"
-                      aria-label="Increase quantity"
-                    >
-                      <span className="material-symbols-outlined text-lg">add</span>
-                    </button>
-                  </div>
-                  <button onClick={() => removeFromCart(item.productId)} className="p-2 text-on-surface-variant hover:text-error" aria-label="Remove">
-                    <span className="material-symbols-outlined">delete</span>
-                  </button>
+            <aside className="lg:sticky lg:top-[calc(var(--header-h)+24px)] lg:self-start">
+              <div className="overflow-hidden rounded-3xl bg-ink p-6 text-sand">
+                <p className="eyebrow text-stone-light">Summary</p>
+                <div className="mt-5">
+                  <SummaryRow onDark label="Items (list price)" value={rupees.format(estimatedTotal)} />
                 </div>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between border-t border-outline-variant/30 pt-4">
-              <span className="font-body text-sm text-on-surface-variant">Estimated total (before GST/delivery)</span>
-              <span className="font-headline text-xl font-bold">{rupees.format(estimatedTotal)}</span>
-            </div>
-
-            <Link
-              href="/checkout"
-              className="rounded-xl bg-primary py-4 text-center font-headline font-bold uppercase tracking-wide text-on-primary"
-            >
-              Proceed to checkout
-            </Link>
+                <p className="mt-4 border-t border-white/10 pt-4 text-[14px] leading-relaxed text-stone-light">
+                  GST, delivery and any bulk prices are calculated at checkout, before you place the order.
+                </p>
+                <Link href="/checkout" className="btn-lime mt-6 w-full py-4 text-[16px]">
+                  Continue to checkout
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_forward</span>
+                </Link>
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-[13px] text-stone-light">
+                  <span className="material-symbols-outlined text-[16px]" aria-hidden="true">payments</span>
+                  Cash on delivery
+                </p>
+              </div>
+              <Link href="/#categories" className="mt-4 flex items-center justify-center gap-1 text-[14px] font-medium text-stone hover:text-ink">
+                <span className="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+                Add more materials
+              </Link>
+            </aside>
           </div>
         )}
       </main>
