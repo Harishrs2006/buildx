@@ -14,7 +14,8 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx src/scripts/seed.ts",
     "grant-role": "tsx src/scripts/grant-role.ts",
-    "import-postal": "tsx src/scripts/import-postal-directory.ts"
+    "import-postal": "tsx src/scripts/import-postal-directory.ts",
+    "fix-dashes": "tsx src/scripts/fix-dashes.ts"
   },
   "config": {
     "mongodbMemoryServer": {

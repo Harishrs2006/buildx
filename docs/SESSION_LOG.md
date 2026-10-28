@@ -154,4 +154,8 @@ Times are IST.
   155,525 offices / 19,252 PINs, version "2019-05" active. Verified: 572101 serviceable (1 supplier), 560001 NO_SUPPLIERS,
   product page shows "Delivers to 572101". TODO: import a current monthly file from data.gov.in when the user downloads
   it (npm run import-postal --workspace=apps/api -- --file <csv> --version YYYY-MM --yes); PINs created after 2019
-  currently return not found. TODO (old): seed data still contains em dashes ("placeholder — not a real business").
+  currently return not found. Em dashes: see 23:30 entry.
+- 23:30 Em dashes in data: seed.ts strings fixed (18 lines). New script apps/api/src/scripts/fix-dashes.ts
+  (npm run fix-dashes --workspace=apps/api -- --dry-run | --yes) with test. Dry run on production: 4 fields
+  (supplier "placeholder, not a real business", 1 product name, 2 descriptions). Writing to the live DB was blocked by
+  the permission classifier: USER must run `npm run fix-dashes --workspace=apps/api -- --yes` (or approve it).

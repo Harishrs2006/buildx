@@ -135,7 +135,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Bricks & Blocks'],
-      name: 'Red Clay Bricks — Grade A',
+      name: 'Red Clay Bricks, Grade A',
       description: 'High-quality red clay bricks kiln-fired at 900°C. Uniform size, low water absorption, high compressive strength. Ideal for load-bearing walls and facades.',
       shortDescription: 'Grade A kiln-fired red clay bricks for structural work',
       unit: 'PIECE',
@@ -153,7 +153,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Bricks & Blocks'],
-      name: 'Fly Ash Bricks — 230×115×75mm',
+      name: 'Fly Ash Bricks, 230×115×75mm',
       description: 'Eco-friendly fly ash bricks with superior thermal insulation, uniform dimensions, and low cost. Compliant with IS 12894:2002. No plaster needed for interior walls.',
       shortDescription: 'Eco-friendly fly ash bricks with thermal insulation',
       unit: 'PIECE',
@@ -170,8 +170,8 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Bricks & Blocks'],
-      name: 'AAC Blocks — 600×200×100mm',
-      description: 'Autoclaved Aerated Concrete blocks — lightweight, excellent thermal insulation, easy to cut. Reduces overall load on structure by 40%. For framed structures only.',
+      name: 'AAC Blocks, 600×200×100mm',
+      description: 'Autoclaved Aerated Concrete blocks, lightweight, excellent thermal insulation, easy to cut. Reduces overall load on structure by 40%. For framed structures only.',
       shortDescription: 'Lightweight AAC blocks, reduces structural load by 40%',
       unit: 'PIECE',
       basePrice: 42,
@@ -224,7 +224,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Sand & Aggregates'],
-      name: 'Jelly 20mm — Crushed Granite',
+      name: 'Jelly 20mm, Crushed Granite',
       description: 'Crushed granite coarse aggregate 20mm graded as per IS 383. Used for RCC work, foundations, and road construction. Sourced from licensed quarries near Tumakuru.',
       shortDescription: '20mm crushed granite aggregate for RCC and foundations',
       unit: 'TON',
@@ -241,7 +241,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Sand & Aggregates'],
-      name: 'Jelly 40mm — Crushed Granite',
+      name: 'Jelly 40mm, Crushed Granite',
       description: 'Coarse aggregate 40mm crushed granite for mass concrete, dam work, and road base. Consistent gradation, low flakiness index.',
       shortDescription: '40mm granite aggregate for mass concrete and road base',
       unit: 'TON',
@@ -261,7 +261,7 @@ function makeProducts(
       supplierId: supplierProfileId,
       categoryId: catMap['Steel & TMT Bars'],
       name: 'Tata Tiscon TMT Bar 12mm Fe500D',
-      description: 'Tata Tiscon Fe500D TMT bars 12mm — superior ductility, earthquake-resistant, corrosion-resistant ribbed surface. IS 1786:2008 certified. Ideal for columns and beams.',
+      description: 'Tata Tiscon Fe500D TMT bars 12mm, superior ductility, earthquake-resistant, corrosion-resistant ribbed surface. IS 1786:2008 certified. Ideal for columns and beams.',
       shortDescription: 'Earthquake-resistant Tata Tiscon TMT 12mm Fe500D',
       unit: 'KG',
       basePrice: 72,
@@ -295,7 +295,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Steel & TMT Bars'],
-      name: 'Binding Wire — 18 Gauge GI',
+      name: 'Binding Wire, 18 Gauge GI',
       description: 'Galvanised iron binding wire 18 gauge for tying TMT bars in reinforcement work. 25 kg coil, smooth finish, easy to bend and tie.',
       shortDescription: '18 gauge GI binding wire, 25 kg coil',
       unit: 'KG',
@@ -314,7 +314,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Plumbing'],
-      name: 'Ashirvad CPVC Pipe 1 inch — 3m',
+      name: 'Ashirvad CPVC Pipe 1 inch, 3m',
       description: 'Ashirvad CPVC pipes for hot and cold water supply lines. Temperature-resistant up to 93°C, chlorine-resistant, BIS marked. 3-metre length, pressure rating 10 kg/cm².',
       shortDescription: 'CPVC hot/cold water pipe, temp-resistant up to 93°C',
       unit: 'PIECE',
@@ -331,7 +331,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Plumbing'],
-      name: 'PVC Drainage Pipe 4 inch — 3m (SWR)',
+      name: 'PVC Drainage Pipe 4 inch, 3m (SWR)',
       description: 'Supreme Industries SWR (Soil Waste Rain) PVC drainage pipe 4 inch. Smooth inner surface, leak-proof ring-seal joints. For drainage, sewerage, and rainwater discharge.',
       shortDescription: 'SWR PVC 4 inch drainage pipe for sewerage',
       unit: 'PIECE',
@@ -350,7 +350,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Electricals'],
-      name: 'Havells Wiring Cable 2.5 sqmm — 90m',
+      name: 'Havells Wiring Cable 2.5 sqmm, 90m',
       description: 'Havells HRFR PVC insulated single-core copper wiring cable 2.5 sqmm. Fire retardant, heat resistant, suitable for concealed wiring in residential and commercial buildings.',
       shortDescription: 'Havells HRFR copper wire 2.5 sqmm, fire retardant',
       unit: 'PIECE',
@@ -367,7 +367,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Electricals'],
-      name: 'Legrand MCB 32A — Single Pole',
+      name: 'Legrand MCB 32A, Single Pole',
       description: 'Legrand DX3 single-pole MCB 32A, C-curve, 6kA breaking capacity. For circuit protection in residential and light commercial applications. IS 60898-1 certified.',
       shortDescription: 'Legrand 32A MCB single-pole, 6kA breaking capacity',
       unit: 'PIECE',
@@ -386,7 +386,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Paints & Chemicals'],
-      name: 'Asian Paints Apex Exterior Emulsion — 20L',
+      name: 'Asian Paints Apex Exterior Emulsion, 20L',
       description: 'Asian Paints Apex Exterior Emulsion with advanced weatherproofing technology. UV-resistant, anti-algae, anti-fungal. 8-year warranty. Covers 120–140 sqft/litre.',
       shortDescription: 'Weatherproof exterior emulsion with 8-year warranty',
       unit: 'PIECE',
@@ -404,7 +404,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Paints & Chemicals'],
-      name: 'Dr. Fixit LW+ Waterproofing — 1L',
+      name: 'Dr. Fixit LW+ Waterproofing, 1L',
       description: 'Dr. Fixit LW+ integral waterproofing compound for cement concrete and mortar. Reduces water permeability by 90%. Used in roofs, bathrooms, basements, and water tanks.',
       shortDescription: 'Integral waterproofing compound, reduces permeability 90%',
       unit: 'PIECE',
@@ -423,7 +423,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Plywood & Timber'],
-      name: 'Greenply Commercial Plywood 18mm — 8×4 ft',
+      name: 'Greenply Commercial Plywood 18mm, 8×4 ft',
       description: 'Greenply commercial MR grade plywood 18mm. Moisture resistant, smooth surface, warp-free. IS 303 certified. For shuttering, furniture, and interior woodwork.',
       shortDescription: 'Greenply 18mm MR grade commercial plywood for shuttering',
       unit: 'PIECE',
@@ -442,7 +442,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Machines & Tools'],
-      name: 'Concrete Mixer 1 Bag — 200L Electric',
+      name: 'Concrete Mixer 1 Bag, 200L Electric',
       description: '200-litre electric concrete mixer for on-site concrete mixing. 1-HP motor, 220V single-phase, 25–30 bags/hour output. Tilting drum, heavy-duty steel body, rubber tyres for mobility.',
       shortDescription: '200L electric mixer, 1HP, 25–30 bags/hour output',
       unit: 'PIECE',
@@ -461,7 +461,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Tiles & Flooring'],
-      name: 'Kajaria Floor Tiles 600×600mm — Matt',
+      name: 'Kajaria Floor Tiles 600×600mm, Matt',
       description: 'Kajaria vitrified floor tiles 600×600mm matt finish. Anti-skid, stain-resistant, PEI rating 4. For residential and commercial flooring. Sold per box (4 tiles).',
       shortDescription: 'Kajaria 600×600 vitrified floor tiles, anti-skid matt',
       unit: 'PIECE',
@@ -479,7 +479,7 @@ function makeProducts(
     {
       supplierId: supplierProfileId,
       categoryId: catMap['Tiles & Flooring'],
-      name: 'Somany Wall Tiles 300×600mm — Glossy',
+      name: 'Somany Wall Tiles 300×600mm, Glossy',
       description: 'Somany ceramic wall tiles 300×600mm glossy finish. Water-resistant, easy to clean. For kitchen backsplash, bathrooms, and wet areas. Sold per box (8 tiles).',
       shortDescription: 'Somany glossy wall tiles for bathroom and kitchen',
       unit: 'PIECE',
