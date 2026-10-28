@@ -11,59 +11,75 @@ type ProductExtras = {
 
 const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 
-function deliveryLabel(days?: number): string {
-  if (days === undefined) return 'Varies';
+// Supplier-provided estimate; shown only when the listing has one
+function deliveryLabel(days?: number): string | null {
+  if (days === undefined) return null;
   if (days <= 1) return 'Within 24h';
-  if (days < 7) return `${days} Days`;
-  return `${Math.round(days / 7)} Weeks`;
+  if (days < 7) return `${days} days`;
+  return `${Math.round(days / 7)} weeks`;
 }
 
 export function ProductListCard({ product }: { product: ProductSummary }) {
   const extra = product as ProductSummary & ProductExtras;
   const image = extra.images?.find((i) => i.isPrimary) ?? extra.images?.[0];
-  const topRated = (extra.avgRating ?? 0) >= 4.5 && (extra.totalReviews ?? 0) > 0;
+  const rated = (extra.totalReviews ?? 0) > 0 && extra.avgRating !== undefined;
+  const delivery = deliveryLabel(extra.deliveryDays);
 
   return (
-    <div className="bg-surface-container-lowest rounded-xl overflow-hidden flex flex-col group">
-      <div className="relative aspect-square overflow-hidden bg-surface-container-low">
+    <Link
+      href={`/product/${product._id}`}
+      className="group flex h-full flex-col overflow-hidden rounded-3xl border border-sand-4/80 bg-sand-2 transition-[transform,box-shadow,border-color] duration-500 ease-out-expo hover:-translate-y-1 hover:border-ink/30 hover:shadow-[0_30px_60px_-30px_rgba(11,12,10,0.4)]"
+    >
+      <div className="relative m-2 aspect-[4/3] overflow-hidden rounded-[18px] bg-sand-3">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={image.url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+          <img
+            src={image.url}
+            alt={product.name}
+            className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+            loading="lazy"
+            decoding="async"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-on-surface-variant text-sm font-body">No image</div>
+          <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-stone">
+            <span className="material-symbols-outlined text-4xl" aria-hidden="true">image</span>
+            <span className="text-[13px]">No photo yet</span>
+          </div>
         )}
-        {topRated && (
-          <span className="absolute top-3 left-3 bg-primary-container text-on-primary-container px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded">
-            Top Rated
+        {rated && (
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-sand-2/95 px-2.5 py-1 text-[12px] font-semibold text-ink backdrop-blur">
+            <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">star</span>
+            {extra.avgRating!.toFixed(1)}
+            <span className="font-normal text-stone">({extra.totalReviews})</span>
           </span>
         )}
       </div>
-      <div className="p-6 flex-1 flex flex-col">
-        <h3 className="text-xl font-bold tracking-tight text-on-surface mb-1 font-headline">{product.name}</h3>
-        {extra.supplierId?.businessName && (
-          <p className="text-on-surface-variant text-sm mb-4 font-body">Supplier: {extra.supplierId.businessName}</p>
-        )}
-        <div className="mt-auto space-y-4">
-          <div className="flex justify-between items-end">
-            <div>
-              <p className="text-[10px] uppercase font-bold tracking-widest text-outline font-body">Price</p>
-              <p className="text-xl font-black text-on-surface font-headline">
-                {rupees.format(product.basePrice)}/{product.unit.toLowerCase()}
+
+      <div className="flex flex-1 flex-col px-5 pb-5 pt-3">
+        <h3 className="font-display text-[20px] font-semibold leading-tight tracking-[-0.02em] text-ink">{product.name}</h3>
+        {extra.supplierId?.businessName && <p className="mt-1 text-[14px] text-stone">by {extra.supplierId.businessName}</p>}
+
+        <div className="mt-auto flex items-end justify-between gap-3 pt-6">
+          <div>
+            <p className="font-display text-[22px] font-bold tracking-[-0.02em] text-ink">
+              {rupees.format(product.basePrice)}
+              <span className="ml-1 text-[14px] font-medium text-stone">/ {product.unit.toLowerCase()}</span>
+            </p>
+            {delivery && (
+              <p className="mt-1 flex items-center gap-1 text-[13px] text-stone">
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">local_shipping</span>
+                {delivery}
               </p>
-            </div>
-            <div className="text-right">
-              <p className="text-[10px] uppercase font-bold tracking-widest text-outline font-body">Delivery</p>
-              <p className="text-sm font-bold text-on-surface font-body">{deliveryLabel(extra.deliveryDays)}</p>
-            </div>
+            )}
           </div>
-          <Link
-            href={`/product/${product._id}`}
-            className="block text-center w-full px-6 py-3 bg-primary text-on-primary font-black text-sm rounded-lg active:scale-95 transition-all"
+          <span
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-ink text-lime transition-transform duration-500 ease-out-expo group-hover:rotate-[-45deg]"
+            aria-hidden="true"
           >
-            VIEW DETAILS
-          </Link>
+            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }

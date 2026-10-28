@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSelectedLocation, validatePincode } from '@buildx/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ProductGallery } from '@/components/ProductGallery';
 import { useProduct } from '@/lib/products';
 import { useSupplierReviews } from '@/lib/reviews';
@@ -78,7 +79,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   return (
     <>
       <Header />
-      <main className="max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-32">
+      <main id="main" className="container-x pb-24 pt-[calc(var(--header-h)+32px)]">
         {product.status === 'loading' && <p className="text-on-surface-variant font-body py-12 text-center">Loading product…</p>}
         {product.status === 'error' && (
           <p className="text-error font-body py-12 text-center">Couldn't load this product. It may no longer be listed.</p>
@@ -89,6 +90,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <div className="lg:col-span-7">
               <ProductGallery
                 images={data.images ?? []}
+                name={data.name}
                 badges={data.supplierId?.verificationStatus === 'VERIFIED' ? ['Verified Supplier'] : undefined}
               />
             </div>
@@ -303,10 +305,12 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </div>
         )}
 
-        <Link href="/" className="inline-block mt-12 text-primary font-bold font-body">
-          ← Back to categories
+        <Link href="/#categories" className="btn-ghost mt-12">
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_back</span>
+          All materials
         </Link>
       </main>
+      <SiteFooter />
       <BottomNav />
     </>
   );

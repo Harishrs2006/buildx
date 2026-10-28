@@ -19,7 +19,7 @@ export function getFirebaseAuth(): Auth {
   }
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
     throw new Error(
-      'Missing Firebase config — set NEXT_PUBLIC_FIREBASE_* in .env.local (see .env.local.example)'
+      'Missing Firebase config: set NEXT_PUBLIC_FIREBASE_* in .env.local (see .env.local.example)'
     );
   }
   if (!app) {
