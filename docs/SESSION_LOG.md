@@ -170,3 +170,12 @@ Times are IST.
   "buyers will find this" check -> price/unit/stock/MOQ/delivery days -> photos; sticky save bar), sign-in with 6-box OTP,
   resend timer and Change number (resetOtp added), onboarding on the split AuthShell. lib/categoryTemplates.ts removed.
   Friendly sign-in config error (dev detail goes to console). Signed-in screens verified by type-check + build only.
+- 02:30 User: landing images should move ("works doing"), change automatically, and NOT change on touch/scroll;
+  must run smoothly. Branch feat/hero-slideshow: replaced the scroll-pinned story + WebGL PhotoStage + Lenis with
+  components/cinematic/HeroSlideshow.tsx: full-screen, timer-driven (the progress bar's CSS animation is the clock),
+  Ken Burns push-in towards each photo's focus point, 1.4 s crossfade, next photo preloaded and required before
+  switching, pauses when off-screen / tab hidden / user presses pause, reduced motion = one still photo, no controls.
+  Removed CinematicLanding, PhotoStage, useChapterScroll, motionTier, lenis. Measured (scratchpad perf.mjs, headless
+  Chrome, 20 s): desktop 60 fps, 0 frames >33 ms, no long tasks, CLS 0.002; phone 390px with 4x CPU throttle 59.8 fps,
+  1 frame >33 ms, no long tasks; slide every ~6.5 s; scroll/click/touch never changed the slide.
+  Real worker motion needs AI video (Figma Weave not linked to the user's account), so camera motion only for now.

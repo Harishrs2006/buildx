@@ -1,43 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pickMotionTier, type DeviceSignals } from '../components/cinematic/motionTier';
 import { CHAPTERS, LAST_CHAPTER, chapterRamp, chapterWeight, photoUrl, resolveChapterLinks } from '../components/cinematic/chapters';
-
-const desktop: DeviceSignals = {
-  reducedMotion: false,
-  coarsePointer: false,
-  viewportWidth: 1440,
-  cores: 8,
-  memoryGb: 8,
-  saveData: false,
-  webgl: true,
-};
-
-describe('pickMotionTier', () => {
-  it('gives capable desktops the full WebGL story', () => {
-    expect(pickMotionTier(desktop)).toBe('full');
-  });
-
-  it('respects prefers-reduced-motion above everything else', () => {
-    expect(pickMotionTier({ ...desktop, reducedMotion: true })).toBe('static');
-    expect(pickMotionTier({ ...desktop, reducedMotion: true, webgl: false, coarsePointer: true })).toBe('static');
-  });
-
-  it('falls back to stills on phones and tablets', () => {
-    expect(pickMotionTier({ ...desktop, coarsePointer: true })).toBe('lite');
-    expect(pickMotionTier({ ...desktop, viewportWidth: 390 })).toBe('lite');
-  });
-
-  it('falls back to stills on low-power devices, data saver or no WebGL', () => {
-    expect(pickMotionTier({ ...desktop, cores: 2 })).toBe('lite');
-    expect(pickMotionTier({ ...desktop, memoryGb: 2 })).toBe('lite');
-    expect(pickMotionTier({ ...desktop, saveData: true })).toBe('lite');
-    expect(pickMotionTier({ ...desktop, webgl: false })).toBe('lite');
-  });
-
-  it('does not penalise browsers that hide cores or memory', () => {
-    expect(pickMotionTier({ ...desktop, cores: undefined, memoryGb: undefined })).toBe('full');
-  });
-});
 
 describe('chapters', () => {
   const api = [
@@ -48,6 +10,10 @@ describe('chapters', () => {
   it('starts with the hero and ends with the final call to action', () => {
     expect(CHAPTERS[0].id).toBe('hero');
     expect(CHAPTERS[LAST_CHAPTER].id).toBe('skyline');
+  });
+
+  it('gives every slide a photo and a focus point for the push-in', () => {
+    for (const c of CHAPTERS) expect(c.focus, c.id).toMatch(/^\d{1,3}% \d{1,3}%$/);
   });
 
   it('only puts chapters that have a photo into the story', () => {
