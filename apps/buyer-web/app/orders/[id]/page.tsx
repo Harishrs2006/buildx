@@ -6,15 +6,17 @@ import { useApiClient } from '@buildx/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { RequireAuth } from '@/components/auth/RequireAuth';
+import { ErrorNote, StatusPill, SummaryRow } from '@/components/account/AccountUI';
 import { fetchOrder, cancelBuyerOrder, type BuyerOrder } from '@/lib/orders';
 import { OrderTimeline } from '@/components/OrderTimeline';
-
-const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+import { rupees, shortDate } from '@/lib/format';
 
 function OrderDetail({ id }: { id: string }) {
   const client = useApiClient();
   const [state, setState] = useState<{ status: 'loading' } | { status: 'success'; order: BuyerOrder } | { status: 'error' }>({ status: 'loading' });
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   function load() {
     fetchOrder(client, id)
@@ -25,69 +27,123 @@ function OrderDetail({ id }: { id: string }) {
   useEffect(load, [client, id]);
 
   async function handleCancel() {
-    if (!confirm('Cancel this order?')) return;
     setCancelling(true);
+    setCancelError(null);
     try {
       await cancelBuyerOrder(client, id);
+      setConfirmingCancel(false);
       load();
+    } catch (err) {
+      setCancelError(err instanceof Error ? err.message : 'Could not cancel this order. Please try again.');
     } finally {
       setCancelling(false);
     }
   }
 
-  if (state.status === 'loading') return <p className="py-24 text-center font-body text-on-surface-variant">Loading…</p>;
-  if (state.status === 'error') return <p className="py-24 text-center font-body text-error">Couldn't load this order.</p>;
+  if (state.status === 'loading') {
+    return (
+      <div className="flex flex-col gap-4" role="status" aria-label="Loading order">
+        <div className="skeleton h-40" />
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="skeleton h-72" />
+          <div className="skeleton h-72" />
+        </div>
+      </div>
+    );
+  }
+  if (state.status === 'error') return <ErrorNote>Could not load this order. Check your connection and try again.</ErrorNote>;
 
   const { order } = state;
   const cancellable = order.status === 'PENDING' || order.status === 'CONFIRMED';
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3 rounded-xl bg-primary-container px-4 py-3">
-        <span className="material-symbols-outlined text-on-primary-container">check_circle</span>
-        <div>
-          <p className="font-headline font-bold text-on-primary-container">Order {order.orderNumber}</p>
-          <p className="font-body text-sm text-on-primary-container">Status: {order.status.replace('_', ' ')}</p>
+    <div className="flex flex-col gap-4">
+      <section className="relative overflow-hidden rounded-3xl bg-ink p-6 text-sand sm:p-8">
+        <div className="blueprint pointer-events-none absolute inset-0" aria-hidden="true" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="eyebrow text-stone-light">Order · {shortDate.format(new Date(order.createdAt))}</p>
+            <h1 className="mt-3 font-mono text-[clamp(1.5rem,4vw,2.25rem)] font-medium tracking-tight">{order.orderNumber}</h1>
+            <div className="mt-4">
+              <StatusPill status={order.status} />
+            </div>
+          </div>
+          <div className="sm:text-right">
+            <p className="eyebrow text-stone-light">Total</p>
+            <p className="mt-2 font-display text-4xl font-bold tabular-nums">{rupees.format(order.total)}</p>
+            <p className="mt-1 text-[13px] text-stone-light">Cash on delivery</p>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="card p-5 sm:p-6">
+          <OrderTimeline order={order} />
+        </section>
+
+        <div className="flex flex-col gap-4">
+          <section className="card p-5 sm:p-6">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Items</h2>
+            <ul className="mt-4 flex flex-col gap-3 border-b border-sand-4 pb-4">
+              {order.items.map((item, i) => (
+                <li key={i} className="flex justify-between gap-4 text-[15px]">
+                  <span>
+                    <span className="font-mono">{item.quantity}</span> <span className="text-stone">{item.unit.toLowerCase()} ×</span> {item.name}
+                  </span>
+                  <span className="flex-shrink-0 font-medium tabular-nums">{rupees.format(item.lineTotal)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4 flex flex-col gap-2">
+              <SummaryRow label="Subtotal" value={rupees.format(order.subtotal)} />
+              <SummaryRow label="GST" value={rupees.format(order.gstAmount)} />
+              <SummaryRow strong label="Total" value={rupees.format(order.total)} />
+            </div>
+          </section>
+
+          <section className="card p-5 sm:p-6">
+            <h2 className="font-display text-xl font-semibold tracking-tight">Delivery</h2>
+            <div className="mt-4 flex gap-3 text-[15px]">
+              <span className="material-symbols-outlined text-stone" aria-hidden="true">location_on</span>
+              <div>
+                <p className="font-semibold">{order.deliveryAddress.label}</p>
+                <p className="mt-0.5 text-stone">{order.deliveryAddress.fullAddress}</p>
+                <p className="mt-2 font-mono text-[14px]">{order.deliveryAddress.contactPhone}</p>
+              </div>
+            </div>
+          </section>
+
+          {cancellable && (
+            <section className="card p-5 sm:p-6">
+              {!confirmingCancel ? (
+                <button onClick={() => setConfirmingCancel(true)} className="btn-ghost w-full text-error hover:bg-error-container">
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">cancel</span>
+                  Cancel order
+                </button>
+              ) : (
+                <div role="alertdialog" aria-labelledby="cancel-title" className="flex flex-col gap-3">
+                  <p id="cancel-title" className="font-semibold">Cancel this order?</p>
+                  <p className="text-[14px] text-stone">This cannot be undone. You can place a new order any time.</p>
+                  {cancelError && <p role="alert" className="text-[14px] text-error">{cancelError}</p>}
+                  <div className="flex gap-2">
+                    <button onClick={handleCancel} disabled={cancelling} className="btn flex-1 bg-error text-white hover:bg-[#A51F24]">
+                      {cancelling ? 'Cancelling' : 'Yes, cancel'}
+                    </button>
+                    <button onClick={() => setConfirmingCancel(false)} disabled={cancelling} className="btn-ghost flex-1">
+                      Keep order
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </div>
 
-      <div className="rounded-xl bg-surface-container-low p-5">
-        <OrderTimeline order={order} />
-      </div>
-
-      <div className="rounded-xl bg-surface-container-low p-5">
-        <h2 className="font-headline font-bold">Items</h2>
-        <ul className="mt-3 flex flex-col gap-2 font-body text-sm">
-          {order.items.map((item, i) => (
-            <li key={i} className="flex justify-between">
-              <span>{item.quantity} {item.unit.toLowerCase()} × {item.name}</span>
-              <span className="font-semibold">{rupees.format(item.lineTotal)}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="mt-4 flex justify-between border-t border-outline-variant/30 pt-3 font-headline font-bold">
-          <span>Total</span>
-          <span>{rupees.format(order.total)}</span>
-        </div>
-        <p className="mt-2 font-body text-xs text-on-surface-variant">Payment: Cash on Delivery</p>
-      </div>
-
-      <div className="rounded-xl bg-surface-container-low p-5">
-        <h2 className="font-headline font-bold">Delivery address</h2>
-        <p className="mt-2 font-body text-sm text-on-surface-variant">{order.deliveryAddress.label}: {order.deliveryAddress.fullAddress}</p>
-      </div>
-
-      {cancellable && (
-        <button
-          onClick={handleCancel}
-          disabled={cancelling}
-          className="rounded-lg bg-error-container py-3 font-body text-sm font-bold uppercase text-on-error-container disabled:opacity-50"
-        >
-          {cancelling ? 'Cancelling…' : 'Cancel order'}
-        </button>
-      )}
-
-      <Link href="/orders" className="font-body font-bold text-primary">← Back to orders</Link>
+      <Link href="/orders" className="mt-2 inline-flex items-center gap-1 self-start text-[15px] font-medium text-stone hover:text-ink">
+        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_back</span>
+        All orders
+      </Link>
     </div>
   );
 }
@@ -97,7 +153,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-2xl px-4 pb-32 pt-24 md:px-8">
+      <main id="main" className="container-x min-h-[70vh] max-w-5xl pb-32 pt-[calc(var(--header-h)+32px)]">
         <RequireAuth>
           <OrderDetail id={id} />
         </RequireAuth>

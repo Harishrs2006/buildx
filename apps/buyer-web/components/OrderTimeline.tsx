@@ -20,39 +20,46 @@ export function OrderTimeline({ order }: { order: BuyerOrder }) {
   const history = order.statusHistory ?? [];
   const steps = history.length > 0 ? history : [{ status: order.status, at: order.createdAt, byRole: 'SYSTEM' as const }];
   const isTerminalBad = order.status === 'CANCELLED' || order.status === 'DISPUTED';
+  const inProgress = !isTerminalBad && order.status !== 'DELIVERED';
 
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="font-headline font-bold">Track order</h2>
-      <ol className="flex flex-col gap-0">
+    <div className="flex flex-col gap-5">
+      <h2 className="font-display text-xl font-semibold tracking-tight">Tracking</h2>
+      <ol className="flex flex-col">
         {steps.map((step, i) => {
           const isLast = i === steps.length - 1;
           const bad = step.status === 'CANCELLED' || step.status === 'DISPUTED';
+          const current = isLast && inProgress;
           return (
-            <li key={i} className="flex gap-3">
+            <li key={i} className="flex gap-4">
               <div className="flex flex-col items-center">
                 <span
-                  className={
-                    bad
-                      ? 'flex h-6 w-6 items-center justify-center rounded-full bg-error text-on-error'
-                      : 'flex h-6 w-6 items-center justify-center rounded-full bg-primary text-on-primary'
-                  }
+                  className={`relative flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
+                    bad ? 'bg-error text-white' : current ? 'bg-lime text-ink' : 'bg-ink text-lime'
+                  }`}
                 >
-                  <span className="material-symbols-outlined text-sm">{bad ? 'close' : 'check'}</span>
+                  {current && <span className="absolute inset-0 animate-pulse-ring rounded-full bg-lime" aria-hidden="true" />}
+                  <span className="material-symbols-outlined relative text-[18px]" aria-hidden="true">
+                    {bad ? 'close' : current ? 'radio_button_checked' : 'check'}
+                  </span>
                 </span>
-                {!isLast && <span className="w-px flex-1 bg-outline-variant" />}
+                {!isLast && <span className="my-1 w-0.5 flex-1 rounded bg-ink/80" />}
               </div>
-              <div className={isLast ? 'pb-1' : 'pb-6'}>
-                <p className="font-body text-sm font-semibold text-on-surface">{STEP_LABELS[step.status] ?? step.status}</p>
-                <p className="font-body text-xs text-on-surface-variant">{dateFormat.format(new Date(step.at))}</p>
-                {step.note && <p className="font-body text-xs text-on-surface-variant">{step.note}</p>}
+              <div className={isLast ? 'pb-1 pt-1' : 'pb-7 pt-1'}>
+                <p className="text-[15px] font-semibold">
+                  {STEP_LABELS[step.status] ?? step.status}
+                  {current && <span className="sr-only"> (current step)</span>}
+                </p>
+                <p className="mt-0.5 font-mono text-[12px] text-stone">{dateFormat.format(new Date(step.at))}</p>
+                {step.note && <p className="mt-1 text-[14px] text-stone">{step.note}</p>}
               </div>
             </li>
           );
         })}
       </ol>
-      {!isTerminalBad && order.status !== 'DELIVERED' && (
-        <p className="font-body text-xs text-on-surface-variant">
+      {inProgress && (
+        <p className="flex items-start gap-2 rounded-xl bg-sand-3 px-4 py-3 text-[14px] text-stone">
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">local_shipping</span>
           {order.deliveryMode === 'SUPPLIER' ? 'This supplier is delivering it themselves.' : 'A BuildX delivery partner will pick this up.'}
         </p>
       )}
