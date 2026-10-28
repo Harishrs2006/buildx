@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { pickMotionTier, type DeviceSignals } from '../components/cinematic/motionTier';
-import { CHAPTERS, LAST_CHAPTER, chapterRamp, chapterWeight, resolveChapterLinks } from '../components/cinematic/chapters';
+import { CHAPTERS, LAST_CHAPTER, chapterRamp, chapterWeight, photoUrl, resolveChapterLinks } from '../components/cinematic/chapters';
 
 const desktop: DeviceSignals = {
   reducedMotion: false,
@@ -48,6 +48,15 @@ describe('chapters', () => {
   it('starts with the hero and ends with the final call to action', () => {
     expect(CHAPTERS[0].id).toBe('hero');
     expect(CHAPTERS[LAST_CHAPTER].id).toBe('skyline');
+  });
+
+  it('only puts chapters that have a photo into the story', () => {
+    expect(CHAPTERS.length).toBeGreaterThanOrEqual(3);
+    for (const c of CHAPTERS) expect(c.photo).toMatch(/^\/cinematic\/[a-z-]+\.(jpg|webp|png)$/);
+  });
+
+  it('serves photos through the image optimiser', () => {
+    expect(photoUrl('/cinematic/hero.jpg', 1200)).toBe('/_next/image?url=%2Fcinematic%2Fhero.jpg&w=1200&q=78');
   });
 
   it('links only to categories the API returned, with the API name', () => {
