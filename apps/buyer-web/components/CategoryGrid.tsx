@@ -1,5 +1,7 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { categoryIcon, type Category } from '@/lib/categories';
+import { catalogCategory, catalogItems } from '@/lib/catalog/data';
 import { Reveal } from './motion/Reveal';
 
 export function CategoryGrid({ categories }: { categories: Category[] }) {
@@ -14,48 +16,58 @@ export function CategoryGrid({ categories }: { categories: Category[] }) {
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-      {categories.map((category, i) => (
-        <Reveal as="li" key={category._id} delay={(i % 4) * 70}>
-          <Link
-            href={`/category/${category.slug}`}
-            className="group relative flex h-full min-h-[184px] flex-col justify-between overflow-hidden rounded-2xl border border-sand-4/80 bg-sand-2 p-5 transition-[transform,box-shadow,border-color] duration-500 ease-out-expo hover:-translate-y-1 hover:border-ink hover:shadow-[0_24px_60px_-28px_rgba(11,12,10,0.45)] sm:p-6"
-          >
-            <span
-              aria-hidden="true"
-              className="absolute inset-0 origin-bottom scale-y-0 bg-ink transition-transform duration-500 ease-out-expo group-hover:scale-y-100"
-            />
-            <div className="relative flex items-start justify-between">
-              <span className="grid h-12 w-12 place-items-center rounded-xl bg-sand-3 text-ink transition-colors duration-500 group-hover:bg-lime">
-                <span className="material-symbols-outlined text-[26px]" aria-hidden="true">{categoryIcon(category.name)}</span>
-              </span>
-              <span className="font-mono text-[11px] text-stone transition-colors duration-500 group-hover:text-sand/50">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-            </div>
-            <div className="relative mt-10 flex items-end justify-between gap-3">
-              <h3 className="font-display text-[19px] font-semibold leading-[1.15] tracking-[-0.02em] text-ink transition-colors duration-500 group-hover:text-sand sm:text-[22px]">
-                {category.name}
-              </h3>
-              <span
-                className="material-symbols-outlined -translate-x-2 text-[22px] text-lime opacity-0 transition-[opacity,transform] duration-500 ease-out-expo group-hover:translate-x-0 group-hover:opacity-100"
-                aria-hidden="true"
-              >
-                arrow_outward
-              </span>
-            </div>
-          </Link>
-        </Reveal>
-      ))}
+    <ul className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+      {categories.map((category, i) => {
+        const meta = catalogCategory(category.slug);
+        const types = catalogItems(category.slug).length;
+        return (
+          <Reveal as="li" key={category._id} delay={(i % 4) * 70}>
+            <Link
+              href={`/category/${category.slug}`}
+              className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-sand-4/80 bg-sand-2 transition-[transform,box-shadow,border-color] duration-500 ease-out-expo hover:-translate-y-1 hover:border-ink hover:shadow-[0_24px_60px_-28px_rgba(11,12,10,0.45)]"
+            >
+              <div className="relative aspect-[3/2] overflow-hidden bg-sand-3">
+                {meta?.photo ? (
+                  <Image
+                    src={meta.photo}
+                    alt=""
+                    fill
+                    sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 420px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-700 ease-out-expo group-hover:scale-[1.06]"
+                  />
+                ) : (
+                  <span className="material-symbols-outlined absolute inset-0 m-auto h-fit w-fit text-5xl text-stone" aria-hidden="true">
+                    {categoryIcon(category.name)}
+                  </span>
+                )}
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,rgba(11,12,10,0.45))]" aria-hidden="true" />
+                <span className="absolute left-3 top-3 rounded-full bg-sand-2/90 px-2.5 py-1 font-mono text-[11px] text-ink backdrop-blur">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+              </div>
+              <div className="flex flex-1 flex-col gap-1.5 p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-3">
+                  <h3 className="font-display text-[20px] font-semibold leading-[1.15] tracking-[-0.02em]">{category.name}</h3>
+                  <span className="material-symbols-outlined mt-0.5 text-[22px] text-stone transition-transform duration-500 ease-out-expo group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-ink" aria-hidden="true">
+                    arrow_outward
+                  </span>
+                </div>
+                {meta?.tagline && <p className="text-[14px] leading-snug text-stone">{meta.tagline}</p>}
+                {types > 0 && <p className="mt-auto pt-2 font-mono text-[11px] uppercase tracking-[0.14em] text-stone">{types} material types</p>}
+              </div>
+            </Link>
+          </Reveal>
+        );
+      })}
     </ul>
   );
 }
 
 export function CategoryGridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4" aria-label="Loading categories" role="status">
+    <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4" aria-label="Loading categories" role="status">
       {Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className="skeleton min-h-[184px]" />
+        <div key={i} className="skeleton aspect-[4/5]" />
       ))}
     </div>
   );
