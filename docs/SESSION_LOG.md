@@ -135,3 +135,23 @@ Times are IST.
   paint, electrical, plumbing, skyline at 1376x768, converted to JPG with sharp. Plumbing image had a hotel-style crest +
   name badge on the uniform: painted out (ring-sampled navy fill, feathered). Branch feat/landing-all-chapters switches
   on all 4 chapters; ASSETS.md lists sources. Tests 12 pass, build OK.
+- (separate session, same user, same day) User asked a different Claude session to update GitHub and the README
+  "everything up to today", then "what next". That session: consolidated every BuildX-related local folder (the repo's
+  two worktrees, the Flutter buildx_app, the buildx-secrets Firebase admin key, the PRD and the Stitch zip) into one
+  Desktop/BuildX folder, discovered the real Desktop is OneDrive-redirected
+  (OneDrive/Documents/Desktop) and worked around a robocopy instead of a blocked rename, repaired both git worktrees
+  (`git worktree repair`) afterward. Reviewed external PR #24 (mobile GST/bulk-pricing cart fix) at /code-review high:
+  confirmed the core fix is correct, found one real display bug (product page quantity row showed the pre-GST value,
+  inconsistent with the unit price above it and with the Cart screen), one reuse issue (the pricing formula duplicated
+  across two files), reported both, left the merge decision to the user. Found this repo had moved to this
+  Desktop/BuildX/buildx path and origin/main was 7 commits ahead of what that session knew (PRs #25-#32: the Hi-Vis
+  redesign, Firebase going live, the cinematic/photo landing, this file's own history above). Found uncommitted work
+  on branch feat/catalog (an Indian-market material catalog: /materials/[id] pages, quantity helpers, category photos,
+  a restyled product page), fast-forwarded local main and reapplied it, verified it typechecked, built clean (19
+  routes) and passed its 11 new tests, then committed and pushed it (ddef1fd) before realizing another, longer-running
+  Claude session ("buildx-2d") was concurrently live in that same folder on that same branch. That session confirmed
+  the commit's content was fine; PR #33 already covers it. This session then moved to a separate worktree
+  (Desktop/BuildX/readme-update) to avoid further collisions, and updated the root README.md from a stale,
+  pre-pivot description (mobile-only, TanStack Query, MMKV) to the current one (all 4 apps, live URLs, Hi-Vis, known
+  gaps), via its own PR rather than editing this shared working tree. Lesson for next time: check `ListAgents` /
+  coordinate before touching a shared worktree when more than one Claude session may be open on the same machine.
