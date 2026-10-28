@@ -3,21 +3,25 @@
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE
-- Branch in progress: `feat/web-redesign` (from origin/main 7a464be).
-- Working on: premium redesign of apps/buyer-web landing page + phone sign-in + onboarding,
-  new design system documented in docs/DESIGN_SYSTEM.md (to be reused by apps/mobile).
+## CURRENT STATE (2026-10-28 17:05 IST)
+- Redesign is LIVE on https://buildx-vgud.vercel.app (PR #25 squash-merged to main as 1b8fa24, Vercel buildx9/buildx-vgud).
+- Local repo: Desktop/BuildX/buildx on branch main. Old local main saved as backup/local-main-old.
+- Preview tooling: `node <scratchpad>/shot.mjs <url> <w> <h> <out.png> [full] [scrollY]` (CDP, real mobile widths).
+  Recreate it if the scratchpad is gone (headless Chrome + Emulation.setDeviceMetricsOverride).
 
 ## NEXT STEPS
-1. Visual QA via headless Chrome screenshots (save to scratchpad, NOT %TEMP%): home, signin, mobile, legal, 404.
-   Hero stack + mobile overflow fixes applied 16:20, need re-check. Port 3101 may be stuck: use another port.
-2. Polish inner pages (cart, checkout, product, category, orders, profile): remove em dashes, add SiteFooter.
-3. Write docs/DESIGN_SYSTEM.md (tokens/fonts/motion for web + mobile app).
-4. Open PR feat/web-redesign -> main, merge (Vercel project buildx9/buildx-vgud auto-deploys main).
-5. BLOCKER for user: production has NO Firebase web config (NEXT_PUBLIC_FIREBASE_* missing in Vercel env),
-   so phone sign-in cannot work on the live site until those 4 vars are added in Vercel project settings.
-3. Ask user: OK to commit docs/BuildX_PRD.pdf + docs/design-references/ (repo is PUBLIC, PRD says Confidential)?
-4. Apply the same system to apps/seller-web, then apps/mobile.
+1. BLOCKER: add Firebase web config to Vercel project buildx-vgud (Settings > Environment Variables, Production):
+   NEXT_PUBLIC_FIREBASE_API_KEY, NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, NEXT_PUBLIC_FIREBASE_PROJECT_ID, NEXT_PUBLIC_FIREBASE_APP_ID
+   (Firebase console > Project settings > Your apps > Web app). Also add buildx-vgud.vercel.app to Firebase Auth
+   authorized domains. Then redeploy. Until then live sign-in shows "Sign-in is not available yet".
+   Claude in Chrome tools were NOT connected in the 2026-10-28 session; user must run `/chrome` (or start `claude --chrome`).
+2. Optional env: NEXT_PUBLIC_SUPPORT_EMAIL, NEXT_PUBLIC_SUPPORT_PHONE, NEXT_PUBLIC_LEGAL_NAME, NEXT_PUBLIC_SELLER_PORTAL_URL
+   (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
+3. Private backup of PRD + user-brief images: creating a private GitHub repo was blocked by the permission classifier;
+   user to approve or do it. Files are safe locally in Desktop/BuildX/user-brief and BuildX_PRD.pdf.
+4. Restyle remaining buyer pages in depth (cart, checkout, orders, profile) beyond token remap.
+5. Apply Hi-Vis to apps/seller-web, then apps/mobile (spec: docs/DESIGN_SYSTEM.md).
+6. Add a strict CSP only together with an end-to-end OTP test.
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -60,3 +64,7 @@ Times are IST.
 - 16:40 User: full autonomy (deploy, env keys, auth via Claude in Chrome extension). Saved globally + memory.
 - 16:20 Saved global prefs: decide technical things myself; questions need (Recommended) + chat option; commit+push after
   every sub-task because usage limits / shutdowns can cut a session; "continue" = read log and resume.
+- 16:50 PR #25 opened, all CI + Vercel checks green, squash-merged to main (author Harish R S, no Claude trailer).
+- 16:55 Verified live: new title, security headers, /privacy 200, custom 404, categories load from production API,
+  mobile layout OK. Contributors widget should drop "claude" now that main has a fresh push (API already clean).
+- 17:00 Claude in Chrome tools unavailable in this session. Private backup repo upload denied by permission classifier.
