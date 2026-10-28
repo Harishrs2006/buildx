@@ -45,24 +45,22 @@ export function ImageUploader({ images, onChange }: { images: ProductImage[]; on
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {images.map((img) => (
-          <div key={img.publicId} className="group relative aspect-square overflow-hidden rounded-lg bg-surface-container-low">
+          <div key={img.publicId} className="relative aspect-square overflow-hidden rounded-xl bg-sand-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={img.url} alt="" className="h-full w-full object-cover" />
             {img.isPrimary && (
-              <span className="absolute left-1 top-1 rounded bg-primary px-1.5 py-0.5 font-body text-[10px] font-bold uppercase text-on-primary">
-                Primary
-              </span>
+              <span className="absolute left-2 top-2 rounded-full bg-lime px-2.5 py-1 font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-ink">Cover</span>
             )}
-            <div className="absolute inset-0 flex items-end justify-end gap-1 bg-black/0 p-1 opacity-0 transition-opacity group-hover:bg-black/30 group-hover:opacity-100">
+            <div className="absolute inset-x-0 bottom-0 flex justify-end gap-1.5 bg-gradient-to-t from-ink/60 to-transparent p-2">
               {!img.isPrimary && (
-                <button type="button" onClick={() => makePrimary(img.publicId)} className="rounded bg-surface-container-lowest p-1" title="Make primary">
-                  <span className="material-symbols-outlined text-sm">star</span>
+                <button type="button" onClick={() => makePrimary(img.publicId)} className="grid h-9 w-9 place-items-center rounded-full bg-sand-2 text-ink" aria-label="Use as cover photo">
+                  <span className="material-symbols-outlined text-[18px]">star</span>
                 </button>
               )}
-              <button type="button" onClick={() => remove(img.publicId)} className="rounded bg-surface-container-lowest p-1" title="Remove">
-                <span className="material-symbols-outlined text-sm">delete</span>
+              <button type="button" onClick={() => remove(img.publicId)} className="grid h-9 w-9 place-items-center rounded-full bg-sand-2 text-error" aria-label="Remove photo">
+                <span className="material-symbols-outlined text-[18px]">delete</span>
               </button>
             </div>
           </div>
@@ -71,10 +69,11 @@ export function ImageUploader({ images, onChange }: { images: ProductImage[]; on
           type="button"
           disabled={uploading}
           onClick={() => inputRef.current?.click()}
-          className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-outline-variant text-on-surface-variant disabled:opacity-50"
+          className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed border-sand-4 text-stone transition-colors hover:border-ink hover:text-ink disabled:opacity-50"
         >
-          <span className="material-symbols-outlined text-2xl">{uploading ? 'progress_activity' : 'add_photo_alternate'}</span>
-          <span className="font-body text-xs">{uploading ? 'Uploading…' : 'Add photo'}</span>
+          <span className={`material-symbols-outlined text-[28px] ${uploading ? 'animate-spin' : ''}`} aria-hidden="true">{uploading ? 'progress_activity' : 'add_photo_alternate'}</span>
+          <span className="text-[14px] font-medium">{uploading ? 'Uploading' : 'Add photos'}</span>
+          {!uploading && <span className="text-[12px]">JPG, PNG or WebP</span>}
         </button>
       </div>
       <input
@@ -85,7 +84,7 @@ export function ImageUploader({ images, onChange }: { images: ProductImage[]; on
         hidden
         onChange={(e) => handleFiles(e.target.files)}
       />
-      {error && <p className="font-body text-sm text-error">{error}</p>}
+      {error && <p role="alert" className="text-[14px] text-error">{error}</p>}
     </div>
   );
 }

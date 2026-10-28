@@ -30,6 +30,8 @@ type AuthContextValue = {
   confirmOtp: (code: string) => Promise<void>;
   onboard: (input: { name: string; businessName: string; whatsappNumber: string }) => Promise<void>;
   signOut: () => Promise<void>;
+  // Back to the phone step after a code was sent (wrong number, or to request a new code)
+  resetOtp: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -143,6 +145,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [client]
   );
 
+  const resetOtp = useCallback(() => {
+    confirmationRef.current = null;
+    setPhoneInFlight(null);
+    setError(null);
+    setStatus((s) => (s === 'otp-sent' ? 'signed-out' : s));
+  }, []);
+
   const signOut = useCallback(async () => {
     await firebaseSignOut(getFirebaseAuth());
     confirmationRef.current = null;
@@ -151,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ status, user, error, phoneInFlight, sendOtp, confirmOtp, onboard, signOut }}>
+    <AuthContext.Provider value={{ status, user, error, phoneInFlight, sendOtp, confirmOtp, onboard, signOut, resetOtp }}>
       {children}
       <div id="recaptcha-container" />
     </AuthContext.Provider>

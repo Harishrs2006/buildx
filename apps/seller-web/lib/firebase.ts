@@ -19,9 +19,9 @@ export function getFirebaseAuth(): Auth {
     throw new Error('Firebase Auth is only available in the browser');
   }
   if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-    throw new Error(
-      'Missing Firebase config — set NEXT_PUBLIC_FIREBASE_* in .env.local (see .env.local.example)'
-    );
+    // Developers see how to fix it in the console; suppliers see a plain message
+    console.error('Missing Firebase config: set NEXT_PUBLIC_FIREBASE_* in .env.local (see .env.local.example)');
+    throw new Error('Sign-in is not available on this site yet. Please try again later.');
   }
   if (!app) {
     app = getApps()[0] ?? initializeApp(firebaseConfig);

@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useApiClient } from '@buildx/web-core';
 import { fetchSupplierProduct, type SupplierProduct } from '../../../../../lib/products';
 import { ProductForm } from '../../../../../components/ProductForm';
+import { ErrorNote, PageHead } from '../../../../../components/ui';
 
 export default function EditProductPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,9 +22,9 @@ export default function EditProductPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-headline text-2xl font-bold text-on-surface">Edit product</h1>
-      {state.status === 'loading' && <p className="font-body text-sm text-on-surface-variant">Loading…</p>}
-      {state.status === 'error' && <p className="font-body text-sm text-error">Couldn't load this product.</p>}
+      <PageHead eyebrow="Catalogue" title="Edit listing" />
+      {state.status === 'loading' && <div className="skeleton h-64" role="status" aria-label="Loading product" />}
+      {state.status === 'error' && <ErrorNote>Couldn&apos;t load this product.</ErrorNote>}
       {state.status === 'success' && <ProductForm product={state.product} />}
     </div>
   );

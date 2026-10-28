@@ -4,47 +4,80 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useApiClient } from '@buildx/web-core';
 import { useSupplierProducts, discontinueSupplierProduct, type SupplierProduct } from '../../../lib/products';
+import { Chip, ChipRow, EmptyState, ErrorNote, PageHead, Pager, Pill, PRODUCT_STATUS, rupees } from '../../../components/ui';
 
-const STATUS_FILTERS = ['ACTIVE', 'DRAFT', 'OUT_OF_STOCK', 'DISCONTINUED'] as const;
+const FILTERS: { value: string | undefined; label: string }[] = [
+  { value: undefined, label: 'All' },
+  { value: 'ACTIVE', label: 'Live' },
+  { value: 'DRAFT', label: 'Draft' },
+  { value: 'OUT_OF_STOCK', label: 'Out of stock' },
+  { value: 'DISCONTINUED', label: 'Discontinued' },
+];
 
-const STATUS_STYLES: Record<string, string> = {
-  ACTIVE: 'bg-primary-container text-on-primary-container',
-  DRAFT: 'bg-surface-container-high text-on-surface-variant',
-  OUT_OF_STOCK: 'bg-error-container text-on-error-container',
-  INACTIVE: 'bg-surface-container-high text-on-surface-variant',
-  DISCONTINUED: 'bg-surface-container-high text-on-surface-variant',
+const UNIT: Record<string, string> = {
+  KG: 'kg', TON: 'tonne', PIECE: 'piece', BAG: 'bag', BUNDLE: 'bundle', CUBIC_METER: 'm³', SQUARE_METER: 'm²', LITER: 'litre', METER: 'metre',
 };
 
-function ProductRow({ product, onDiscontinue }: { product: SupplierProduct; onDiscontinue: (id: string) => void }) {
-  const primaryImage = product.images?.[0]?.url;
+function ProductRow({ product, onDiscontinue }: { product: SupplierProduct; onDiscontinue: (id: string) => Promise<void> }) {
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const image = product.images?.find((i) => i.isPrimary)?.url ?? product.images?.[0]?.url;
+  const status = PRODUCT_STATUS[product.status] ?? { label: product.status, tone: 'muted' as const };
+  const unit = UNIT[product.unit] ?? product.unit.toLowerCase();
+  const brand = product.specifications?.Brand;
+
   return (
-    <div className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4">
-      <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
-        {primaryImage && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={primaryImage} alt="" className="h-full w-full object-cover" />
-        )}
+    <li className="card overflow-hidden">
+      <div className="flex items-center gap-4 p-4">
+        <div className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-sand-3 sm:h-20 sm:w-20">
+          {image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={image} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="material-symbols-outlined text-stone" aria-hidden="true">image</span>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Pill tone={status.tone}>{status.label}</Pill>
+            {product.categoryId?.name && <span className="text-[13px] text-stone">{product.categoryId.name}</span>}
+          </div>
+          <p className="mt-1.5 truncate text-[16px] font-semibold">{product.name}</p>
+          <p className="mt-0.5 flex flex-wrap gap-x-3 text-[14px] text-stone">
+            <span className="font-medium text-ink">{rupees.format(product.basePrice)} / {unit}</span>
+            <span className={product.stockQuantity > 0 ? '' : 'text-error'}>Stock {product.stockQuantity} {unit}</span>
+            {(product.minOrderQuantity ?? 1) > 1 && <span>Min {product.minOrderQuantity}</span>}
+            {brand && <span>{brand}</span>}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Link href={`/products/${product._id}/edit`} className="grid h-11 w-11 place-items-center rounded-full text-stone transition-colors hover:bg-sand-3 hover:text-ink" aria-label={`Edit ${product.name}`}>
+            <span className="material-symbols-outlined text-[20px]">edit</span>
+          </Link>
+          {product.status !== 'DISCONTINUED' && (
+            <button type="button" onClick={() => setConfirming(true)} className="grid h-11 w-11 place-items-center rounded-full text-stone transition-colors hover:bg-error-container hover:text-error" aria-label={`Discontinue ${product.name}`}>
+              <span className="material-symbols-outlined text-[20px]">delete</span>
+            </button>
+          )}
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="truncate font-body text-sm font-semibold text-on-surface">{product.name}</p>
-        <p className="font-body text-xs text-on-surface-variant">
-          ₹{product.basePrice.toLocaleString('en-IN')}/{product.unit} · Stock: {product.stockQuantity}
-        </p>
-      </div>
-      <span className={`rounded-full px-2.5 py-1 font-body text-[10px] font-bold uppercase tracking-wide ${STATUS_STYLES[product.status] ?? ''}`}>
-        {product.status.replace('_', ' ')}
-      </span>
-      <div className="flex gap-1">
-        <Link href={`/products/${product._id}/edit`} className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-high" title="Edit">
-          <span className="material-symbols-outlined text-lg">edit</span>
-        </Link>
-        {product.status !== 'DISCONTINUED' && (
-          <button onClick={() => onDiscontinue(product._id)} className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-container-high" title="Discontinue">
-            <span className="material-symbols-outlined text-lg">delete</span>
-          </button>
-        )}
-      </div>
-    </div>
+      {confirming && (
+        <div role="alertdialog" aria-label="Discontinue this product?" className="flex flex-col gap-3 border-t border-sand-4 bg-sand px-4 py-3 sm:flex-row sm:items-center">
+          <p className="flex-1 text-[15px]">Discontinue this listing? Buyers stop seeing it. Past orders are not affected.</p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={async () => { setBusy(true); await onDiscontinue(product._id); setBusy(false); setConfirming(false); }}
+              className="btn bg-error text-white hover:bg-[#A51F24]"
+            >
+              Discontinue
+            </button>
+            <button type="button" disabled={busy} onClick={() => setConfirming(false)} className="btn-ghost">Keep</button>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 
@@ -52,71 +85,57 @@ export default function ProductsPage() {
   const client = useApiClient();
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | null>(null);
   const list = useSupplierProducts(page, status);
 
   async function handleDiscontinue(id: string) {
-    if (!confirm('Discontinue this product? It will stop showing to buyers.')) return;
-    await discontinueSupplierProduct(client, id);
-    list.reload();
+    setError(null);
+    try {
+      await discontinueSupplierProduct(client, id);
+      list.reload();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not discontinue the product.');
+    }
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-headline text-2xl font-bold text-on-surface">Products</h1>
-        <Link
-          href="/products/new"
-          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 font-body text-sm font-bold uppercase tracking-wide text-on-primary"
-        >
-          <span className="material-symbols-outlined text-lg">add</span>
-          Add product
+      <PageHead eyebrow="Catalogue" title="Your products">
+        <Link href="/products/new" className="btn-lime self-start sm:self-auto">
+          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add</span>
+          List a product
         </Link>
-      </div>
+      </PageHead>
 
-      <div className="flex flex-wrap gap-2">
-        {([undefined, ...STATUS_FILTERS] as const).map((s) => (
-          <button
-            key={s ?? 'ALL'}
-            onClick={() => { setStatus(s); setPage(1); }}
-            className={
-              status === s
-                ? 'rounded-full bg-primary px-3.5 py-1.5 font-body text-xs font-semibold text-on-primary'
-                : 'rounded-full bg-surface-container-high px-3.5 py-1.5 font-body text-xs font-semibold text-on-surface-variant'
-            }
-          >
-            {s ?? 'All'}
-          </button>
+      <ChipRow label="Filter products">
+        {FILTERS.map((f) => (
+          <Chip key={f.label} active={status === f.value} onClick={() => { setStatus(f.value); setPage(1); }}>{f.label}</Chip>
         ))}
-      </div>
+      </ChipRow>
 
-      {list.status === 'loading' && <p className="font-body text-sm text-on-surface-variant">Loading…</p>}
-      {list.status === 'error' && <p className="font-body text-sm text-error">Couldn't load your products.</p>}
+      {error && <ErrorNote>{error}</ErrorNote>}
+      {list.status === 'loading' && (
+        <div className="flex flex-col gap-3" role="status" aria-label="Loading products">
+          {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-24" />)}
+        </div>
+      )}
+      {list.status === 'error' && <ErrorNote>Couldn&apos;t load your products. Check your connection and try again.</ErrorNote>}
 
       {list.status === 'success' && (
         <>
           {list.products.length === 0 ? (
-            <p className="rounded-xl bg-surface-container-low p-6 text-center font-body text-sm text-on-surface-variant">
-              No products yet. Add your first one to start selling.
-            </p>
+            <EmptyState
+              icon="inventory_2"
+              title={status ? 'Nothing here' : 'List your first product'}
+              body={status ? 'No products with this status.' : 'Pick the material, brand and size. Buyers near you can order as soon as it is live.'}
+              cta={status ? undefined : { href: '/products/new', label: 'List a product' }}
+            />
           ) : (
-            <div className="flex flex-col gap-3">
-              {list.products.map((p) => (
-                <ProductRow key={p._id} product={p} onDiscontinue={handleDiscontinue} />
-              ))}
-            </div>
+            <ul className="flex flex-col gap-3">
+              {list.products.map((p) => <ProductRow key={p._id} product={p} onDiscontinue={handleDiscontinue} />)}
+            </ul>
           )}
-
-          {list.meta.totalPages > 1 && (
-            <div className="flex items-center justify-center gap-3">
-              <button disabled={!list.meta.hasPrev} onClick={() => setPage((p) => p - 1)} className="rounded-lg bg-surface-container-high px-3 py-2 disabled:opacity-40">
-                <span className="material-symbols-outlined text-lg">chevron_left</span>
-              </button>
-              <span className="font-body text-sm text-on-surface-variant">Page {list.meta.page} of {list.meta.totalPages}</span>
-              <button disabled={!list.meta.hasNext} onClick={() => setPage((p) => p + 1)} className="rounded-lg bg-surface-container-high px-3 py-2 disabled:opacity-40">
-                <span className="material-symbols-outlined text-lg">chevron_right</span>
-              </button>
-            </div>
-          )}
+          <Pager page={list.meta.page} totalPages={list.meta.totalPages} hasPrev={list.meta.hasPrev} hasNext={list.meta.hasNext} onPage={setPage} />
         </>
       )}
     </div>
