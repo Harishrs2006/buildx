@@ -6,42 +6,55 @@ import { useCart } from '../lib/cart';
 
 const TABS = [
   { href: '/', label: 'Home', icon: 'home' },
-  { href: '/cart', label: 'Cart', icon: 'shopping_cart' },
+  { href: '/search', label: 'Search', icon: 'search' },
+  { href: '/cart', label: 'Cart', icon: 'shopping_bag' },
   { href: '/orders', label: 'Orders', icon: 'receipt_long' },
-  { href: '/profile', label: 'Profile', icon: 'person' },
+  { href: '/profile', label: 'Account', icon: 'person' },
 ] as const;
 
+// Mobile-only tab bar (the same five tabs the mobile app uses). Hidden from md up, where the
+// header carries navigation. Renders its own spacer so page content never sits underneath it.
 export function BottomNav() {
   const pathname = usePathname();
   const cart = useCart();
   const cartCount = cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
-      {TABS.map((tab) => {
-        const active = pathname === tab.href;
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={
-              active
-                ? 'relative flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-lg px-6 py-2 transition-all duration-200'
-                : 'relative flex flex-col items-center justify-center text-on-surface-variant px-6 py-2 hover:text-primary transition-colors'
-            }
-          >
-            <span className="material-symbols-outlined" style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}>
-              {tab.icon}
-            </span>
-            {tab.href === '/cart' && cartCount > 0 && (
-              <span className="absolute top-0 right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-error px-1 font-body text-[9px] font-bold text-on-error">
-                {cartCount}
+    <>
+      <div className="h-24 md:hidden" aria-hidden="true" />
+      <nav
+        aria-label="Tabs"
+        className="fixed inset-x-3 bottom-3 z-50 flex items-center justify-between rounded-[22px] bg-ink/95 px-2 py-2 shadow-[0_18px_50px_-12px_rgba(11,12,10,0.55)] backdrop-blur-xl md:hidden"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+      >
+        {TABS.map((tab) => {
+          const active = tab.href === '/' ? pathname === '/' : pathname.startsWith(tab.href);
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              aria-current={active ? 'page' : undefined}
+              className={`relative flex min-h-[52px] flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl transition-colors duration-300 ${
+                active ? 'bg-lime text-ink' : 'text-sand/60 hover:text-sand'
+              }`}
+            >
+              <span
+                className="material-symbols-outlined text-[22px]"
+                style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                aria-hidden="true"
+              >
+                {tab.icon}
               </span>
-            )}
-            <span className="font-body text-[10px] font-semibold uppercase tracking-widest mt-1">{tab.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+              <span className="text-[10px] font-semibold tracking-wide">{tab.label}</span>
+              {tab.href === '/cart' && cartCount > 0 && (
+                <span className="absolute right-[18%] top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-signal-red px-1 font-mono text-[9px] font-semibold text-white">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+    </>
   );
 }
