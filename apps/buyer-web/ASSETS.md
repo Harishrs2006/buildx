@@ -1,26 +1,38 @@
 # Landing page media
 
-The landing page story (`components/cinematic/`) uses **no third-party media**. Everything is original and
-lives in this repo, so there is nothing to license and nothing to replace before launch.
+The landing page story (`components/cinematic/`) is built from one photo per chapter. Each photo is
+listed in `components/cinematic/chapters.ts`; a chapter without a photo is left out of the story
+automatically, so adding a photo is all it takes to switch a chapter on.
 
-| What | Where | How it is made | Size |
+## Photos in use (`public/cinematic/`)
+
+| File | Chapter | Scene | Source |
 |---|---|---|---|
-| 3D construction site (trucks, mixer, bricklayers, tiling, painters, electrician, hotel bathroom, skyline) | `components/cinematic/scene/*.tsx` | Built in code with three.js / React Three Fiber primitives; custom GLSL in `scene/shaders.ts` (sky, city windows, bath water, falling stream) | ~0 KB of assets, JS loaded lazily |
-| Chapter posters, landscape | `public/cinematic/chapter-<0..8>.webp` | Rendered from the 3D scene at 1920x1080 | 55-150 KB each |
-| Chapter posters, portrait | `public/cinematic/chapter-<0..8>-portrait.webp` | Rendered from the 3D scene at 430x900 @2x | 20-75 KB each |
+| `hero.jpg` | Hero, and the closing chapter for now | Indian construction site at golden hour: tower crane, concrete frame, mixer and tipper trucks, workers in hi-vis walking | AI-generated for BuildX with Canva AI (Magic Media), 2026-10-28 |
+| `trucks.jpg` | Delivery | Supervisor waving a truck loaded with steel bars through the site gate | AI-generated, Canva AI, 2026-10-28 |
+| `concrete.jpg` | Concrete | Transit mixer pouring concrete down a chute onto rebar mesh, workers spreading it | AI-generated, Canva AI, 2026-10-28 |
+| `bricks.jpg` | Masonry | Worker tossing a brick to a mason laying a red brick wall | AI-generated, Canva AI, 2026-10-28 |
+| `interiors.jpg` | Interiors | Tile layer setting large vitrified tiles, plywood and tile boxes behind | AI-generated, Canva AI, 2026-10-28 |
 
-Posters are the LCP image on first paint, the whole story on phones and low-power devices, and the
-reduced-motion version.
+All photos are 1680x944 JPG (~220-470 KB). They are served through the Next.js image optimiser
+(`next/image` and `photoUrl()` in `chapters.ts`), which resizes them per screen and converts them to
+WebP/AVIF, so visitors never download the originals. These are generated images, not photos of real
+BuildX suppliers or sites, and they contain no brand names or logos.
 
-## Re-rendering the posters after changing the scene
-1. `npm run dev` in `apps/buyer-web` (port 3001).
-2. Open `http://localhost:3001/?still=<chapter>` (development only) to see the bare 3D stage frozen at that chapter.
-3. Capture each chapter at 1920x1080 and at 430x900 (device scale 2) as WebP, quality ~82, into
-   `public/cinematic/` with the names above. Any headless Chrome screenshot tool works.
+## Still to add (chapter is hidden until its photo exists)
+
+| File | Chapter | Scene to create |
+|---|---|---|
+| `paint.jpg` | Paint | Painters on rope-access seats rolling bold colours onto a building facade |
+| `electrical.jpg` | Electrical | Electrician on a ladder at dusk, distribution board wiring, colourful string lights glowing |
+| `plumbing.jpg` | Plumbing | Five-star hotel bathroom, gold tap filling a freestanding tub, rain shower behind glass, plumber checking a fitting |
+| `skyline.jpg` | Closing chapter | Indian city skyline at dusk, new towers with lit windows, cranes on a tower nearing completion |
+
+To add one: save a landscape photo (at least 1600 px wide, 16:9) as `public/cinematic/<file>`, set
+`photo: '/cinematic/<file>'` (and optionally `focus`) on that chapter in `chapters.ts`. For the skyline,
+replace the hero photo on the `skyline` chapter. Use only images BuildX generated, owns, or has a
+licence for, and note the source in the tables above. No other brands' photos, logos or copy.
 
 ## Optional upgrade: filmed footage
-If the team later shoots or licenses real video (for example a hero clip of a site at golden hour), use:
-- `public/cinematic/hero.mp4` (H.264) and `hero.webm` (VP9), 720p, under 3 MB, 8-12 s seamless loop, no audio.
-- Record the source and licence (Pexels/Mixkit licence or "owned by BuildX") in this file.
-- Keep the poster for the first paint and keep the 3D/poster fallbacks for phones and reduced motion.
-Do not use footage, logos or copy from other brands.
+A real hero clip (site at golden hour, 8-12 s seamless loop, 720p, under 3 MB, H.264 + VP9, no audio)
+can replace the hero photo later. Keep the photo as its poster and for phones and reduced motion.

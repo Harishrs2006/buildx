@@ -10,8 +10,10 @@ Times are IST.
   Recreate it if the scratchpad is gone (headless Chrome + Emulation.setDeviceMetricsOverride).
 
 ## NEXT STEPS
-0. Cinematic 3D landing (branch feat/cinematic-landing, PR open): user merges -> live. Afterwards: optional real
-   footage (see apps/buyer-web/ASSETS.md), re-render posters if the 3D scene changes (/?still=N in dev).
+0. Cinematic PHOTO landing (branch feat/cinematic-landing, PR #30): user merges -> live. Then add the 4 missing
+   chapter photos (paint, electrical, plumbing, skyline; list + prompts in apps/buyer-web/ASSETS.md). Canva AI quota
+   ran out after 5 images on 2026-10-28; retry when it resets or use another source the user approves.
+0b. Pending user decision: free sign-in alternative (Google sign-in via Firebase recommended; SMS is never free).
 1. DONE 2026-10-28 (Chrome session): Firebase web app 'BuildX Web' registered in project buildx-15494; the 4
    NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
    Firebase Auth authorized domains (via Identity Toolkit admin API, the console form kept rejecting it). Production
@@ -119,3 +121,12 @@ Times are IST.
   Lighthouse mobile (simulated, like PageSpeed): 84 perf / 96 a11y / 96 best practices, CLS 0.011, LCP 3.5 s
   (live baseline with old landing: 55, LCP 16.5 s). Devtools-throttled run: 56. Desktop preset run fails with
   NO_NAVSTART in headless (WebGL), not measured. SEO 66 is the intentional noindex.
+- 22:40 User: 3D workers look "AI"/toy-like, wants real photographic scenes (refs photo-ref-1..3 in user-brief).
+  Removed the three.js/R3F scene + deps + 3D posters. Generated 5 photoreal images with Canva AI (hero site at golden
+  hour, steel truck at gate, concrete pour, brick toss, tile laying), exported full-size via Canva design export
+  (Open in editor -> export-design jpg 1680x944) into apps/buyer-web/public/cinematic. Canva quota exceeded for paint,
+  electrical, plumbing, skyline: those chapters auto-hide until photo exists (chapters.ts filters on photo).
+  New PhotoStage.tsx: raw WebGL1 shader (cover crop + focus, scroll push-in, pointer parallax, fbm liquid dissolve,
+  lime seam). Phones: next/image photos with CSS 3D crossfade. Bug fixed: loseContext in effect cleanup broke React
+  Strict Mode remount. Tests 12 pass. Lighthouse mobile: simulated 62-65 (lantern cannot find LCP element, observed
+  LCP 0.77 s), devtools-throttled 78 (LCP 3.5 s, CLS 0.022), accessibility 100.
