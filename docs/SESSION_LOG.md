@@ -181,3 +181,12 @@ Times are IST.
   like 'materials'/'services' did not exist), category photos from the web app, removed invented "HEAVY MACHINERY
   RENTALS NOW OPEN in Tumakuru" promo. app.json splash/icon bg -> ink (applies on next native build).
   tsc: only the 2 pre-existing typed-route errors in app/_layout.tsx (same on main locally; CI passes).
+- 02:30 User: landing images should move ("works doing"), change automatically, and NOT change on touch/scroll;
+  must run smoothly. Branch feat/hero-slideshow: replaced the scroll-pinned story + WebGL PhotoStage + Lenis with
+  components/cinematic/HeroSlideshow.tsx: full-screen, timer-driven (the progress bar's CSS animation is the clock),
+  Ken Burns push-in towards each photo's focus point, 1.4 s crossfade, next photo preloaded and required before
+  switching, pauses when off-screen / tab hidden / user presses pause, reduced motion = one still photo, no controls.
+  Removed CinematicLanding, PhotoStage, useChapterScroll, motionTier, lenis. Measured (scratchpad perf.mjs, headless
+  Chrome, 20 s): desktop 60 fps, 0 frames >33 ms, no long tasks, CLS 0.002; phone 390px with 4x CPU throttle 59.8 fps,
+  1 frame >33 ms, no long tasks; slide every ~6.5 s; scroll/click/touch never changed the slide.
+  Real worker motion needs AI video (Figma Weave not linked to the user's account), so camera motion only for now.

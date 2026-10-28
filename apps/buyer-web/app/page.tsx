@@ -6,7 +6,7 @@ import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { CategoryGrid, CategoryGridSkeleton } from '@/components/CategoryGrid';
-import { CinematicLanding } from '@/components/cinematic/CinematicLanding';
+import { HeroSlideshow } from '@/components/cinematic/HeroSlideshow';
 import { Reveal } from '@/components/motion/Reveal';
 import { useCategories } from '@/lib/categories';
 import { SITE } from '@/lib/site';
@@ -62,7 +62,7 @@ export default function HomePage() {
       <Header tone="dark" darkUntilId="story" />
 
       <main id="main">
-        <CinematicLanding categories={categories.status === 'success' ? categories.data : null} />
+        <HeroSlideshow categories={categories.status === 'success' ? categories.data : null} />
 
         {/* ── Materials marquee ─────────────────────────── */}
         <div className="relative overflow-hidden border-y border-ink bg-lime py-4 text-ink" aria-label="Materials on BuildX">
