@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const KEY = 'buildx.storageNotice';
 
@@ -9,6 +10,7 @@ const KEY = 'buildx.storageNotice';
 // gate: there is nothing optional to accept or reject. Shown once, then remembered.
 export function StorageNotice() {
   const [show, setShow] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     try {
@@ -25,7 +27,8 @@ export function StorageNotice() {
     setShow(false);
   }
 
-  if (!show) return null;
+  // Sign-in screens already show the reCAPTCHA notice; keep them uncluttered
+  if (!show || pathname === '/signin' || pathname === '/onboard') return null;
 
   return (
     <div

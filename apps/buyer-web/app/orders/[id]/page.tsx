@@ -74,7 +74,7 @@ function OrderDetail({ id }: { id: string }) {
 
       <div className="rounded-xl bg-surface-container-low p-5">
         <h2 className="font-headline font-bold">Delivery address</h2>
-        <p className="mt-2 font-body text-sm text-on-surface-variant">{order.deliveryAddress.label} — {order.deliveryAddress.fullAddress}</p>
+        <p className="mt-2 font-body text-sm text-on-surface-variant">{order.deliveryAddress.label}: {order.deliveryAddress.fullAddress}</p>
       </div>
 
       {cancellable && (

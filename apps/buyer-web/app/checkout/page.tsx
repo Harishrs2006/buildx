@@ -124,7 +124,7 @@ function CheckoutForm() {
           <span className="font-body text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Payment method</span>
           <p className="mt-1 flex items-center gap-2 font-body text-sm text-on-surface">
             <span className="material-symbols-outlined text-lg">payments</span>
-            Cash on Delivery — pay when it arrives
+            Cash on delivery: pay when it arrives
           </p>
         </div>
 

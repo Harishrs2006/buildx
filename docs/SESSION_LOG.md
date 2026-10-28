@@ -53,5 +53,10 @@ Times are IST.
   login protected. Live API = https://buildx-api.onrender.com. Live bundle has no Firebase web config (sign-in broken in prod).
 - 16:15 Screenshot QA: fixed logo tile invisible on dark (LogoMark onDark), mobile horizontal overflow (grid minmax(0,1fr) +
   overflow-x clip), hero capped at min(100svh,980px), hero blocks rebuilt as a clean stacked tower.
+- 16:35 CDP screenshot script (scratchpad/shot.mjs) for true mobile widths; mobile has no overflow. Reveal now also
+  shows elements already scrolled past. Storage notice hidden on /signin and /onboard. Em dashes removed from inner pages.
+  New ProductListCard, category page header/skeletons/footer, product page footer, alt text on product images.
+  docs/DESIGN_SYSTEM.md written (web + Expo mapping). Build passes.
+- 16:40 User: full autonomy (deploy, env keys, auth via Claude in Chrome extension). Saved globally + memory.
 - 16:20 Saved global prefs: decide technical things myself; questions need (Recommended) + chat option; commit+push after
   every sub-task because usage limits / shutdowns can cut a session; "continue" = read log and resume.

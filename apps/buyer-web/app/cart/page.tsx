@@ -34,7 +34,7 @@ export default function CartPage() {
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
                     {item.imageUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt="" className="h-full w-full object-cover" />
+                      <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">

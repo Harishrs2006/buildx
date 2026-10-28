@@ -22,7 +22,8 @@ export function Reveal({
     if (!el) return;
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) {
+        // Also reveal anything already above the viewport (fast scroll, anchor jump, print)
+        if (entry.isIntersecting || entry.boundingClientRect.top < 0) {
           el.classList.add('is-visible');
           io.disconnect();
         }
