@@ -10,7 +10,9 @@ import { Logo } from './brand/Logo';
 
 // `tone="dark"` starts transparent over the ink hero on the landing page and turns into a
 // sand glass bar once the page scrolls. Every other page uses the light bar from the start.
-export function Header({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
+// `darkUntilId` keeps the dark bar until the bottom of that element passes under the header
+// (the landing page's pinned 3D story).
+export function Header({ tone = 'light', darkUntilId }: { tone?: 'light' | 'dark'; darkUntilId?: string }) {
   const cart = useCart();
   const cartCount = cart?.items.reduce((n, i) => n + i.quantity, 0) ?? 0;
   const location = useSelectedLocation();
@@ -21,11 +23,14 @@ export function Header({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
   const [searchOpen, setSearchOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => {
+      const until = darkUntilId ? document.getElementById(darkUntilId) : null;
+      setScrolled(until ? until.getBoundingClientRect().bottom < 80 : window.scrollY > 24);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [darkUntilId]);
 
   const dark = tone === 'dark' && !scrolled;
 

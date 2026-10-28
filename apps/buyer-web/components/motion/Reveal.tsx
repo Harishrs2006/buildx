@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ElementType, type ReactNode, type CSSProperties } from 'react';
+import { useEffect, useRef, type ReactNode, type CSSProperties } from 'react';
 
 // Fades + lifts its child into place the first time it scrolls into view. The hidden starting
 // state lives in globals.css behind `.js`, and reduced-motion users get it instantly.
@@ -10,12 +10,12 @@ export function Reveal({
   className,
   children,
 }: {
-  as?: ElementType;
+  as?: 'div' | 'li' | 'section';
   delay?: number;
   className?: string;
   children: ReactNode;
 }) {
-  const ref = useRef<HTMLElement>(null);
+  const ref = useRef<HTMLDivElement & HTMLLIElement>(null);
 
   useEffect(() => {
     const el = ref.current;

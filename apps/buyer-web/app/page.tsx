@@ -1,14 +1,14 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { LocationSelector } from '@buildx/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { CategoryGrid, CategoryGridSkeleton } from '@/components/CategoryGrid';
-import { HeroVisual } from '@/components/landing/HeroVisual';
-import { Reveal, SplitLines } from '@/components/motion/Reveal';
-import { Spotlight } from '@/components/motion/Spotlight';
+import { CinematicLanding, StillStage } from '@/components/cinematic/CinematicLanding';
+import { Reveal } from '@/components/motion/Reveal';
 import { useCategories } from '@/lib/categories';
 import { SITE } from '@/lib/site';
 
@@ -55,82 +55,29 @@ const PRINCIPLES = [
   { icon: 'lock', title: 'Phone sign-in, no passwords', body: 'One-time codes over SMS. Nothing to remember, nothing to leak.' },
 ];
 
+// Development only: /?still=<chapter> renders the bare 3D stage for capturing poster images
+function useStillChapter(): number | null {
+  const [still, setStill] = useState<number | null>(null);
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+    const v = new URLSearchParams(window.location.search).get('still');
+    if (v !== null && !Number.isNaN(Number(v))) setStill(Number(v));
+  }, []);
+  return still;
+}
+
 export default function HomePage() {
   const categories = useCategories();
+  const still = useStillChapter();
+
+  if (still !== null) return <StillStage chapter={still} />;
 
   return (
     <>
-      <Header tone="dark" />
+      <Header tone="dark" darkUntilId="story" />
 
       <main id="main">
-        {/* ── Hero ─────────────────────────────────────── */}
-        <section className="on-ink grain relative isolate overflow-hidden bg-ink text-sand">
-          <div className="blueprint absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_center,#000_30%,transparent_75%)]" />
-          <Spotlight />
-
-          <div className="container-x relative grid grid-cols-[minmax(0,1fr)] items-center gap-10 pb-16 pt-[calc(var(--header-h)+40px)] md:pb-24 lg:min-h-[min(100svh,980px)] lg:grid-cols-12 lg:gap-6 lg:pt-[var(--header-h)]">
-            <div className="lg:col-span-7">
-              <p className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pl-2 pr-4 text-[13px] text-sand/70">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-pulse-ring rounded-full bg-lime" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-lime" />
-                </span>
-                Starting in Tumakuru, Karnataka
-              </p>
-
-              <h1 className="mt-7 font-display text-[clamp(3rem,8.4vw,7.25rem)] font-bold leading-[0.92] tracking-tightest">
-                <SplitLines
-                  start={120}
-                  lines={[
-                    'Build with',
-                    'materials',
-                    <>
-                      you can <em className="font-serif font-normal italic tracking-[-0.02em] text-lime">trust.</em>
-                    </>,
-                  ]}
-                />
-              </h1>
-
-              <p
-                className="mt-7 max-w-[520px] animate-fade-up text-pretty text-[17px] leading-relaxed text-sand/65 sm:text-lg"
-                style={{ animationDelay: '450ms' }}
-              >
-                Cement, steel, sand, bricks and everything else your site needs, from verified local suppliers. Check delivery
-                to your PIN, see honest prices, and pay cash on delivery.
-              </p>
-
-              <div className="mt-9 flex animate-fade-up flex-wrap items-center gap-3" style={{ animationDelay: '600ms' }}>
-                <Link href="#categories" className="btn-lime group">
-                  Browse materials
-                  <span className="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">
-                    arrow_forward
-                  </span>
-                </Link>
-                <Link href="#delivery" className="btn-ghost-dark">
-                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">pin_drop</span>
-                  Check my PIN code
-                </Link>
-              </div>
-
-              <dl className="mt-14 grid max-w-[560px] animate-fade-up grid-cols-3 gap-4 sm:gap-6 border-t border-white/10 pt-6" style={{ animationDelay: '750ms' }}>
-                {[
-                  ['Payment', 'Cash on delivery'],
-                  ['Sign-in', 'Phone OTP'],
-                  ['Pricing', 'Server checked'],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <dt className="eyebrow text-sand/40">{k}</dt>
-                    <dd className="mt-2 text-[14px] font-medium text-sand/90 sm:text-[15px]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-
-            <div className="lg:col-span-5">
-              <HeroVisual />
-            </div>
-          </div>
-        </section>
+        <CinematicLanding categories={categories.status === 'success' ? categories.data : null} />
 
         {/* ── Materials marquee ─────────────────────────── */}
         <div className="relative overflow-hidden border-y border-ink bg-lime py-4 text-ink" aria-label="Materials on BuildX">
