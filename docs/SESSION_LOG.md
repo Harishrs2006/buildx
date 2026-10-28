@@ -72,3 +72,6 @@ Times are IST.
 - 17:30 User: product cards had no photos. Image sites unreachable from this machine, so drew 12 original isometric
   material illustrations (apps/buyer-web/public/illustrations/*.svg, generator scripts/generate-illustrations.py). lib/illustrations.ts
   maps product name/category to one; shown with an 'Illustration' label on cards, product page and cart when no supplier photo.
+- 17:45 PR #26 merged (4faa314), live: category pages show labelled illustrations. TODO: product/supplier names in the
+  production DB (seed data) contain em dashes, e.g. 'BuildX Demo Supplier (placeholder — not a real business)'; fix in
+  apps/api/src/scripts/seed.ts and the live DB. Next session: Firebase keys in Vercel (needs /chrome).
