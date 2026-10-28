@@ -2,18 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: light;
+    --header-h: 72px;
+  }
+  html,
+  body {
+    overflow-x: clip;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-sand text-ink font-sans antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    @apply bg-lime text-ink;
+  }
+  /* One visible, high-contrast focus style for every interactive element */
+  :focus-visible {
+    outline: 2px solid #2457ff;
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+  .on-ink :focus-visible {
+    outline-color: #c8ff3d;
+  }
+}
+
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-[1320px] px-5 sm:px-8 lg:px-12;
+  }
+  .eyebrow {
+    @apply font-mono text-[11px] font-medium uppercase tracking-[0.18em];
+  }
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3.5 text-[15px] font-semibold transition-[transform,background-color,color,box-shadow] duration-300 ease-out-expo active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
+  }
+  .btn-lime {
+    @apply btn bg-lime text-ink shadow-[0_0_0_0_rgba(200,255,61,0.5)] hover:shadow-[0_10px_40px_-8px_rgba(200,255,61,0.65)];
+  }
+  .btn-ink {
+    @apply btn bg-ink text-sand hover:bg-ink-3;
+  }
+  .btn-ghost {
+    @apply btn border border-ink/15 bg-transparent hover:bg-ink/5;
+  }
+  .btn-ghost-dark {
+    @apply btn border border-white/15 bg-white/[0.03] text-sand hover:bg-white/10;
+  }
+  .field {
+    @apply w-full rounded-xl border border-sand-4 bg-sand-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-stone-light focus:border-ink focus:shadow-[0_0_0_4px_rgba(200,255,61,0.55)];
+  }
+  .card {
+    @apply rounded-2xl border border-sand-4/70 bg-sand-2;
+  }
+  .skeleton {
+    @apply rounded-xl bg-[linear-gradient(90deg,#E8E4D9_0%,#F2EFE7_50%,#E8E4D9_100%)] bg-[length:200%_100%] animate-shimmer;
+  }
+  .grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .blueprint {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+  .blueprint-light {
+    background-image:
+      linear-gradient(rgba(11, 12, 10, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(11, 12, 10, 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  .mask-fade-x {
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  }
+}
+
+/* Scroll reveal: elements start hidden only once JS has marked the page ready, so content is
+   never invisible for users without JavaScript. */
 .material-symbols-outlined {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  user-select: none;
 }
 
-body {
-  min-height: 100dvh;
-}
-
-/* Invisible reCAPTCHA container Firebase needs somewhere in the DOM — never shown */
+/* Invisible reCAPTCHA container Firebase needs somewhere in the DOM, never shown */
 #recaptcha-container {
   position: fixed;
   bottom: 0;
   left: 0;
   visibility: hidden;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(105%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
 }

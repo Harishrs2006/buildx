@@ -28,3 +28,11 @@ export type { LocationSelectorProps } from './location/LocationSelector';
 
 export { fetchProducts, useProductsForLocation } from './products/products';
 export type { ProductQuery, ProductsState } from './products/products';
+
+// Material catalogue: what exists in the Indian market and how it is sold (no prices or stock)
+export {
+  CATALOG, CATALOG_CATEGORIES, catalogCategory, catalogItems, catalogItem, matchCatalogItem, offerQuery,
+  suggestedListingUnit, suggestedListingName,
+} from './catalog/data';
+export type { CatalogItem, CatalogCategory, Calculator, ListingUnit, Spec, VariantGroup, SoldAs } from './catalog/types';
+export * as units from './catalog/units';

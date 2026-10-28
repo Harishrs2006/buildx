@@ -1,7 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { categoryIcon, type Category } from '@/lib/categories';
-import { catalogCategory, catalogItems } from '@/lib/catalog/data';
+import { catalogCategory, catalogItems } from '@buildx/web-core';
 import { Reveal } from './motion/Reveal';
 
 export function CategoryGrid({ categories }: { categories: Category[] }) {

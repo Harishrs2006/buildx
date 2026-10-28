@@ -1,4 +1,4 @@
-import type { CatalogCategory, CatalogItem } from './types';
+import type { CatalogCategory, CatalogItem, ListingUnit } from './types';
 
 // Material types, specs, trade units and well-known brands in the Indian market (checked against
 // BIS standards and public product listings, October 2026). Brand lists say what exists in the
@@ -586,7 +586,7 @@ export function matchCatalogItem(productName: string, categorySlug?: string): Ca
   const pool = categorySlug ? catalogItems(categorySlug) : CATALOG;
   let best: { item: CatalogItem; score: number } | undefined;
   for (const item of pool) {
-    const phrases = [item.search, ...(item.aliases ?? [])].map(normalise);
+    const phrases = [item.search, item.name.replace(/\s*\(.*\)\s*$/, ''), ...(item.aliases ?? [])].map(normalise);
     // longer matched phrase = more specific match
     const phrase = Math.max(0, ...phrases.filter((p) => name.includes(p)).map((p) => p.length));
     const words = normalise(item.search).trim().split(' ').filter((w) => w.length > 1);
@@ -600,4 +600,24 @@ export function matchCatalogItem(productName: string, categorySlug?: string): Ca
 // Search text for GET /products?q= (MongoDB text search matches any of the words)
 export function offerQuery(item: CatalogItem): string {
   return [item.search, ...(item.aliases ?? [])].join(' ');
+}
+
+// The API unit a supplier listing should usually use, from how the trade sells the item
+export function suggestedListingUnit(item: CatalogItem): ListingUnit {
+  const first = item.soldAs[0]?.label.toLowerCase() ?? '';
+  if (first.includes('bag')) return 'BAG';
+  if (first.includes('tonne')) return 'TON';
+  if (first.includes('per kg')) return 'KG';
+  if (first.includes('cubic metre')) return 'CUBIC_METER';
+  if (first.includes('square metre') || first.includes('square foot')) return 'SQUARE_METER';
+  if (first.includes('metre') && !first.includes('cubic')) return 'METER';
+  return 'PIECE';
+}
+
+// A listing name buyers will recognise and matchCatalogItem will map back to this item:
+// brand first, then the material, then the chosen options
+export function suggestedListingName(item: CatalogItem, brand: string | null, choices: Record<string, string | null>): string {
+  const base = item.name.replace(/\s*\(.*\)\s*$/, '');
+  const options = item.variants.map((v) => choices[v.label]).filter((v): v is string => !!v);
+  return [brand, base, ...options].filter(Boolean).join(' ');
 }

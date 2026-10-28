@@ -12,7 +12,7 @@ import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { useProduct } from '@/lib/products';
 import { useSupplierReviews } from '@/lib/reviews';
 import { addToCart } from '@/lib/cart';
-import { matchCatalogItem } from '@/lib/catalog/data';
+import { matchCatalogItem } from '@buildx/web-core';
 import { rupees } from '@/lib/format';
 
 const relativeDate = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });

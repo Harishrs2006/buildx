@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import type { CatalogItem } from '@/lib/catalog/types';
+import type { CatalogItem } from '@buildx/web-core';
 
 // A material type in the catalogue (not a supplier listing): what it is, sizes and how it is sold
 export function MaterialCard({ item }: { item: CatalogItem }) {

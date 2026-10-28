@@ -10,7 +10,7 @@ import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ProductListCard } from '@/components/ProductListCard';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { useCategories } from '@/lib/categories';
-import { catalogCategory, catalogItems } from '@/lib/catalog/data';
+import { catalogCategory, catalogItems } from '@buildx/web-core';
 
 // Only sort orders the API actually supports, so no filter promises a feature that isn't real
 const SORTS = [
