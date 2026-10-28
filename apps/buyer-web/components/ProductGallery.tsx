@@ -1,16 +1,21 @@
 'use client';
 
 import { useState } from 'react';
+import { illustrationFor } from '@/lib/illustrations';
 
-export function ProductGallery({ images, badges, name = 'Product' }: { images: { url: string; isPrimary?: boolean }[]; badges?: string[]; name?: string }) {
+export function ProductGallery({ images, badges, name = 'Product', category }: { images: { url: string; isPrimary?: boolean }[]; badges?: string[]; name?: string; category?: string }) {
   const ordered = [...images].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
   const [active, setActive] = useState(0);
   const main = ordered[active];
 
   if (!main) {
     return (
-      <div className="aspect-[4/3] rounded-xl bg-surface-container-low flex items-center justify-center text-on-surface-variant font-body">
-        No image available
+      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-sand-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={illustrationFor(name, category)} alt="" className="h-full w-full object-cover" />
+        <span className="absolute bottom-4 right-4 rounded-full bg-ink/80 px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em] text-sand backdrop-blur">
+          Illustration. Supplier photo coming soon
+        </span>
       </div>
     );
   }

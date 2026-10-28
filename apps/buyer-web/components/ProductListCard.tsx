@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { ProductSummary } from '@buildx/web-core';
+import { illustrationFor } from '@/lib/illustrations';
 
 type ProductExtras = {
   images?: { url: string; isPrimary?: boolean }[];
   supplierId?: { businessName?: string };
+  categoryId?: { name?: string };
   deliveryDays?: number;
   avgRating?: number;
   totalReviews?: number;
@@ -41,10 +43,18 @@ export function ProductListCard({ product }: { product: ProductSummary }) {
             decoding="async"
           />
         ) : (
-          <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-stone">
-            <span className="material-symbols-outlined text-4xl" aria-hidden="true">image</span>
-            <span className="text-[13px]">No photo yet</span>
-          </div>
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={illustrationFor(product.name, extra.categoryId?.name)}
+              alt=""
+              className="h-full w-full object-cover transition-transform duration-700 ease-out-expo group-hover:scale-105"
+              loading="lazy"
+            />
+            <span className="absolute bottom-3 right-3 rounded-full bg-ink/80 px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-sand backdrop-blur">
+              Illustration
+            </span>
+          </>
         )}
         {rated && (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-sand-2/95 px-2.5 py-1 text-[12px] font-semibold text-ink backdrop-blur">

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Cement bags illustration">
+<defs>
+  <radialGradient id="g" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#FAF8F3"/><stop offset="1" stop-color="#E4DFD3"/></radialGradient>
+  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#0B0C0A" stroke-opacity=".05"/></pattern>
+</defs>
+<rect width="480" height="360" fill="url(#g)"/>
+<rect width="480" height="360" fill="url(#grid)"/>
+<ellipse cx="240" cy="292" rx="170" ry="30" fill="#0B0C0A" opacity=".12"/>
+<g ><polygon points="150.0,157.0 300.0,232.0 300.0,270.0 150.0,195.0" fill="#C8C4BB"/><polygon points="300.0,232.0 390.0,187.0 390.0,225.0 300.0,270.0" fill="#A3A098"/><polygon points="240.0,112.0 390.0,187.0 300.0,232.0 150.0,157.0" fill="#E9E5DA"/></g><polygon points="190.0,185.0 260.0,220.0 260.0,236.0 190.0,201.0" fill="#0B0C0A" opacity="0.85"/><g ><polygon points="150.0,119.0 300.0,194.0 300.0,232.0 150.0,157.0" fill="#C8C4BB"/><polygon points="300.0,194.0 390.0,149.0 390.0,187.0 300.0,232.0" fill="#A3A098"/><polygon points="240.0,74.0 390.0,149.0 300.0,194.0 150.0,119.0" fill="#E9E5DA"/></g><polygon points="190.0,147.0 260.0,182.0 260.0,198.0 190.0,163.0" fill="#0B0C0A" opacity="0.85"/><g ><polygon points="150.0,81.0 300.0,156.0 300.0,194.0 150.0,119.0" fill="#C8C4BB"/><polygon points="300.0,156.0 390.0,111.0 390.0,149.0 300.0,194.0" fill="#A3A098"/><polygon points="240.0,36.0 390.0,111.0 300.0,156.0 150.0,81.0" fill="#E9E5DA"/></g><polygon points="190.0,109.0 260.0,144.0 260.0,160.0 190.0,125.0" fill="#C8FF3D" opacity="1"/><text x="230" y="106" transform="rotate(26.57 230 106)" font-family="Arial, sans-serif" font-weight="800" font-size="18" fill="#0B0C0A" letter-spacing="2">CEMENT</text>
+</svg>

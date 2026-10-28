@@ -69,3 +69,6 @@ Times are IST.
   mobile layout OK. Contributors widget should drop "claude" now that main has a fresh push (API already clean).
 - 17:00 Claude in Chrome tools unavailable in this session. Private backup repo upload denied by permission classifier.
 - 17:10 User decision: keep PRD + reference images local in Desktop/BuildX/user-brief (consolidated there, incl. PRD and Stitch zip).
+- 17:30 User: product cards had no photos. Image sites unreachable from this machine, so drew 12 original isometric
+  material illustrations (apps/buyer-web/public/illustrations/*.svg, generator scripts/generate-illustrations.py). lib/illustrations.ts
+  maps product name/category to one; shown with an 'Illustration' label on cards, product page and cart when no supplier photo.
