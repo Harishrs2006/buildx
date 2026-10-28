@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 22, fontWeight: '700', color: '#fff' },
   name: { fontSize: 16, fontWeight: '700', color: Colors.text },
   phone: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  roleBadge: { marginTop: 6, alignSelf: 'flex-start', backgroundColor: '#FFF7ED', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  roleBadge: { marginTop: 6, alignSelf: 'flex-start', backgroundColor: Colors.primaryLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   roleText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.text, marginBottom: 12 },

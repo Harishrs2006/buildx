@@ -28,7 +28,8 @@ Times are IST.
    orders list, order detail (dark header, timeline, in-page cancel confirm instead of window.confirm), profile.
    Shared: components/account/AccountUI.tsx + OrderRow.tsx, lib/format.ts. Signed-in screens not screenshot-tested
    (need login); user can check with test number 70192 82018 / code 123456.
-5. Seller-web Hi-Vis DONE (PR feat/seller-hivis). Next: apps/mobile (spec: docs/DESIGN_SYSTEM.md).
+5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
+   Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
 6. Add a strict CSP only together with an end-to-end OTP test.
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
@@ -170,3 +171,13 @@ Times are IST.
   "buyers will find this" check -> price/unit/stock/MOQ/delivery days -> photos; sticky save bar), sign-in with 6-box OTP,
   resend timer and Change number (resetOtp added), onboarding on the split AuthShell. lib/categoryTemplates.ts removed.
   Friendly sign-in config error (dev detail goes to console). Signed-in screens verified by type-check + build only.
+- 01:20 Vercel Hobby build-rate-limit hit (3 projects build per push: buildx, buildx-48kc, buildx-vgud). Offered to
+  disconnect the 2 likely-duplicate projects (needs user OK). PR #37 merged by user.
+- 01:40 Mobile pass 1 (feat/mobile-hivis): read apps/mobile AGENTS.md (Expo v56 docs first). colors.ts remapped to
+  Hi-Vis (same keys + brand names) so all 37 screens re-skin; src/components/ui.tsx (TabItem/tabBarStyle, Button, Card,
+  Eyebrow, Pill, type); 4 role tab bars: ink bar + lime active pill, emoji icons removed (no icon lib installed; adding
+  @expo/vector-icons/expo-font needs a native rebuild, so not done). Auth phone + OTP rebuilt (dark brand panel, inline
+  errors, SMS autofill oneTimeCode/sms-otp). Buyer home: real categories via new useCategories (old hard-coded slugs
+  like 'materials'/'services' did not exist), category photos from the web app, removed invented "HEAVY MACHINERY
+  RENTALS NOW OPEN in Tumakuru" promo. app.json splash/icon bg -> ink (applies on next native build).
+  tsc: only the 2 pre-existing typed-route errors in app/_layout.tsx (same on main locally; CI passes).
