@@ -1,128 +1,124 @@
-# BuildX — Construction Materials Marketplace
+# BuildX
 
-> B2B platform connecting contractors and construction companies with verified local suppliers — built for tier-2/3 India (starting Tumakuru, Karnataka)
+BuildX is a B2B marketplace for construction materials in India: contractors and builders
+browse, compare and order cement, bricks, sand, steel, plumbing, electricals and more from
+verified local suppliers, with real time stock, per item GST and Cash on Delivery. Built for
+tier 2/3 India, starting with Tumakuru, Karnataka.
 
 [![CI](https://github.com/Harishrs2006/buildx/actions/workflows/ci.yml/badge.svg)](https://github.com/Harishrs2006/buildx/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
----
+## Live
 
-## What is BuildX?
+| App | URL | Status |
+|---|---|---|
+| Buyer storefront | [buildx-vgud.vercel.app](https://buildx-vgud.vercel.app) | Live, Hi-Vis design |
+| Seller portal | [buildx-48kc.vercel.app](https://buildx-48kc.vercel.app) | Live, pending Hi-Vis restyle |
+| API | [buildx-api.onrender.com](https://buildx-api.onrender.com) | Live (free tier, sleeps when idle) |
+| Mobile app | not published | Expo app, run locally for now |
 
-BuildX is a B2B marketplace mobile app where contractors and builders browse, compare, and order construction materials (cement, sand, bricks, steel, equipment rentals) directly from verified local suppliers — with real-time stock, per-item GST calculation, and Cash on Delivery.
+Sign in uses Firebase phone OTP. Real SMS needs a Firebase Blaze (billing) plan, which this
+project has not enabled yet, so only two test numbers work on the live sites for now:
+`+91 7019282018` and `+91 7019282019`, OTP code `123456`.
 
-## Tech Stack
+## Apps in this monorepo
+
+| App | What it is |
+|---|---|
+| `apps/buyer-web` | The public storefront (Next.js). Cinematic landing page, category and material browsing, cart, checkout, orders, profile. |
+| `apps/seller-web` | The supplier portal (Next.js). Phone sign-in, a category aware product form, order management. |
+| `apps/api` | The backend (Express, MongoDB, TypeScript). Authoritative for prices, stock, roles and order status. |
+| `apps/mobile` | The original React Native (Expo) app: buyer, supplier, delivery partner and ops roles. |
+| `apps/web` | An older Next.js admin panel. Currently broken, not a priority. |
+| `packages/web-core` | Shared API client, location picker and product hooks used by both web apps. |
+| `packages/shared` | Shared TypeScript types and constants used by the API and the web apps. |
+
+## Tech stack
 
 | Layer | Technology |
 |---|---|
-| Mobile App | React Native (Expo), TypeScript, Expo Router |
-| Backend API | Node.js, Express.js, TypeScript |
-| Database | MongoDB Atlas (Mongoose ODM) |
-| Auth | Firebase Authentication (Phone OTP) |
-| Storage | Cloudinary (image CDN) |
-| Cache | Redis (ioredis) |
-| State | Zustand + MMKV persistence |
-| Data Fetching | TanStack Query v5 |
-| Payments | Cash on Delivery (Razorpay integration planned) |
-| Infra | Docker (Redis), GitHub Actions CI |
+| Web apps | Next.js (App Router), TypeScript, Tailwind CSS |
+| Mobile app | React Native (Expo), TypeScript, Expo Router |
+| Backend API | Node.js, Express, TypeScript |
+| Database | MongoDB Atlas (Mongoose) |
+| Auth | Firebase Authentication, phone OTP only |
+| Images | Cloudinary |
+| Hosting | Vercel (web apps), Render (API) |
+| CI | GitHub Actions |
 
-## Architecture
+## Design system
 
-```
-buildx/
-├── apps/
-│   ├── mobile/          # React Native (Expo) — buyer + supplier app
-│   └── api/             # Express.js REST API
-├── packages/
-│   └── shared/          # Shared types and utilities
-└── infrastructure/
-    └── docker/          # docker-compose for local Redis
-```
+The web apps (and eventually the mobile app) share one visual language, "Hi-Vis": near black
+ink, warm sand, and signal lime reserved for calls to action. See
+[`docs/DESIGN_SYSTEM.md`](./docs/DESIGN_SYSTEM.md) for colours, type, spacing and motion.
 
-- **Feature-first structure** — code organised by domain (auth, products, orders, payments)
-- **Firebase Phone OTP** — no passwords, verified Indian mobile numbers only
-- **MongoDB + Mongoose** — flexible schema for construction product specs and bulk pricing
-- **Per-item GST** — 5%/12%/18%/28% rates per product, accurate invoice breakdown
+## Honesty rules
 
-## Quick Start
+These apply everywhere in the product, not just the code:
+
+- The API is the only source of truth for prices, stock, supplier coverage and order status.
+  Nothing in the UI invents a price, a rating, a delivery promise or a statistic.
+- Sample or placeholder data is always labelled as sample.
+- Auth is Firebase phone OTP only. No other sign in method.
+
+## Quick start
 
 ```bash
-# 1. Clone and install
 git clone https://github.com/Harishrs2006/buildx.git
 cd buildx
 npm install
+```
 
-# 2. Start local Redis (optional — app works without it)
-docker-compose -f infrastructure/docker/docker-compose.yml up -d
+### API
 
-# 3. Configure API environment
+```bash
 cp apps/api/.env.example apps/api/.env
-# Fill in: MONGODB_URI, FIREBASE_PROJECT_ID
-# (Firebase: run "gcloud auth application-default login" for local dev)
-
-# 4. Configure mobile environment
-echo "EXPO_PUBLIC_API_URL=http://10.0.2.2:4000" > apps/mobile/.env
-
-# 5. Start API
+# fill in MONGODB_URI, FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY
 cd apps/api && npm run dev
+# http://localhost:4000, health check at /health
+```
 
-# 6. Start mobile (separate terminal)
+### Buyer storefront
+
+```bash
+cp apps/buyer-web/.env.local.example apps/buyer-web/.env.local
+# fill in NEXT_PUBLIC_API_URL and the NEXT_PUBLIC_FIREBASE_* values
+cd apps/buyer-web && npm run dev
+# http://localhost:3001
+```
+
+### Seller portal
+
+```bash
+cp apps/seller-web/.env.local.example apps/seller-web/.env.local
+cd apps/seller-web && npm run dev
+# http://localhost:3002
+```
+
+### Mobile app
+
+```bash
+echo "EXPO_PUBLIC_API_URL=http://10.0.2.2:4000" > apps/mobile/.env   # Android emulator
 cd apps/mobile && npx expo start --android
 ```
 
-- API: http://localhost:4000
-- Health check: http://localhost:4000/health
+## What is still missing
 
-## Environment Variables
-
-### `apps/api/.env`
-
-```env
-MONGODB_URI=mongodb+srv://...
-FIREBASE_PROJECT_ID=your-project-id
-
-# Optional in dev (leave blank, uses gcloud ADC):
-FIREBASE_CLIENT_EMAIL=
-FIREBASE_PRIVATE_KEY=
-
-# Fill when ready:
-CLOUDINARY_CLOUD_NAME=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-RAZORPAY_KEY_ID=
-RAZORPAY_KEY_SECRET=
-RAZORPAY_WEBHOOK_SECRET=
-```
-
-### `apps/mobile/.env`
-
-```env
-# Android emulator → host machine
-EXPO_PUBLIC_API_URL=http://10.0.2.2:4000
-
-# iOS simulator / physical device
-# EXPO_PUBLIC_API_URL=http://192.168.x.x:4000
-```
-
-## Build Phases
-
-| Phase | Status | Description |
-|---|---|---|
-| 1 — Foundation | ✅ Done | Monorepo, MongoDB schemas, API scaffold, Firebase setup, CI |
-| 2 — Marketplace | ✅ Done | Product browse, search, cart (infinite scroll, per-item GST, multi-supplier detection) |
-| 3 — Checkout & Orders | ✅ Done | Checkout flow, COD orders, stock deduction, order history |
-| 4 — Supplier App | 🔄 Next | Supplier dashboard, product CRUD, order management |
-| 5 — Image Uploads | ⏳ | Cloudinary integration for product photos |
-| 6 — Admin Panel | ⏳ | Next.js admin dashboard, supplier verification, analytics |
-| 7 — Payments | ⏳ | Razorpay UPI/card integration (post-scale) |
-| 8 — AI Features | ⏳ | Smart recommendations, quotation generation |
-| 9 — Cloud Deployment | ⏳ | Railway/Render API, Expo EAS build |
+- Real SMS delivery for phone OTP (needs a Firebase Blaze plan; a billing decision, not a
+  code change).
+- The seller portal and the mobile app still use the older design; only the buyer storefront
+  has had the Hi-Vis restyle.
+- Online payment (UPI, cards) is designed for in the data model but not built; every order
+  today is Cash on Delivery.
+- `apps/web` (the admin panel) needs repair before it is usable again.
+- A strict Content Security Policy is deferred until phone sign-in has been tested end to end
+  with real SMS, since a CSP that is too strict can silently break Firebase's reCAPTCHA check.
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). All contributions go through PR review — direct pushes to `main` are disabled.
+See [CONTRIBUTING.md](./CONTRIBUTING.md). Contributions go through pull request review.
 
 ## License
 
-MIT © [Harishrs2006](https://github.com/Harishrs2006)
+MIT, see [LICENSE](./LICENSE).
