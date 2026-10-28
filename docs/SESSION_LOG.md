@@ -92,3 +92,8 @@ Times are IST.
   +917019282018/19 (code 123456) are configured in Firebase and skip SMS. Mapped billing-not-enabled + quota-exceeded to
   a clear message in buyer-web and seller-web AuthProvider. Asked user about upgrading to Blaze (money: user decides).
 - 18:50 User chose: test numbers only for now, no Blaze yet. Next: NEXT STEPS 4 (restyle cart/checkout/orders/profile).
+- 19:40 User: test number + 123456 does not sign in. Render logs: POST /auth/sync -> 'secretOrPrivateKey must be an
+  asymmetric key when using RS256'. Render FIREBASE_PRIVATE_KEY (project buildx-15494, correct) is wrapped in a quote
+  and has stray text after the END line ('"whi'). Fix on branch fix/api-firebase-key: normalizePrivateKey() keeps only the
+  PEM block (+ vitest). PR #27 (buyer pages) and this fix both need the user to merge (auto-merge blocked by permission
+  classifier). Render deploys main automatically.
