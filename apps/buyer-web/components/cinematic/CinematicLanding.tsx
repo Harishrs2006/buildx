@@ -117,7 +117,7 @@ function HeroContent({ onFocusChapter, onNext }: { onFocusChapter?: () => void; 
 
 function ChapterContent({ chapter, index, categories, onFocusChapter }: { chapter: Chapter; index: number; categories: Categories; onFocusChapter?: () => void }) {
   return (
-    <div className="container-x flex h-full flex-col justify-end pb-24 pt-[var(--header-h)] sm:pb-28 lg:justify-center lg:pb-0">
+    <div className="container-x flex h-full flex-col justify-end pb-36 pt-[var(--header-h)] md:pb-28 lg:justify-center lg:pb-0">
       <div className="max-w-xl">
         <p className="eyebrow flex items-center gap-3 text-lime">
           <span className="font-mono text-white/60">{String(index).padStart(2, '0')}</span>
@@ -145,9 +145,19 @@ function StaticStory({ categories }: { categories: Categories }) {
       {CHAPTERS.map((chapter, i) => (
         <div key={chapter.id} className="relative isolate min-h-[100svh] overflow-hidden">
           <Poster i={i} priority={i === 0} />
+          <div className={`absolute inset-0 bg-ink ${i === 0 ? 'opacity-[0.78]' : 'opacity-40'}`} aria-hidden="true" />
+          <div className="absolute inset-y-0 left-0 hidden w-[55%] bg-[linear-gradient(90deg,rgba(11,12,10,0.55),transparent)] lg:block" aria-hidden="true" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,10,0.55)_0%,rgba(11,12,10,0.25)_40%,rgba(11,12,10,0.85)_100%)]" aria-hidden="true" />
-          <div className="relative min-h-[100svh]">
-            {i === 0 ? <HeroContent /> : <div className="min-h-[100svh]"><ChapterContent chapter={chapter} index={i} categories={categories} /></div>}
+          <div className="relative">
+            {i === 0 ? (
+              <div className="h-[100svh] min-h-[640px]">
+                <HeroContent />
+              </div>
+            ) : (
+              <div className="h-[100svh] min-h-[640px]">
+                <ChapterContent chapter={chapter} index={i} categories={categories} />
+              </div>
+            )}
           </div>
         </div>
       ))}
@@ -161,7 +171,7 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
   const stills = useRef<(HTMLDivElement | null)[]>([]);
   const rail = useRef<(HTMLButtonElement | null)[]>([]);
   const bar = useRef<HTMLDivElement>(null);
-  const hint = useRef<HTMLDivElement>(null);
+  const dim = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
   const [sceneReady, setSceneReady] = useState(false);
   const lastActive = useRef(-1);
@@ -187,7 +197,8 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
       el.style.transform = `perspective(1200px) translate3d(${(-d * 40).toFixed(1)}px, 0, ${(-Math.abs(d) * 220).toFixed(1)}px) rotateY(${(d * -7).toFixed(2)}deg) scale(${(1.08 - 0.08 * w + Math.abs(d) * 0.05).toFixed(3)})`;
     });
     if (bar.current) bar.current.style.transform = `scaleY(${(p / LAST_CHAPTER).toFixed(4)})`;
-    if (hint.current) hint.current.style.opacity = String(Math.max(0, 1 - p * 3));
+    // darkest on the hero (centred white type), lighter once the side-aligned chapters start
+    if (dim.current) dim.current.style.opacity = String(0.38 + 0.4 * Math.max(0, 1 - p * 1.4));
     const active = Math.round(p);
     if (active !== lastActive.current) {
       lastActive.current = active;
@@ -234,7 +245,8 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
               ))}
             </div>
           )}
-          {/* readability: top band for the header, heavier towards the bottom, soft vignette */}
+          {/* readability: overall dim, top band for the header, heavier towards the bottom, soft vignette */}
+          <div ref={dim} className="pointer-events-none absolute inset-0 bg-ink" style={{ opacity: 0.78 }} />
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,10,0.6)_0%,rgba(11,12,10,0)_22%,rgba(11,12,10,0)_45%,rgba(11,12,10,0.78)_100%)]" />
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(11,12,10,0.55)_100%)]" />
           <div className="grain pointer-events-none absolute inset-0" />
@@ -283,7 +295,6 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
           </div>
         </nav>
 
-        <div ref={hint} className="pointer-events-none absolute bottom-0 left-0 right-0 h-1" aria-hidden="true" />
         <a
           href="#delivery"
           className="absolute bottom-6 right-5 rounded-full px-3 py-2 text-[13px] font-medium text-white/60 underline-offset-4 transition-colors hover:text-white hover:underline focus-visible:text-white"
@@ -302,6 +313,7 @@ export function CinematicLanding({ categories }: { categories: Categories }) {
     return (
       <section id="story" aria-label="What you can order on BuildX" className="on-ink relative h-[100svh] overflow-hidden bg-ink">
         <Poster i={0} priority />
+        <div className="absolute inset-0 bg-ink opacity-[0.78]" aria-hidden="true" />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,10,0.6)_0%,rgba(11,12,10,0)_22%,rgba(11,12,10,0)_45%,rgba(11,12,10,0.78)_100%)]" aria-hidden="true" />
         <div className="relative h-full">
           <HeroContent />
