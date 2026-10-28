@@ -190,3 +190,9 @@ Times are IST.
   Chrome, 20 s): desktop 60 fps, 0 frames >33 ms, no long tasks, CLS 0.002; phone 390px with 4x CPU throttle 59.8 fps,
   1 frame >33 ms, no long tasks; slide every ~6.5 s; scroll/click/touch never changed the slide.
   Real worker motion needs AI video (Figma Weave not linked to the user's account), so camera motion only for now.
+- 03:10 Vercel cleanup (user said yes). Checked what each project builds: buildx (buildx-six.vercel.app) = duplicate of
+  apps/buyer-web -> Git disconnected (project + old deployments kept). buildx-48kc (buildx-48kc.vercel.app) is NOT a
+  duplicate: it is the SUPPLIER PORTAL (apps/seller-web) -> kept. buildx-vgud = live buyer site. Builds per push now 2.
+  Supplier portal could not sign in: added the 4 NEXT_PUBLIC_FIREBASE_* (Config, Production) to buildx-48kc and
+  authorized buildx-48kc.vercel.app in Firebase Auth (Identity Toolkit API). Buyer site: NEXT_PUBLIC_SELLER_PORTAL_URL
+  = https://buildx-48kc.vercel.app (shows "Open the seller portal"). Both take effect on the next deploy (rate limit).
