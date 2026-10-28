@@ -13,8 +13,8 @@ Times are IST.
 1. DONE 2026-10-28 (Chrome session): Firebase web app 'BuildX Web' registered in project buildx-15494; the 4
    NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
    Firebase Auth authorized domains (via Identity Toolkit admin API, the console form kept rejecting it). Production
-   redeploy triggered by pushing to main (manual Vercel redeploy needs an email-code re-auth). TODO: verify the
-   sign-in page no longer says 'Sign-in is not available yet' and an OTP SMS arrives (quota: 10 SMS/day on Spark plan).
+   redeploy triggered by pushing to main (manual Vercel redeploy needs an email-code re-auth). VERIFIED live: /signin
+   shows the phone form + reCAPTCHA. Remaining: user sends a real OTP to their own phone (quota 10 SMS/day on Spark).
 2. Optional env: NEXT_PUBLIC_SUPPORT_EMAIL, NEXT_PUBLIC_SUPPORT_PHONE, NEXT_PUBLIC_LEGAL_NAME, NEXT_PUBLIC_SELLER_PORTAL_URL
    (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
 3. DONE: user chose to keep PRD + images LOCAL in Desktop/BuildX/user-brief (not GitHub). Save new user files there.
@@ -83,3 +83,5 @@ Times are IST.
   Identity Toolkit admin API (service-account script in scratchpad; console form rejected the input). Added the 4
   NEXT_PUBLIC_FIREBASE_* vars to Vercel Production. Vercel asked to set up 2FA (skipped; user may want to enable it) and
   manual redeploy needs an email code, so pushed this log to main to trigger the production build.
+- 18:30 Production build with Firebase config is live (key found in bundle). /signin works, reCAPTCHA loads.
+  Next: real-phone OTP test by the user, then NEXT STEPS 4 (restyle cart/checkout/orders/profile).
