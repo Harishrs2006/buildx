@@ -13,6 +13,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   // @buildx/web-core ships TypeScript source, not a compiled package, so Next must transpile it
   transpilePackages: ['@buildx/web-core'],
   poweredByHeader: false,

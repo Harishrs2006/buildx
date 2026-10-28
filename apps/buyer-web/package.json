@@ -7,22 +7,28 @@
     "dev": "next dev --port 3001",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@buildx/web-core": "*",
+    "@react-three/fiber": "^9.1.2",
     "firebase": "^13.1.0",
+    "lenis": "^1.1.20",
     "next": "15.5.28",
     "react": "^19.0.9",
-    "react-dom": "^19.0.9"
+    "react-dom": "^19.0.9",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.3",
     "@types/react-dom": "^19.0.2",
+    "@types/three": "^0.170.0",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.9"
   }
 }
