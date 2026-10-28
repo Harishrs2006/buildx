@@ -135,3 +135,14 @@ Times are IST.
   paint, electrical, plumbing, skyline at 1376x768, converted to JPG with sharp. Plumbing image had a hotel-style crest +
   name badge on the uniform: painted out (ring-sampled navy fill, feathered). Branch feat/landing-all-chapters switches
   on all 4 chapters; ASSETS.md lists sources. Tests 12 pass, build OK.
+- 23:10 User: PIN check belongs on product info; images for category cards; complete Indian-market catalogue (bricks,
+  blocks, jelly sizes, M/P-sand in tonnes/brass, electrical + plumbing materials with brands like V-Guard, Lisha...).
+  Branch feat/catalog, PR #33: 10 category photos (Figma AI, unbranded) in public/categories; lib/catalog (57 material
+  types, BIS standards, sizes, trade units, brands, aliases; NO prices/stock); units.ts (brass=100 cft=2.83 m3, TMT
+  D^2/162, bags, coils); /materials/[id] pages with choices, brand chips, QuantityHelper, DeliveryCheck, offers that
+  really match (matchCatalogItem on real listing names); category page = banner + catalogue + live listings; product
+  page rebuilt with PIN check in the buy box (add to cart blocked when not deliverable); home PIN block removed.
+  Facts checked online (brass, TMT weight, 90 m coils, brick/AAC sizes). Removed brands I could not verify.
+  Note: another local Claude session ("E-commerce codebase health audit") committed ddef1fd in this folder; it has
+  moved to its own worktree (Desktop/BuildX/readme-update) and is updating README + this log in a separate PR.
+  Preview can't call the live API (CORS allows production only), so product/offers were checked by tests only.

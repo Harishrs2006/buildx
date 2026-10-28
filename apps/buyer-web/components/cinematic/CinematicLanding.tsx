@@ -60,12 +60,12 @@ function ChapterButtons({ chapter, categories, onFocusChapter }: { chapter: Chap
 function FinalButtons({ onFocusChapter }: { onFocusChapter?: () => void }) {
   return (
     <div className="mt-8 flex flex-wrap gap-3">
-      <a href="#delivery" onFocus={onFocusChapter} className="btn-lime group">
-        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">pin_drop</span>
-        Check delivery to your PIN code
-      </a>
-      <a href="#categories" onFocus={onFocusChapter} className="btn-ghost-dark">
+      <a href="#categories" onFocus={onFocusChapter} className="btn-lime group">
         Start ordering
+        <span className="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">arrow_forward</span>
+      </a>
+      <a href="#how-it-works" onFocus={onFocusChapter} className="btn-ghost-dark">
+        How it works
       </a>
     </div>
   );
@@ -89,12 +89,12 @@ function HeroContent({ onFocusChapter, onNext }: { onFocusChapter?: () => void; 
         {hero.body}
       </p>
       <div className="mt-9 flex animate-fade-up flex-wrap justify-center gap-3" style={{ animationDelay: '520ms' }}>
-        <a href="#delivery" onFocus={onFocusChapter} className="btn-lime group h-14 px-7 text-[16px]">
-          <span className="material-symbols-outlined text-[20px]" aria-hidden="true">pin_drop</span>
-          Check delivery to your PIN code
-        </a>
-        <a href="#categories" onFocus={onFocusChapter} className="btn-ghost-dark h-14 px-7 text-[16px] backdrop-blur-md">
+        <a href="#categories" onFocus={onFocusChapter} className="btn-lime group h-14 px-7 text-[16px]">
           Browse materials
+          <span className="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:translate-x-1" aria-hidden="true">arrow_forward</span>
+        </a>
+        <a href="#how-it-works" onFocus={onFocusChapter} className="btn-ghost-dark h-14 px-7 text-[16px] backdrop-blur-md">
+          How it works
         </a>
       </div>
       {onNext && (
@@ -296,7 +296,7 @@ function PinnedStory({ tier, categories }: { tier: 'full' | 'lite' | null; categ
         </nav>
 
         <a
-          href="#delivery"
+          href="#categories"
           className="absolute bottom-6 right-5 rounded-full px-3 py-2 text-[13px] font-medium text-white/60 underline-offset-4 transition-colors hover:text-white hover:underline focus-visible:text-white"
         >
           Skip the story
