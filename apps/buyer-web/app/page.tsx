@@ -68,7 +68,7 @@ export default function HomePage() {
           <div className="blueprint absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_at_center,#000_30%,transparent_75%)]" />
           <Spotlight />
 
-          <div className="container-x relative grid items-center gap-10 pb-16 pt-[calc(var(--header-h)+40px)] md:pb-24 lg:min-h-[100svh] lg:grid-cols-12 lg:gap-6 lg:pt-[var(--header-h)]">
+          <div className="container-x relative grid grid-cols-[minmax(0,1fr)] items-center gap-10 pb-16 pt-[calc(var(--header-h)+40px)] md:pb-24 lg:min-h-[min(100svh,980px)] lg:grid-cols-12 lg:gap-6 lg:pt-[var(--header-h)]">
             <div className="lg:col-span-7">
               <p className="inline-flex animate-fade-up items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] py-1.5 pl-2 pr-4 text-[13px] text-sand/70">
                 <span className="relative flex h-2 w-2">
@@ -112,7 +112,7 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <dl className="mt-14 grid max-w-[560px] animate-fade-up grid-cols-3 gap-6 border-t border-white/10 pt-6" style={{ animationDelay: '750ms' }}>
+              <dl className="mt-14 grid max-w-[560px] animate-fade-up grid-cols-3 gap-4 sm:gap-6 border-t border-white/10 pt-6" style={{ animationDelay: '750ms' }}>
                 {[
                   ['Payment', 'Cash on delivery'],
                   ['Sign-in', 'Phone OTP'],

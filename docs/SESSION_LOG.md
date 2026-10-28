@@ -9,8 +9,13 @@ Times are IST.
   new design system documented in docs/DESIGN_SYSTEM.md (to be reused by apps/mobile).
 
 ## NEXT STEPS
-1. Finish buyer-web redesign (tokens, fonts, logo, landing, signin, onboard, legal pages, SEO).
-2. `npm run build` in apps/buyer-web, fix errors, push, open PR, merge to main (Vercel deploys main).
+1. Visual QA via headless Chrome screenshots (save to scratchpad, NOT %TEMP%): home, signin, mobile, legal, 404.
+   Hero stack + mobile overflow fixes applied 16:20, need re-check. Port 3101 may be stuck: use another port.
+2. Polish inner pages (cart, checkout, product, category, orders, profile): remove em dashes, add SiteFooter.
+3. Write docs/DESIGN_SYSTEM.md (tokens/fonts/motion for web + mobile app).
+4. Open PR feat/web-redesign -> main, merge (Vercel project buildx9/buildx-vgud auto-deploys main).
+5. BLOCKER for user: production has NO Firebase web config (NEXT_PUBLIC_FIREBASE_* missing in Vercel env),
+   so phone sign-in cannot work on the live site until those 4 vars are added in Vercel project settings.
 3. Ask user: OK to commit docs/BuildX_PRD.pdf + docs/design-references/ (repo is PUBLIC, PRD says Confidential)?
 4. Apply the same system to apps/seller-web, then apps/mobile.
 
@@ -41,4 +46,12 @@ Times are IST.
 - 15:45 Sign-in rebuilt: split AuthShell, +91 phone field, 6-box OTP (paste/SMS autofill/auto-submit), 30s resend, change number
   (AuthProvider.resetOtp), safeNext() open-redirect guard. Onboarding with 18+ and terms consent.
 - 15:46 Saved user brief + 21 images + links to Desktop/BuildX/user-brief/ (and docs/USER_BRIEF.md in repo).
-- TODO next: search page, legal pages, 404, robots/sitemap/OG/icon, security headers, inner page polish, build, deploy.
+- 16:00 Added: /search, /terms, /privacy, /refunds, /cookies (honest, match real data flows), StorageNotice, custom 404,
+  robots.ts (noindex until NEXT_PUBLIC_ALLOW_INDEXING=true), sitemap.ts, icon.svg, opengraph-image, security headers in
+  next.config.ts (CSP intentionally deferred: would break Firebase reCAPTCHA). `npm run build` passes (19 routes).
+- 16:05 Found: Vercel git integration (team buildx9, projects buildx-vgud/buildx/buildx-48kc) deploys main; previews are
+  login protected. Live API = https://buildx-api.onrender.com. Live bundle has no Firebase web config (sign-in broken in prod).
+- 16:15 Screenshot QA: fixed logo tile invisible on dark (LogoMark onDark), mobile horizontal overflow (grid minmax(0,1fr) +
+  overflow-x clip), hero capped at min(100svh,980px), hero blocks rebuilt as a clean stacked tower.
+- 16:20 Saved global prefs: decide technical things myself; questions need (Recommended) + chat option; commit+push after
+  every sub-task because usage limits / shutdowns can cut a session; "continue" = read log and resume.

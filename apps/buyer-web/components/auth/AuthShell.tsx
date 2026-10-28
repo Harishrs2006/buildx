@@ -52,7 +52,7 @@ export function AuthShell({ children, step }: { children: ReactNode; step?: stri
 
         <div className="relative mt-16 flex items-center justify-between border-t border-white/10 pt-6 text-[12px] text-sand/40">
           <span className="font-mono uppercase tracking-[0.16em]">Construction materials marketplace</span>
-          <LogoMark size={22} />
+          <LogoMark size={22} onDark />
         </div>
       </aside>
 

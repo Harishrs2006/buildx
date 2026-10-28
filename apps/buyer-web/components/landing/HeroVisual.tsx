@@ -23,15 +23,20 @@ const TONES = {
   cobalt: { top: '#5A80FF', left: '#2457FF', right: '#1A43CC' },
 } as const;
 
-// Back-to-front so nearer blocks paint over farther ones.
+// A tidy stack: blocks sit on a slab (origin 250,210, 160x160 footprint). Positions are in
+// slab grid units (u right, v left, z up) and converted to screen space; listed back-to-front.
+const SLAB = { x: 250, y: 210 };
+function onSlab(u: number, v: number, z: number, a: number, b: number, h: number, tone: Block['tone'], delay: number): Block {
+  return { x: SLAB.x + u - v, y: SLAB.y + (u + v) / 2 - z - h, a, b, h, tone, delay };
+}
+
 const BLOCKS: Block[] = [
-  { x: 250, y: 60, a: 110, b: 60, h: 46, tone: 'ink', delay: 0 },
-  { x: 160, y: 150, a: 70, b: 70, h: 70, tone: 'sand', delay: 300 },
-  { x: 330, y: 150, a: 60, b: 60, h: 60, tone: 'cobalt', delay: 600 },
-  { x: 250, y: 190, a: 170, b: 34, h: 30, tone: 'lime', delay: 150 },
-  { x: 175, y: 270, a: 56, b: 56, h: 40, tone: 'sand', delay: 450 },
-  { x: 245, y: 300, a: 56, b: 56, h: 40, tone: 'sand', delay: 750 },
-  { x: 315, y: 270, a: 56, b: 56, h: 40, tone: 'ink', delay: 900 },
+  { x: SLAB.x, y: SLAB.y, a: 160, b: 160, h: 36, tone: 'sand', delay: 0 },
+  onSlab(10, 10, 0, 60, 60, 60, 'cobalt', 250),
+  onSlab(0, 22, 60, 82, 30, 18, 'lime', 900),
+  onSlab(90, 10, 0, 60, 60, 96, 'ink', 400),
+  onSlab(10, 90, 0, 60, 60, 48, 'sand', 550),
+  onSlab(82, 96, 0, 72, 52, 28, 'lime', 700),
 ];
 
 export function HeroVisual() {
@@ -55,7 +60,8 @@ export function HeroVisual() {
 
       {/* The stack */}
       <svg viewBox="0 0 500 500" className="absolute inset-0 h-full w-full">
-        <ellipse cx="250" cy="420" rx="170" ry="34" fill="rgba(0,0,0,0.45)" style={{ filter: 'blur(14px)' }} />
+        <ellipse cx="250" cy="425" rx="175" ry="34" fill="rgba(0,0,0,0.45)" style={{ filter: 'blur(14px)' }} />
+        <g className="hero-bob">
         {BLOCKS.map((b, i) => {
           const f = box(b.x, b.y, b.a, b.b, b.h);
           const t = TONES[b.tone];
@@ -67,6 +73,7 @@ export function HeroVisual() {
             </g>
           );
         })}
+        </g>
       </svg>
 
       {/* Floating chips: describe what the product does, never fake data */}

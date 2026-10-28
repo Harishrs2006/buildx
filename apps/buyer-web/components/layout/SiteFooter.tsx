@@ -9,7 +9,7 @@ export function SiteFooter() {
       <div className="container-x relative z-10 grid gap-12 py-16 md:grid-cols-12 md:py-20">
         <div className="md:col-span-5">
           <div className="flex items-center gap-3">
-            <LogoMark size={40} />
+            <LogoMark size={40} onDark />
             <span className="font-display text-2xl font-bold tracking-[-0.04em]">BuildX</span>
           </div>
           <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-sand/60">

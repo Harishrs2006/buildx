@@ -7,6 +7,10 @@
     color-scheme: light;
     --header-h: 72px;
   }
+  html,
+  body {
+    overflow-x: clip;
+  }
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
@@ -126,10 +130,11 @@
 
 /* Hero: blocks drop in, then breathe; chips bob on their own rhythm */
 .hero-float {
-  animation:
-    block-drop 1.1s cubic-bezier(0.16, 1, 0.3, 1) both,
-    block-bob 6s ease-in-out infinite;
-  animation-delay: var(--float-delay, 0ms), calc(var(--float-delay, 0ms) + 1.1s);
+  animation: block-drop 1.1s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--float-delay, 0ms);
+}
+.hero-bob {
+  animation: block-bob 6s ease-in-out 2.2s infinite;
 }
 .hero-chip {
   animation:
