@@ -10,9 +10,8 @@ Times are IST.
   Recreate it if the scratchpad is gone (headless Chrome + Emulation.setDeviceMetricsOverride).
 
 ## NEXT STEPS
-0. Cinematic PHOTO landing (branch feat/photo-landing, PR #31; #30 was merged earlier with the 3D version): user merges -> live. Then add the 4 missing
-   chapter photos (paint, electrical, plumbing, skyline; list + prompts in apps/buyer-web/ASSETS.md). Canva AI quota
-   ran out after 5 images on 2026-10-28; retry when it resets or use another source the user approves.
+0. Landing story: photo version live (PR #31). All 9 chapters have photos after PR feat/landing-all-chapters
+   (user merges). Figma scratch file 'BuildX landing photos' in the user's Figma drafts holds the 4 Figma images.
 0b. Pending user decision: free sign-in alternative (Google sign-in via Firebase recommended; SMS is never free).
 1. DONE 2026-10-28 (Chrome session): Firebase web app 'BuildX Web' registered in project buildx-15494; the 4
    NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
@@ -132,3 +131,7 @@ Times are IST.
   LCP 0.77 s), devtools-throttled 78 (LCP 3.5 s, CLS 0.022), accessibility 100.
 - 23:00 User showed PR #30 merged 2 h ago (3D version live); photo commits came after. Opened feat/photo-landing
   from main with the photo version (identical tree) as a new PR.
+- 23:30 User: "try those image things other ways". Figma generate_image (gemini-3.1-flash-image, Starter plan) worked:
+  paint, electrical, plumbing, skyline at 1376x768, converted to JPG with sharp. Plumbing image had a hotel-style crest +
+  name badge on the uniform: painted out (ring-sampled navy fill, feathered). Branch feat/landing-all-chapters switches
+  on all 4 chapters; ASSETS.md lists sources. Tests 12 pass, build OK.

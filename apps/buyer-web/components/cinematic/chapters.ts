@@ -74,6 +74,8 @@ const ALL_CHAPTERS: Chapter[] = [
     accent: 'wall.',
     body: 'Paints, primers and finishing chemicals for the final coat.',
     categorySlugs: ['paints-chemicals'],
+    photo: '/cinematic/paint.jpg',
+    focus: '38% 55%',
   },
   {
     id: 'electrical',
@@ -82,6 +84,8 @@ const ALL_CHAPTERS: Chapter[] = [
     accent: 'light.',
     body: 'Wires, switches and fittings to power every room, from the first circuit to the last bulb.',
     categorySlugs: ['electricals'],
+    photo: '/cinematic/electrical.jpg',
+    focus: '62% 40%',
   },
   {
     id: 'plumbing',
@@ -90,6 +94,8 @@ const ALL_CHAPTERS: Chapter[] = [
     accent: 'where it belongs.',
     body: 'Pipes, fittings, tanks and pumps, all the way to a hotel-grade bathroom.',
     categorySlugs: ['plumbing'],
+    photo: '/cinematic/plumbing.jpg',
+    focus: '48% 55%',
   },
   {
     id: 'skyline',
@@ -98,9 +104,8 @@ const ALL_CHAPTERS: Chapter[] = [
     accent: 'starts here.',
     body: 'Check which suppliers deliver to your site, then order with cash on delivery.',
     categorySlugs: [],
-    // until a dedicated skyline photo is added, the closing chapter reuses the hero site at golden hour
-    photo: '/cinematic/hero.jpg',
-    focus: '30% 40%',
+    photo: '/cinematic/skyline.jpg',
+    focus: '35% 50%',
   },
 ];
 
