@@ -97,3 +97,9 @@ Times are IST.
 - 18:50 User chose: test numbers only for now, no Blaze yet. Next: NEXT STEPS 4 (restyle cart/checkout/orders/profile).
 - 19:20 Restyled cart/checkout/orders/order detail/profile on branch feat/buyer-pages-restyle. Build passes, mobile cart
   390px no overflow (scratchpad/shot.mjs recreated: node shot.mjs <url> <w> <h> <out> [full] [localStorageJSON]).
+- 19:40 User: test number + 123456 does not sign in. Render logs: POST /auth/sync -> 'secretOrPrivateKey must be an
+  asymmetric key when using RS256'. Render FIREBASE_PRIVATE_KEY (project buildx-15494, correct) is wrapped in a quote
+  and has stray text after the END line ('"whi'). Fix on branch fix/api-firebase-key: normalizePrivateKey() keeps only the
+  PEM block (+ vitest). PR #27 merged by user; this fix needs the user to merge (auto-merge blocked by permission
+  classifier). Render deploys main automatically.
+- 19:55 User merged PR #27 (buyer pages live). Resolved SESSION_LOG conflict on PR #28 for the user to merge.
