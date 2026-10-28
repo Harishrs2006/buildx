@@ -13,7 +13,7 @@ import { DeliveryCheck } from '@/components/catalog/DeliveryCheck';
 import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { useCategories } from '@/lib/categories';
-import { catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@/lib/catalog/data';
+import { catalogCategory, catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@/lib/catalog/data';
 
 function OptionChips({ label, options, value, onChange }: { label: string; options: string[]; value: string | null; onChange: (v: string | null) => void }) {
   return (
@@ -49,7 +49,8 @@ export default function MaterialPage({ params }: { params: Promise<{ id: string 
   const [choices, setChoices] = useState<Record<string, string | null>>({});
   const [brand, setBrand] = useState<string | null>(null);
 
-  const category = categories.status === 'success' ? categories.data.find((c) => c.slug === found?.categorySlug) : undefined;
+  const category = (categories.status === 'success' ? categories.data.find((c) => c.slug === found?.categorySlug) : undefined) ??
+    (found ? catalogCategory(found.categorySlug) : undefined);
   const offers = useProductsForLocation({ category: found?.categorySlug, q: found ? offerQuery(found) : undefined, limit: 50 });
 
   // Listings are matched by text; a chosen brand must appear in the listing, chosen sizes rank first

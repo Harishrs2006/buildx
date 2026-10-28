@@ -69,7 +69,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
               <Link href="/#categories" className="hover:text-sand">Materials</Link>
             </nav>
             <h1 className="max-w-3xl font-display text-[clamp(2.75rem,7vw,5.5rem)] font-bold leading-[0.92] tracking-tightest">
-              {category?.name ?? <span className="skeleton inline-block h-[0.9em] w-[6ch] align-middle opacity-30" />}
+              {category?.name ?? meta?.name ?? <span className="skeleton inline-block h-[0.9em] w-[6ch] align-middle opacity-30" />}
             </h1>
             {(meta?.tagline || category?.description) && (
               <p className="mt-5 max-w-xl text-[17px] leading-relaxed text-sand/75">{meta?.tagline ?? category?.description}</p>
@@ -157,7 +157,7 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
                 <p className="font-display text-xl font-semibold">No listings here yet</p>
                 <p className="max-w-md text-[15px] text-stone">
                   {location
-                    ? `No supplier delivering to ${location.pincode} lists ${category?.name ?? 'this category'} yet.`
+                    ? `No supplier delivering to ${location.pincode} lists ${category?.name ?? meta?.name ?? 'this category'} yet.`
                     : 'Suppliers have not listed products in this category yet.'}
                 </p>
               </div>

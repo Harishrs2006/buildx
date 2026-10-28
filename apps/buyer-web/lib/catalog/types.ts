@@ -39,6 +39,7 @@ export type CatalogItem = {
 
 export type CatalogCategory = {
   slug: string;
+  name: string; // fallback while GET /categories loads
   photo: string;
   tagline: string;
   groups: string[];

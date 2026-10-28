@@ -18,7 +18,7 @@ function NumberField({ label, value, onChange, suffix, step = 'any' }: { label: 
           step={step}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full min-w-0 bg-transparent px-4 py-3 font-mono text-[16px] outline-none"
+          className="w-full min-w-0 bg-transparent px-4 py-3 font-mono text-[16px] text-ink outline-none"
         />
         <span className="shrink-0 text-[14px] text-stone">{suffix}</span>
       </span>
