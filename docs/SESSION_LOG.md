@@ -21,7 +21,10 @@ Times are IST.
    (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
 3. DONE: user chose to keep PRD + images LOCAL in Desktop/BuildX/user-brief (not GitHub). Save new user files there.
    (Do not push them; repo is public.)
-4. Restyle remaining buyer pages in depth (cart, checkout, orders, profile) beyond token remap.
+4. DONE (PR feat/buyer-pages-restyle): Hi-Vis cart, checkout (3 steps + dark summary with GST/delivery from quote),
+   orders list, order detail (dark header, timeline, in-page cancel confirm instead of window.confirm), profile.
+   Shared: components/account/AccountUI.tsx + OrderRow.tsx, lib/format.ts. Signed-in screens not screenshot-tested
+   (need login); user can check with test number 70192 82018 / code 123456.
 5. Apply Hi-Vis to apps/seller-web, then apps/mobile (spec: docs/DESIGN_SYSTEM.md).
 6. Add a strict CSP only together with an end-to-end OTP test.
 
@@ -92,8 +95,11 @@ Times are IST.
   +917019282018/19 (code 123456) are configured in Firebase and skip SMS. Mapped billing-not-enabled + quota-exceeded to
   a clear message in buyer-web and seller-web AuthProvider. Asked user about upgrading to Blaze (money: user decides).
 - 18:50 User chose: test numbers only for now, no Blaze yet. Next: NEXT STEPS 4 (restyle cart/checkout/orders/profile).
+- 19:20 Restyled cart/checkout/orders/order detail/profile on branch feat/buyer-pages-restyle. Build passes, mobile cart
+  390px no overflow (scratchpad/shot.mjs recreated: node shot.mjs <url> <w> <h> <out> [full] [localStorageJSON]).
 - 19:40 User: test number + 123456 does not sign in. Render logs: POST /auth/sync -> 'secretOrPrivateKey must be an
   asymmetric key when using RS256'. Render FIREBASE_PRIVATE_KEY (project buildx-15494, correct) is wrapped in a quote
   and has stray text after the END line ('"whi'). Fix on branch fix/api-firebase-key: normalizePrivateKey() keeps only the
-  PEM block (+ vitest). PR #27 (buyer pages) and this fix both need the user to merge (auto-merge blocked by permission
+  PEM block (+ vitest). PR #27 merged by user; this fix needs the user to merge (auto-merge blocked by permission
   classifier). Render deploys main automatically.
+- 19:55 User merged PR #27 (buyer pages live). Resolved SESSION_LOG conflict on PR #28 for the user to merge.
