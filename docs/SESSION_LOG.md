@@ -75,3 +75,6 @@ Times are IST.
 - 17:45 PR #26 merged (4faa314), live: category pages show labelled illustrations. TODO: product/supplier names in the
   production DB (seed data) contain em dashes, e.g. 'BuildX Demo Supplier (placeholder — not a real business)'; fix in
   apps/api/src/scripts/seed.ts and the live DB. Next session: Firebase keys in Vercel (needs /chrome).
+- 18:00 User ran /chrome; extension installed + signed in, but browser tools still not loaded in this session. Fix: restart
+  Claude Code with `claude --chrome` in Desktop/BuildX, then say 'continue'. FIRST TASK THEN: Firebase web keys into Vercel
+  buildx-vgud env (Production) + add buildx-vgud.vercel.app to Firebase Auth authorized domains + redeploy + test OTP screen.
