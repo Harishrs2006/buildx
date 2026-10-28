@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Plumbing pipes illustration">
+<defs>
+  <radialGradient id="g" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#FAF8F3"/><stop offset="1" stop-color="#E4DFD3"/></radialGradient>
+  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#0B0C0A" stroke-opacity=".05"/></pattern>
+</defs>
+<rect width="480" height="360" fill="url(#g)"/>
+<rect width="480" height="360" fill="url(#grid)"/>
+<ellipse cx="240" cy="292" rx="170" ry="30" fill="#0B0C0A" opacity=".12"/>
+<g transform="rotate(26.57 150 168)"><rect x="150" y="153" width="230" height="30" rx="3" fill="#EDEBE5"/><rect x="150" y="153" width="230" height="9" fill="#FFFFFF" opacity=".35"/><ellipse cx="150" cy="168" rx="8" ry="15" fill="#C9C4B5"/><ellipse cx="150" cy="168" rx="4.5" ry="9" fill="#78756C"/></g><g transform="rotate(26.57 128 196)"><rect x="128" y="181" width="230" height="30" rx="3" fill="#2457FF"/><rect x="128" y="181" width="230" height="9" fill="#FFFFFF" opacity=".35"/><ellipse cx="128" cy="196" rx="8" ry="15" fill="#1A43CC"/><ellipse cx="128" cy="196" rx="4.5" ry="9" fill="#0F287A"/></g><g transform="rotate(26.57 106 224)"><rect x="106" y="209" width="230" height="30" rx="3" fill="#EDEBE5"/><rect x="106" y="209" width="230" height="9" fill="#FFFFFF" opacity=".35"/><ellipse cx="106" cy="224" rx="8" ry="15" fill="#C9C4B5"/><ellipse cx="106" cy="224" rx="4.5" ry="9" fill="#78756C"/></g><g transform="rotate(26.57 152 218)"><rect x="152" y="203" width="230" height="30" rx="3" fill="#EDEBE5"/><rect x="152" y="203" width="230" height="9" fill="#FFFFFF" opacity=".35"/><ellipse cx="152" cy="218" rx="8" ry="15" fill="#C9C4B5"/><ellipse cx="152" cy="218" rx="4.5" ry="9" fill="#78756C"/></g><path d="M330 120 h34 a26 26 0 0 1 26 26 v34 h-30 v-30 h-30z" fill="#0B0C0A"/><rect x="322" y="116" width="12" height="38" rx="3" fill="#C8FF3D"/><rect x="356" y="172" width="38" height="12" rx="3" fill="#C8FF3D"/>
+</svg>

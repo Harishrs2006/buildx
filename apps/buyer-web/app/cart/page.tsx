@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { useCart, setCartQuantity, removeFromCart } from '@/lib/cart';
+import { illustrationFor } from '@/lib/illustrations';
 
 const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 
@@ -32,10 +33,12 @@ export default function CartPage() {
               {cart.items.map((item) => (
                 <div key={item.productId} className="flex items-center gap-4 rounded-xl bg-surface-container-low p-4">
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-lg bg-surface-container-high">
-                    {item.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt={item.name} className="h-full w-full object-cover" />
-                    )}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.imageUrl ?? illustrationFor(item.name)}
+                      alt={item.imageUrl ? item.name : ''}
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-body text-sm font-semibold text-on-surface">{item.name}</p>

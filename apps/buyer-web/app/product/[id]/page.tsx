@@ -91,6 +91,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <ProductGallery
                 images={data.images ?? []}
                 name={data.name}
+                category={data.categoryId?.name}
                 badges={data.supplierId?.verificationStatus === 'VERIFIED' ? ['Verified Supplier'] : undefined}
               />
             </div>

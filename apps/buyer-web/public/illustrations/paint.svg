@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Paint bucket illustration">
+<defs>
+  <radialGradient id="g" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#FAF8F3"/><stop offset="1" stop-color="#E4DFD3"/></radialGradient>
+  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#0B0C0A" stroke-opacity=".05"/></pattern>
+</defs>
+<rect width="480" height="360" fill="url(#g)"/>
+<rect width="480" height="360" fill="url(#grid)"/>
+<ellipse cx="240" cy="292" rx="170" ry="30" fill="#0B0C0A" opacity=".12"/>
+<path d="M150 140 v110 a90 32 0 0 0 180 0 v-110" fill="#0B0C0A"/><path d="M150 175 v40 a90 32 0 0 0 180 0 v-40 a90 32 0 0 1 -180 0z" fill="#C8FF3D"/><ellipse cx="240" cy="140" rx="90" ry="32" fill="#2A2C26"/><ellipse cx="240" cy="140" rx="74" ry="24" fill="#2457FF"/><path d="M188 150 q6 40 0 60 q-6 8 -10 0 q-2 -30 10 -60z" fill="#2457FF"/><path d="M150 140 C150 60 330 60 330 140" fill="none" stroke="#8F8A7D" stroke-width="5"/><g transform="rotate(30 360 120)"><rect x="350" y="40" width="20" height="80" rx="4" fill="#C2562E"/><rect x="344" y="118" width="32" height="14" fill="#8F8A7D"/><rect x="342" y="130" width="36" height="34" rx="3" fill="#2457FF"/></g>
+</svg>

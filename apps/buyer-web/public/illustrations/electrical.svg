@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360" role="img" aria-label="Electrical wire and switch illustration">
+<defs>
+  <radialGradient id="g" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#FAF8F3"/><stop offset="1" stop-color="#E4DFD3"/></radialGradient>
+  <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M32 0H0V32" fill="none" stroke="#0B0C0A" stroke-opacity=".05"/></pattern>
+</defs>
+<rect width="480" height="360" fill="url(#g)"/>
+<rect width="480" height="360" fill="url(#grid)"/>
+<ellipse cx="240" cy="292" rx="170" ry="30" fill="#0B0C0A" opacity=".12"/>
+<ellipse cx="200" cy="235" rx="95.0" ry="40" fill="none" stroke="#C93A3F" stroke-width="9"/><ellipse cx="200" cy="226" rx="93.5" ry="39" fill="none" stroke="#E5484D" stroke-width="9"/><ellipse cx="200" cy="217" rx="92.0" ry="38" fill="none" stroke="#C93A3F" stroke-width="9"/><ellipse cx="200" cy="208" rx="90.5" ry="37" fill="none" stroke="#E5484D" stroke-width="9"/><ellipse cx="200" cy="199" rx="89.0" ry="36" fill="none" stroke="#C93A3F" stroke-width="9"/><ellipse cx="200" cy="190" rx="87.5" ry="35" fill="none" stroke="#E5484D" stroke-width="9"/><ellipse cx="200" cy="181" rx="86.0" ry="34" fill="none" stroke="#C93A3F" stroke-width="9"/><ellipse cx="200" cy="175" rx="40" ry="16" fill="#E4DFD3"/><path d="M290 200 C330 190 340 120 380 110" fill="none" stroke="#E5484D" stroke-width="9" stroke-linecap="round"/><g ><polygon points="341.0,99.0 405.0,131.0 405.0,205.0 341.0,173.0" fill="#D7D5D0"/><polygon points="405.0,131.0 419.0,124.0 419.0,198.0 405.0,205.0" fill="#AFADAA"/><polygon points="355.0,92.0 419.0,124.0 405.0,131.0 341.0,99.0" fill="#FAF8F3"/></g><polygon points="370.0,118.0 398.0,132.0 398.0,150.0 370.0,136.0" fill="#0B0C0A"/><polygon points="372.0,121.0 386.0,128.0 386.0,141.0 372.0,134.0" fill="#C8FF3D"/>
+</svg>
