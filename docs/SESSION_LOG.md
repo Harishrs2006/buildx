@@ -146,3 +146,12 @@ Times are IST.
   Note: another local Claude session ("E-commerce codebase health audit") committed ddef1fd in this folder; it has
   moved to its own worktree (Desktop/BuildX/readme-update) and is updating README + this log in a separate PR.
   Preview can't call the live API (CORS allows production only), so product/offers were checked by tests only.
+- 23:15 PR #33 (catalogue) merged and live; verified M-sand material page shows only the real M-sand listing.
+  Live PIN checks were ALL failing: GET /locations/pincode/:pin -> 503 LOOKUP_UNAVAILABLE because the India Post
+  directory had never been imported into production (cluster0.xkcruay, db buildx; same cluster as apps/api/.env).
+  With user approval: downloaded the GODL-licensed mirror (ndp.ckan.civicdatalab.in, pincode_30052019.csv, 16 MB;
+  official data.gov.in download needs a CAPTCHA form), dry run OK, then imported:
+  155,525 offices / 19,252 PINs, version "2019-05" active. Verified: 572101 serviceable (1 supplier), 560001 NO_SUPPLIERS,
+  product page shows "Delivers to 572101". TODO: import a current monthly file from data.gov.in when the user downloads
+  it (npm run import-postal --workspace=apps/api -- --file <csv> --version YYYY-MM --yes); PINs created after 2019
+  currently return not found. TODO (old): seed data still contains em dashes ("placeholder — not a real business").
