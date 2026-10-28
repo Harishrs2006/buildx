@@ -1,14 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useApiClient } from '@buildx/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { RequireAuth } from '@/components/auth/RequireAuth';
+import { EmptyState, ErrorNote, PageHead } from '@/components/account/AccountUI';
+import { OrderRow } from '@/components/account/OrderRow';
 import { fetchOrders, type BuyerOrder } from '@/lib/orders';
-
-const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
 
 function OrdersList() {
   const client = useApiClient();
@@ -24,38 +23,41 @@ function OrdersList() {
       .catch(() => setState({ status: 'error' }));
   }, [client, page]);
 
-  if (state.status === 'loading') return <p className="py-24 text-center font-body text-on-surface-variant">Loading…</p>;
-  if (state.status === 'error') return <p className="py-24 text-center font-body text-error">Couldn't load your orders.</p>;
+  if (state.status === 'loading') {
+    return (
+      <div className="flex flex-col gap-3" role="status" aria-label="Loading orders">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="skeleton h-[92px]" />)}
+      </div>
+    );
+  }
+  if (state.status === 'error') return <ErrorNote>Could not load your orders. Check your connection and try again.</ErrorNote>;
 
   if (state.orders.length === 0) {
     return (
-      <div className="py-24 text-center">
-        <p className="font-body text-on-surface-variant">No orders yet.</p>
-        <Link href="/" className="mt-4 inline-block font-body font-bold text-primary">Browse categories</Link>
-      </div>
+      <EmptyState
+        icon="receipt_long"
+        title="No orders yet"
+        body="When you place an order, you can track it here from confirmation to delivery."
+        cta={{ href: '/#categories', label: 'Browse materials' }}
+      />
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {state.orders.map((order) => (
-        <Link key={order._id} href={`/orders/${order._id}`} className="flex items-center justify-between rounded-xl bg-surface-container-low p-4">
-          <div>
-            <p className="font-body text-sm font-semibold text-on-surface">{order.orderNumber}</p>
-            <p className="font-body text-xs text-on-surface-variant">{order.items.length} item{order.items.length > 1 ? 's' : ''} · {order.status.replace('_', ' ')}</p>
-          </div>
-          <span className="font-headline font-bold">{rupees.format(order.total)}</span>
-        </Link>
-      ))}
+      {state.orders.map((order) => <OrderRow key={order._id} order={order} />)}
       {(state.hasNext || state.hasPrev) && (
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <button disabled={!state.hasPrev} onClick={() => setPage((p) => p - 1)} className="rounded-lg bg-surface-container-high px-3 py-2 disabled:opacity-40">
-            <span className="material-symbols-outlined text-lg">chevron_left</span>
+        <nav className="flex items-center justify-center gap-3 pt-4" aria-label="Pages">
+          <button disabled={!state.hasPrev} onClick={() => setPage((p) => p - 1)} className="btn-ghost h-11 px-4">
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_left</span>
+            Newer
           </button>
-          <button disabled={!state.hasNext} onClick={() => setPage((p) => p + 1)} className="rounded-lg bg-surface-container-high px-3 py-2 disabled:opacity-40">
-            <span className="material-symbols-outlined text-lg">chevron_right</span>
+          <span className="font-mono text-[13px] text-stone">Page {page}</span>
+          <button disabled={!state.hasNext} onClick={() => setPage((p) => p + 1)} className="btn-ghost h-11 px-4">
+            Older
+            <span className="material-symbols-outlined text-[20px]" aria-hidden="true">chevron_right</span>
           </button>
-        </div>
+        </nav>
       )}
     </div>
   );
@@ -65,11 +67,13 @@ export default function OrdersPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-2xl px-4 pb-32 pt-24 md:px-8">
-        <h1 className="mb-6 font-headline text-3xl font-bold tracking-tighter">Orders</h1>
-        <RequireAuth>
-          <OrdersList />
-        </RequireAuth>
+      <main id="main" className="container-x min-h-[70vh] max-w-4xl pb-32 pt-[calc(var(--header-h)+40px)]">
+        <PageHead eyebrow="Orders" title="Your" accent="orders" />
+        <div className="mt-10">
+          <RequireAuth>
+            <OrdersList />
+          </RequireAuth>
+        </div>
       </main>
       <BottomNav />
     </>

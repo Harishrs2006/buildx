@@ -7,10 +7,24 @@ import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { RequireAuth } from '@/components/auth/RequireAuth';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { EmptyState, ErrorNote, PageHead, SummaryRow } from '@/components/account/AccountUI';
 import { useCart, clearCart } from '@/lib/cart';
 import { quoteCart, placeOrder, type Quote } from '@/lib/orders';
+import { rupees } from '@/lib/format';
 
-const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+const LABELS = ['Site', 'Home', 'Office', 'Warehouse'];
+
+function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
+  return (
+    <section className="card p-5 sm:p-6">
+      <div className="flex items-center gap-3">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ink font-mono text-[13px] text-lime">{n}</span>
+        <h2 className="font-display text-xl font-semibold tracking-tight">{title}</h2>
+      </div>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
 
 function CheckoutForm() {
   const client = useApiClient();
@@ -20,7 +34,7 @@ function CheckoutForm() {
   const router = useRouter();
 
   const [quote, setQuote] = useState<{ status: 'loading' } | { status: 'success'; data: Quote } | { status: 'error'; message: string }>({ status: 'loading' });
-  const [label, setLabel] = useState('Home');
+  const [label, setLabel] = useState('Site');
   const [fullAddress, setFullAddress] = useState('');
   const [contactPhone, setContactPhone] = useState(user?.phone.replace(/\D/g, '').slice(-10) ?? '');
   const [placing, setPlacing] = useState(false);
@@ -45,11 +59,18 @@ function CheckoutForm() {
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="py-24 text-center">
-        <p className="font-body text-on-surface-variant">Your cart is empty.</p>
-      </div>
+      <EmptyState
+        icon="shopping_cart"
+        title="Nothing to check out"
+        body="Your cart is empty. Add materials from a supplier first."
+        cta={{ href: '/#categories', label: 'Browse materials' }}
+      />
     );
   }
+
+  const notServiceable = quote.status === 'success' && quote.data.delivery !== null && !quote.data.delivery.serviceable;
+  const canPlace =
+    !placing && quote.status === 'success' && !notServiceable && fullAddress.trim().length >= 5 && /^[6-9]\d{9}$/.test(contactPhone);
 
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
@@ -76,96 +97,147 @@ function CheckoutForm() {
   }
 
   return (
-    <div className="flex flex-col gap-8 md:flex-row">
-      <form onSubmit={handlePlaceOrder} className="flex flex-1 flex-col gap-4">
-        <h2 className="font-headline text-xl font-bold">Delivery address</h2>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-body text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Label</span>
-          <input
-            required
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="Home, Site, Office…"
-            className="rounded-lg bg-surface-container-high px-4 py-3 font-body text-sm text-on-surface outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-body text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Full address</span>
-          <textarea
-            required
-            rows={3}
-            value={fullAddress}
-            onChange={(e) => setFullAddress(e.target.value)}
-            placeholder="House/plot no., street, area, city"
-            className="rounded-lg bg-surface-container-high px-4 py-3 font-body text-sm text-on-surface outline-none"
-          />
-        </label>
-        <label className="flex flex-col gap-1.5">
-          <span className="font-body text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Contact number</span>
-          <div className="flex items-center rounded-lg bg-surface-container-high px-4">
-            <span className="font-body text-sm text-on-surface-variant">+91</span>
-            <input
-              required
-              type="tel"
-              inputMode="numeric"
-              pattern="[6-9][0-9]{9}"
-              maxLength={10}
-              value={contactPhone}
-              onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, ''))}
-              className="w-full bg-transparent py-3 pl-2 font-body text-sm text-on-surface outline-none"
-            />
-          </div>
-        </label>
-        {location?.pincode && (
-          <p className="font-body text-xs text-on-surface-variant">Delivering to PIN {location.pincode} ({location.label}).</p>
-        )}
-
-        <div className="rounded-lg bg-surface-container-high px-4 py-3">
-          <span className="font-body text-xs font-semibold uppercase tracking-wide text-on-surface-variant">Payment method</span>
-          <p className="mt-1 flex items-center gap-2 font-body text-sm text-on-surface">
-            <span className="material-symbols-outlined text-lg">payments</span>
-            Cash on delivery: pay when it arrives
-          </p>
-        </div>
-
-        {placeError && <p className="font-body text-sm text-error">{placeError}</p>}
-
-        <button
-          type="submit"
-          disabled={placing || quote.status !== 'success' || fullAddress.trim().length < 5 || contactPhone.length !== 10}
-          className="mt-2 rounded-xl bg-primary py-4 font-headline font-bold uppercase tracking-wide text-on-primary disabled:opacity-50"
-        >
-          {placing ? 'Placing order…' : quote.status === 'success' ? `Place order · ${rupees.format(quote.data.total)}` : 'Place order'}
-        </button>
-      </form>
-
-      <div className="w-full flex-shrink-0 rounded-xl bg-surface-container-low p-6 md:w-80">
-        <h2 className="font-headline text-lg font-bold">Order summary</h2>
-        {quote.status === 'loading' && <p className="mt-4 font-body text-sm text-on-surface-variant">Pricing your cart…</p>}
-        {quote.status === 'error' && <p className="mt-4 font-body text-sm text-error">{quote.message}</p>}
-        {quote.status === 'success' && (
-          <div className="mt-4 flex flex-col gap-3">
-            {quote.data.items.map((item) => (
-              <div key={item.productId} className="flex items-center justify-between font-body text-sm">
-                <span className="text-on-surface-variant">
-                  {item.quantity} {item.unit.toLowerCase()} × {item.name}
-                  {!item.inStock && <span className="ml-2 text-error">(only {item.stockQuantity} left)</span>}
-                </span>
-                <span className="font-semibold text-on-surface">{rupees.format(item.lineTotal)}</span>
-              </div>
-            ))}
-            <div className="mt-2 flex flex-col gap-1 border-t border-outline-variant/30 pt-3 font-body text-sm">
-              <div className="flex justify-between"><span className="text-on-surface-variant">Subtotal</span><span>{rupees.format(quote.data.subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-on-surface-variant">GST</span><span>{rupees.format(quote.data.gstAmount)}</span></div>
-              <div className="flex justify-between font-headline text-base font-bold"><span>Total</span><span>{rupees.format(quote.data.total)}</span></div>
+    <form onSubmit={handlePlaceOrder} className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <div className="flex flex-col gap-4">
+        <Step n={1} title="Delivery address">
+          <fieldset>
+            <legend className="text-[14px] font-medium text-stone">Save this address as</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {LABELS.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLabel(l)}
+                  aria-pressed={label === l}
+                  className={`h-11 rounded-full border px-4 text-[14px] font-medium transition-colors ${
+                    label === l ? 'border-ink bg-ink text-sand' : 'border-sand-4 bg-sand hover:border-ink'
+                  }`}
+                >
+                  {l}
+                </button>
+              ))}
             </div>
-            {quote.data.delivery && !quote.data.delivery.serviceable && (
-              <p className="font-body text-sm text-error">This supplier doesn't deliver to your selected PIN code.</p>
-            )}
+          </fieldset>
+
+          <label className="mt-5 flex flex-col gap-2">
+            <span className="text-[14px] font-medium text-stone">Full address</span>
+            <textarea
+              required
+              rows={3}
+              value={fullAddress}
+              onChange={(e) => setFullAddress(e.target.value)}
+              placeholder="Plot or house no., street, area, landmark, city"
+              autoComplete="street-address"
+              className="field resize-none"
+            />
+          </label>
+
+          {location?.pincode ? (
+            <p className="mt-3 flex items-center gap-1.5 text-[14px] text-stone">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">location_on</span>
+              Delivering to PIN <span className="font-mono text-ink">{location.pincode}</span> ({location.label})
+            </p>
+          ) : (
+            <p className="mt-3 text-[14px] text-stone">Tip: set your site PIN on the home page so we can check delivery before you order.</p>
+          )}
+        </Step>
+
+        <Step n={2} title="Contact on site">
+          <label className="flex flex-col gap-2">
+            <span className="text-[14px] font-medium text-stone">Mobile number to call on delivery</span>
+            <div className="flex items-center gap-2 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+              <span className="font-mono text-[15px] text-stone">+91</span>
+              <input
+                required
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                pattern="[6-9][0-9]{9}"
+                maxLength={10}
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value.replace(/\D/g, ''))}
+                className="w-full bg-transparent py-3.5 pr-4 font-mono text-[15px] tracking-wide outline-none"
+              />
+            </div>
+          </label>
+        </Step>
+
+        <Step n={3} title="Payment">
+          <div className="flex items-center gap-4 rounded-xl border-2 border-ink bg-sand p-4">
+            <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-lime text-ink">
+              <span className="material-symbols-outlined" aria-hidden="true">payments</span>
+            </span>
+            <div>
+              <p className="font-semibold">Cash on delivery</p>
+              <p className="text-[14px] text-stone">Pay when the materials reach your site.</p>
+            </div>
           </div>
-        )}
+        </Step>
       </div>
-    </div>
+
+      <aside className="lg:sticky lg:top-[calc(var(--header-h)+24px)] lg:self-start">
+        <div className="rounded-3xl bg-ink p-6 text-sand">
+          <p className="eyebrow text-stone-light">Order summary</p>
+          <p className="mt-2 text-[14px] text-stone-light">From {cart.supplierName}</p>
+
+          {quote.status === 'loading' && (
+            <div className="mt-5 flex flex-col gap-3" role="status" aria-label="Pricing your cart">
+              {[0, 1, 2].map((i) => <div key={i} className="h-5 animate-pulse rounded bg-white/10" />)}
+            </div>
+          )}
+
+          {quote.status === 'error' && <p role="alert" className="mt-5 text-[15px] text-signal-red">{quote.message}</p>}
+
+          {quote.status === 'success' && (
+            <>
+              <ul className="mt-5 flex flex-col gap-3 border-b border-white/10 pb-5">
+                {quote.data.items.map((item) => (
+                  <li key={item.productId} className="flex justify-between gap-4 text-[14px]">
+                    <span className="min-w-0 text-stone-light">
+                      <span className="font-mono text-sand">{item.quantity}</span> {item.unit.toLowerCase()} × {item.name}
+                      {item.pricePerUnit < item.listPrice && (
+                        <span className="mt-0.5 block text-[12px] text-lime">Bulk price {rupees.format(item.pricePerUnit)} / {item.unit.toLowerCase()}</span>
+                      )}
+                      {!item.inStock && <span className="mt-0.5 block text-[12px] text-signal-red">Only {item.stockQuantity} left</span>}
+                    </span>
+                    <span className="flex-shrink-0 tabular-nums">{rupees.format(item.lineTotal)}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-5 flex flex-col gap-2">
+                <SummaryRow onDark label="Subtotal" value={rupees.format(quote.data.subtotal)} />
+                <SummaryRow onDark label="GST" value={rupees.format(quote.data.gstAmount)} />
+                <SummaryRow onDark label="Delivery" value={quote.data.deliveryCharge > 0 ? rupees.format(quote.data.deliveryCharge) : 'No charge'} />
+                <div className="mt-2 border-t border-white/10 pt-3">
+                  <SummaryRow strong label="Total" value={rupees.format(quote.data.total)} />
+                </div>
+              </div>
+              {notServiceable && (
+                <p role="alert" className="mt-4 rounded-xl bg-signal-red/15 px-4 py-3 text-[14px] text-[#FFB4B6]">
+                  This supplier does not deliver to PIN {quote.data.delivery?.pincode}. Change your PIN on the home page or pick another supplier.
+                </p>
+              )}
+            </>
+          )}
+
+          {placeError && <p role="alert" className="mt-4 text-[14px] text-signal-red">{placeError}</p>}
+
+          <button type="submit" disabled={!canPlace} className="btn-lime mt-6 w-full py-4 text-[16px]">
+            {placing ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-[20px]" aria-hidden="true">progress_activity</span>
+                Placing order
+              </>
+            ) : (
+              <>
+                Place order{quote.status === 'success' && ` · ${rupees.format(quote.data.total)}`}
+              </>
+            )}
+          </button>
+          <p className="mt-3 text-center text-[12px] text-stone-light">The supplier confirms the order before it is dispatched.</p>
+        </div>
+      </aside>
+    </form>
   );
 }
 
@@ -173,9 +245,9 @@ export default function CheckoutPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto max-w-4xl px-4 pb-32 pt-24 md:px-8">
-        <h1 className="font-headline text-3xl font-bold tracking-tighter">Checkout</h1>
-        <div className="mt-6">
+      <main id="main" className="container-x min-h-[70vh] pb-32 pt-[calc(var(--header-h)+40px)]">
+        <PageHead eyebrow="Checkout" title="Almost" accent="there" />
+        <div className="mt-10">
           <RequireAuth>
             <CheckoutForm />
           </RequireAuth>
