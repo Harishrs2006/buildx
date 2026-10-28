@@ -13,7 +13,7 @@ import { DeliveryCheck } from '@/components/catalog/DeliveryCheck';
 import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { useCategories } from '@/lib/categories';
-import { catalogCategory, catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@/lib/catalog/data';
+import { catalogCategory, catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@buildx/web-core';
 
 function OptionChips({ label, options, value, onChange }: { label: string; options: string[]; value: string | null; onChange: (v: string | null) => void }) {
   return (

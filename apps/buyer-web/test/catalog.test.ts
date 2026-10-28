@@ -1,10 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { CATALOG, CATALOG_CATEGORIES, catalogItems, matchCatalogItem } from '../lib/catalog/data';
-import {
+import { CATALOG, CATALOG_CATEGORIES, catalogItem, catalogItems, matchCatalogItem, suggestedListingName, suggestedListingUnit } from '@buildx/web-core';
+import { units } from '@buildx/web-core';
+const {
   bagsForKg, brassToCft, bulkFromBrass, bulkFromTonnes, coilsForMetres, cftToBrass, cftToM3, m3ToCft, tmtBarsForKg, tmtKgPerBar, tmtKgPerMetre,
-} from '../lib/catalog/units';
+} = units;
 
 const LIVE_CATEGORY_SLUGS = [
   'cement-concrete', 'bricks-blocks', 'sand-aggregates', 'steel-tmt-bars', 'plumbing',
@@ -90,5 +91,22 @@ describe('matching real listing names', () => {
     expect(matchCatalogItem('Wire-Cut Red Bricks', 'bricks-blocks')?.id).toBe('red-clay-bricks');
     expect(matchCatalogItem('Table-Molded Clay Bricks', 'bricks-blocks')?.id).toBe('red-clay-bricks');
     expect(matchCatalogItem('Cement Solid Blocks 6"x8"x16"', 'bricks-blocks')?.id).toBe('solid-concrete-blocks');
+  });
+});
+
+describe('supplier listing helpers', () => {
+  it('suggests the trade unit', () => {
+    expect(suggestedListingUnit(catalogItem('opc-53-cement')!)).toBe('BAG');
+    expect(suggestedListingUnit(catalogItem('m-sand')!)).toBe('TON');
+    expect(suggestedListingUnit(catalogItem('tmt-bars')!)).toBe('KG');
+    expect(suggestedListingUnit(catalogItem('aac-blocks')!)).toBe('CUBIC_METER');
+  });
+
+  it('builds names that map back to the same material', () => {
+    for (const item of CATALOG) {
+      const choices = Object.fromEntries(item.variants.map((v) => [v.label, v.options[0]]));
+      const name = suggestedListingName(item, item.brands[0] ?? null, choices);
+      expect(matchCatalogItem(name, item.categorySlug)?.id, `${item.id}: "${name}"`).toBe(item.id);
+    }
   });
 });
