@@ -26,10 +26,14 @@ export function pickMotionTier(d: DeviceSignals): MotionTier {
   return 'full';
 }
 
+// Creating a WebGL context is expensive (hundreds of ms on slow devices), so it is probed
+// last and the test context is released straight away
 function hasWebGL(): boolean {
   try {
     const canvas = document.createElement('canvas');
-    return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    const gl = (canvas.getContext('webgl2') || canvas.getContext('webgl')) as WebGLRenderingContext | null;
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return !!gl;
   } catch {
     return false;
   }
@@ -37,15 +41,18 @@ function hasWebGL(): boolean {
 
 export function readDeviceSignals(): DeviceSignals {
   const nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
-  return {
+  const signals: DeviceSignals = {
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
     coarsePointer: window.matchMedia('(pointer: coarse)').matches,
     viewportWidth: window.innerWidth,
     cores: nav.hardwareConcurrency,
     memoryGb: nav.deviceMemory,
     saveData: nav.connection?.saveData,
-    webgl: hasWebGL(),
+    webgl: true,
   };
+  // Only devices that would otherwise get the 3D scene pay for the WebGL probe
+  if (pickMotionTier(signals) === 'full') signals.webgl = hasWebGL();
+  return signals;
 }
 
 // null until the first client render, so server HTML and hydration always match

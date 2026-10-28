@@ -35,19 +35,31 @@ export function useChapterScroll(
     return t * (count - 1);
   }, [containerRef, count]);
 
+  // The loop only runs while progress is catching up with a scroll, then goes idle,
+  // so a page sitting still costs no main-thread time.
   useEffect(() => {
     if (!enabled) return;
     let raf = 0;
     progress.current = target();
+    frameCb.current(progress.current);
     const tick = () => {
       const goal = target();
       const next = progress.current + (goal - progress.current) * SCROLL_TUNING.damping;
-      progress.current = Math.abs(goal - next) < 0.0005 ? goal : next;
+      const settled = Math.abs(goal - next) < 0.0005;
+      progress.current = settled ? goal : next;
       frameCb.current(progress.current);
-      raf = requestAnimationFrame(tick);
+      raf = settled ? 0 : requestAnimationFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    const wake = () => {
+      if (!raf) raf = requestAnimationFrame(tick);
+    };
+    window.addEventListener('scroll', wake, { passive: true });
+    window.addEventListener('resize', wake);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', wake);
+      window.removeEventListener('resize', wake);
+    };
   }, [enabled, target, progress]);
 
   // Scroll the window so chapter i is centred in the pinned stage

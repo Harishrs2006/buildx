@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { LogoMark } from '@/components/brand/Logo';
 import { CHAPTERS, LAST_CHAPTER, resolveChapterLinks, type Chapter } from './chapters';
-import { useMotionTier, type MotionTier } from './motionTier';
+import { useMotionTier } from './motionTier';
 import { SCROLL_TUNING, useChapterScroll, useSmoothScroll } from './useChapterScroll';
 
 const SiteScene = dynamic(() => import('./SiteScene'), { ssr: false });
@@ -165,7 +165,8 @@ function StaticStory({ categories }: { categories: Categories }) {
   );
 }
 
-function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>; categories: Categories }) {
+// tier null = not measured yet (server render and first paint): same layout as "lite", nothing heavy started
+function PinnedStory({ tier, categories }: { tier: 'full' | 'lite' | null; categories: Categories }) {
   const container = useRef<HTMLElement>(null);
   const overlays = useRef<(HTMLDivElement | null)[]>([]);
   const stills = useRef<(HTMLDivElement | null)[]>([]);
@@ -175,8 +176,10 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
   const [inView, setInView] = useState(true);
   const [sceneReady, setSceneReady] = useState(false);
   const lastActive = useRef(-1);
+  // only the stills next to the current chapter are mounted, so phones download them as they go
+  const [near, setNear] = useState(0);
 
-  useSmoothScroll(true);
+  useSmoothScroll(tier === 'full');
 
   const { progress, scrollToChapter } = useChapterScroll(container, CHAPTERS.length, (p) => {
     overlays.current.forEach((el, i) => {
@@ -202,6 +205,7 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
     const active = Math.round(p);
     if (active !== lastActive.current) {
       lastActive.current = active;
+      setNear(active);
       rail.current.forEach((b, i) => {
         if (!b) return;
         if (i === active) b.setAttribute('aria-current', 'step');
@@ -240,7 +244,7 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
             <div className="absolute inset-0 [perspective:1200px]">
               {CHAPTERS.map((c, i) => (
                 <div key={c.id} ref={(el) => { stills.current[i] = el; }} className="absolute inset-0 will-change-transform" style={{ opacity: i === 0 ? 1 : 0 }}>
-                  <Poster i={i} priority={i === 0} />
+                  {Math.abs(i - near) <= 1 && <Poster i={i} priority={i === 0} />}
                 </div>
               ))}
             </div>
@@ -308,19 +312,6 @@ function PinnedStory({ tier, categories }: { tier: Exclude<MotionTier, 'static'>
 
 export function CinematicLanding({ categories }: { categories: Categories }) {
   const tier = useMotionTier();
-  // Before the tier is known (first paint), show the hero still with real text: no layout shift
-  if (tier === null) {
-    return (
-      <section id="story" aria-label="What you can order on BuildX" className="on-ink relative h-[100svh] overflow-hidden bg-ink">
-        <Poster i={0} priority />
-        <div className="absolute inset-0 bg-ink opacity-[0.78]" aria-hidden="true" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,12,10,0.6)_0%,rgba(11,12,10,0)_22%,rgba(11,12,10,0)_45%,rgba(11,12,10,0.78)_100%)]" aria-hidden="true" />
-        <div className="relative h-full">
-          <HeroContent />
-        </div>
-      </section>
-    );
-  }
   if (tier === 'static') return <StaticStory categories={categories} />;
   return <PinnedStory tier={tier} categories={categories} />;
 }

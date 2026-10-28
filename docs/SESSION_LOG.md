@@ -10,6 +10,8 @@ Times are IST.
   Recreate it if the scratchpad is gone (headless Chrome + Emulation.setDeviceMetricsOverride).
 
 ## NEXT STEPS
+0. Cinematic 3D landing (branch feat/cinematic-landing, PR open): user merges -> live. Afterwards: optional real
+   footage (see apps/buyer-web/ASSETS.md), re-render posters if the 3D scene changes (/?still=N in dev).
 1. DONE 2026-10-28 (Chrome session): Firebase web app 'BuildX Web' registered in project buildx-15494; the 4
    NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
    Firebase Auth authorized domains (via Identity Toolkit admin API, the console form kept rejecting it). Production
@@ -106,3 +108,14 @@ Times are IST.
 - 20:10 User merged PR #28: sign-in with test number works. Onboarding showed 'Could not complete onboarding': API
   /auth/onboard reply had no `phone`, web syncedUserSchema requires it, so a successful save was shown as an error (the
   user IS onboarded server-side). Fix: PR fix/onboard-response adds phone to the reply + test. Needs user merge.
+- 21:30 User asked for a Zomato-style cinematic landing with a scroll-driven construction story (trucks, concrete,
+  bricks, tiles, paint, electrical lights, luxury bathroom plumbing, skyline), 3D/WebGL/shader effects. Saved refs to
+  user-brief (landing-ref-1..4.png). Stock video unreachable (pexels 403) -> built an ORIGINAL real-time 3D site in
+  three.js/R3F: components/cinematic/ (chapters.ts, motionTier.ts, useChapterScroll.ts [Lenis + idle rAF],
+  CinematicLanding.tsx, SiteScene.tsx, scene/World|Stations|parts|shaders). Chapter buttons link only to categories
+  returned by GET /categories. Tiers: full (desktop WebGL), lite (phones: rendered WebP posters with CSS 3D
+  crossfade), static (reduced motion). 18 posters in public/cinematic (rendered from the scene). Header gets
+  darkUntilId. Removed HeroVisual/Spotlight. Vitest added to buyer-web (10 tests). ASSETS.md written.
+  Lighthouse mobile (simulated, like PageSpeed): 84 perf / 96 a11y / 96 best practices, CLS 0.011, LCP 3.5 s
+  (live baseline with old landing: 55, LCP 16.5 s). Devtools-throttled run: 56. Desktop preset run fails with
+  NO_NAVSTART in headless (WebGL), not measured. SEO 66 is the intentional noindex.
