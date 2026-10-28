@@ -191,7 +191,7 @@ const s = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
     borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt,
   },
-  tagActive: { borderColor: Colors.primary, backgroundColor: '#FFF7ED' },
+  tagActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
   tagText: { fontSize: 13, color: Colors.textSecondary },
   tagTextActive: { color: Colors.primary, fontWeight: '600' },
   input: {

@@ -8,9 +8,9 @@ import { useSupplierProducts, useUpdateProduct, type SupplierProduct } from '../
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   ACTIVE:       { bg: '#D1FAE5', text: '#065F46' },
   DRAFT:        { bg: '#DBEAFE', text: '#1E40AF' },
-  INACTIVE:     { bg: '#F3F4F6', text: '#6B7280' },
+  INACTIVE:     { bg: Colors.sand3, text: Colors.stone },
   OUT_OF_STOCK: { bg: '#FEE2E2', text: '#991B1B' },
-  DISCONTINUED: { bg: '#F3F4F6', text: '#6B7280' },
+  DISCONTINUED: { bg: Colors.sand3, text: Colors.stone },
 };
 
 function ProductCard({ product, onToggle }: { product: SupplierProduct; onToggle: (id: string, status: string) => void }) {

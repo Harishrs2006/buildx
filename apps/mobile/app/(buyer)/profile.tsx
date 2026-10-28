@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   info: { flex: 1 },
   name: { fontSize: 16, fontWeight: '700', color: Colors.text },
   phone: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
-  roleBadge: { marginTop: 6, alignSelf: 'flex-start', backgroundColor: '#FFF7ED', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
+  roleBadge: { marginTop: 6, alignSelf: 'flex-start', backgroundColor: Colors.primaryLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
   roleText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   statCard: { flex: 1, backgroundColor: Colors.surfaceAlt, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, padding: 14, alignItems: 'center' },

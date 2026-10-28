@@ -436,7 +436,7 @@ const styles = StyleSheet.create({
     borderColor: Colors.border,
     gap: 8,
   },
-  optionRowSelected: { borderColor: Colors.primary, backgroundColor: '#FFF7ED' },
+  optionRowSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
   radio: {
     width: 18, height: 18, borderRadius: 9,
     borderWidth: 2, borderColor: Colors.borderStrong,
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   addAllBtnText: { color: Colors.textInverse, fontWeight: '700', fontSize: 14 },
 
   uploadHint: {
-    backgroundColor: '#FFF7ED',
+    backgroundColor: Colors.primaryLight,
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderTopWidth: 1,
