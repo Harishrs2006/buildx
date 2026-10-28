@@ -38,7 +38,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['RCC slabs, beams and columns', 'Precast and high-strength concrete', 'Work that needs early de-shuttering'],
     standard: 'IS 269', specs: [{ label: '28-day strength', value: '53 MPa minimum' }, { label: 'Pack', value: '50 kg bag' }],
     variants: [], soldAs: [{ label: 'Per 50 kg bag' }, { label: 'Per tonne', note: '20 bags' }],
-    brands: CEMENT_BRANDS, search: 'OPC 53', image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
+    brands: CEMENT_BRANDS, search: 'OPC 53', aliases: ['opc 53', '53 grade'], image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
   },
   {
     id: 'opc-43-cement', name: 'OPC 43 grade cement', categorySlug: 'cement-concrete', group: 'Cement',
@@ -46,7 +46,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['General RCC work', 'Masonry and plastering', 'Flooring'],
     standard: 'IS 269', specs: [{ label: '28-day strength', value: '43 MPa minimum' }, { label: 'Pack', value: '50 kg bag' }],
     variants: [], soldAs: [{ label: 'Per 50 kg bag' }, { label: 'Per tonne', note: '20 bags' }],
-    brands: CEMENT_BRANDS, search: 'OPC 43', image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
+    brands: CEMENT_BRANDS, search: 'OPC 43', aliases: ['opc 43', '43 grade'], image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
   },
   {
     id: 'ppc-cement', name: 'PPC cement', categorySlug: 'cement-concrete', group: 'Cement',
@@ -54,7 +54,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Plastering and brickwork', 'Foundations and mass concrete', 'Residential RCC'],
     standard: 'IS 1489 (Part 1)', specs: [{ label: 'Blend', value: 'OPC clinker with fly ash' }, { label: 'Pack', value: '50 kg bag' }],
     variants: [], soldAs: [{ label: 'Per 50 kg bag' }, { label: 'Per tonne', note: '20 bags' }],
-    brands: CEMENT_BRANDS, search: 'PPC cement', image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
+    brands: CEMENT_BRANDS, search: 'PPC cement', aliases: ['ppc', 'pozzolana'], image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
   },
   {
     id: 'psc-cement', name: 'PSC cement', categorySlug: 'cement-concrete', group: 'Cement',
@@ -62,7 +62,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Coastal and marine work', 'Sewage and water-retaining structures', 'Mass concrete'],
     standard: 'IS 455', specs: [{ label: 'Blend', value: 'OPC clinker with GGBS slag' }, { label: 'Pack', value: '50 kg bag' }],
     variants: [], soldAs: [{ label: 'Per 50 kg bag' }, { label: 'Per tonne', note: '20 bags' }],
-    brands: ['JSW', 'UltraTech', 'Dalmia', 'Ramco'], search: 'PSC cement', image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
+    brands: ['JSW', 'UltraTech', 'Dalmia', 'Ramco'], search: 'PSC cement', aliases: ['psc', 'slag cement'], image: I('cement'), calculator: { kind: 'bags', kgPerBag: 50 },
   },
   {
     id: 'white-cement', name: 'White cement', categorySlug: 'cement-concrete', group: 'Cement',
@@ -79,7 +79,7 @@ export const CATALOG: CatalogItem[] = [
     standard: 'IS 4926', specs: [{ label: 'Delivery', value: 'Transit mixer; pump on request' }],
     variants: [{ label: 'Grade', options: ['M10', 'M15', 'M20', 'M25', 'M30', 'M35', 'M40'] }],
     soldAs: [{ label: 'Per cubic metre (m³)' }],
-    brands: ['UltraTech', 'ACC', 'Nuvoco', 'Prism Johnson'], search: 'ready mix concrete', image: I('cement'),
+    brands: ['UltraTech', 'ACC', 'Nuvoco', 'Prism Johnson'], search: 'ready mix concrete', aliases: ['rmc', 'ready mix'], image: I('cement'),
     note: 'Pump charges, minimum loads and pour timing are set by each supplier. Confirm before ordering.',
   },
 
@@ -91,7 +91,7 @@ export const CATALOG: CatalogItem[] = [
     standard: 'IS 1077', specs: [{ label: 'Traditional size', value: 'About 230 × 110 × 75 mm (varies by kiln)' }, { label: 'Modular size', value: '190 × 90 × 90 mm' }],
     variants: [{ label: 'Type', options: ['Country (hand-moulded)', 'Table-moulded', 'Wire-cut (machine-made)'] }],
     soldAs: [{ label: 'Per 1,000 nos' }, { label: 'Per piece' }],
-    brands: [], search: 'red brick', image: I('bricks'), calculator: { kind: 'count', perLabel: 'thousand', per: 1000 },
+    brands: [], search: 'red brick', aliases: ['clay brick', 'red brick', 'wire cut', 'table moulded', 'table molded', 'facing brick', 'country brick'], image: I('bricks'), calculator: { kind: 'count', perLabel: 'thousand', per: 1000 },
     note: 'Clay bricks are made by local kilns, so size and strength vary. Ask the supplier for the class and a sample.',
   },
   {
@@ -100,7 +100,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Walls with less plaster', 'Partition and load-bearing walls'],
     standard: 'IS 12894', specs: [{ label: 'Common size', value: '230 × 110 × 75 mm' }, { label: 'Colour', value: 'Grey' }],
     variants: [], soldAs: [{ label: 'Per 1,000 nos' }, { label: 'Per piece' }],
-    brands: [], search: 'fly ash brick', image: I('blocks'), calculator: { kind: 'count', perLabel: 'thousand', per: 1000 },
+    brands: [], search: 'fly ash brick', aliases: ['fly ash'], image: I('blocks'), calculator: { kind: 'count', perLabel: 'thousand', per: 1000 },
   },
   {
     id: 'aac-blocks', name: 'AAC blocks', categorySlug: 'bricks-blocks', group: 'Blocks',
@@ -109,7 +109,7 @@ export const CATALOG: CatalogItem[] = [
     standard: 'IS 2185 (Part 3)', specs: [{ label: 'Face size', value: '600 × 200 mm' }, { label: 'Density', value: 'About 550 to 700 kg/m³' }],
     variants: [{ label: 'Thickness', options: ['75 mm', '100 mm', '125 mm', '150 mm', '200 mm', '230 mm'] }],
     soldAs: [{ label: 'Per cubic metre (m³)' }, { label: 'Per piece' }],
-    brands: ['Magicrete', 'Biltech', 'UltraTech Xtralite', 'HIL Aerocon', 'Siporex'], search: 'AAC block', image: I('blocks'),
+    brands: ['Magicrete', 'Biltech', 'UltraTech Xtralite', 'HIL Aerocon', 'Siporex'], search: 'AAC block', aliases: ['aac', 'aerated'], image: I('blocks'),
   },
   {
     id: 'solid-concrete-blocks', name: 'Solid concrete blocks', categorySlug: 'bricks-blocks', group: 'Blocks',
@@ -117,7 +117,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Load-bearing walls', 'Compound walls', 'Foundations above plinth'],
     standard: 'IS 2185 (Part 1)', specs: [{ label: 'Face size', value: '400 × 200 mm' }],
     variants: [{ label: 'Thickness', options: ['100 mm', '150 mm', '200 mm'] }], soldAs: [{ label: 'Per piece' }],
-    brands: [], search: 'solid block', image: I('blocks'),
+    brands: [], search: 'solid block', aliases: ['solid block', 'solid concrete block', 'cement solid block', 'concrete block'], image: I('blocks'),
   },
   {
     id: 'hollow-concrete-blocks', name: 'Hollow concrete blocks', categorySlug: 'bricks-blocks', group: 'Blocks',
@@ -125,7 +125,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Partition and compound walls', 'Walls with vertical reinforcement in the cores'],
     standard: 'IS 2185 (Part 1)', specs: [{ label: 'Face size', value: '400 × 200 mm' }],
     variants: [{ label: 'Thickness', options: ['100 mm', '150 mm', '200 mm'] }], soldAs: [{ label: 'Per piece' }],
-    brands: [], search: 'hollow block', image: I('blocks'),
+    brands: [], search: 'hollow block', aliases: ['hollow block'], image: I('blocks'),
   },
   {
     id: 'paver-blocks', name: 'Interlocking paver blocks', categorySlug: 'bricks-blocks', group: 'Paving',
@@ -134,7 +134,7 @@ export const CATALOG: CatalogItem[] = [
     standard: 'IS 15658', specs: [{ label: 'Shapes', value: 'I-shape, zig-zag, rectangle and more' }],
     variants: [{ label: 'Thickness', options: ['60 mm', '80 mm', '100 mm'] }],
     soldAs: [{ label: 'Per square metre or square foot' }, { label: 'Per piece' }],
-    brands: [], search: 'paver block', image: I('blocks'),
+    brands: [], search: 'paver block', aliases: ['paver'], image: I('blocks'),
   },
 
   // ── Sand & Aggregates ─────────────────────────────────────────────
@@ -144,7 +144,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Concrete (RCC and PCC)', 'Block and brick masonry mortar'],
     standard: 'IS 383 (fine aggregate)', specs: [{ label: 'Grading', value: 'Up to 4.75 mm, usually Zone II' }],
     variants: [], soldAs: [{ label: 'Per tonne' }, { label: 'Per cubic foot (cft)' }, { label: 'Per brass', note: '100 cft, about 2.83 m³' }, { label: 'Per truck load' }],
-    brands: [], search: 'M sand', image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'sand' },
+    brands: [], search: 'M sand', aliases: ['manufactured sand', 'm sand', 'msand'], image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'sand' },
   },
   {
     id: 'p-sand', name: 'P-sand (plastering sand)', categorySlug: 'sand-aggregates', group: 'Sand',
@@ -152,14 +152,14 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Wall and ceiling plaster', 'Tile bedding mortar'],
     specs: [{ label: 'Grading', value: 'Finer, typically up to 2.36 mm' }],
     variants: [], soldAs: [{ label: 'Per tonne' }, { label: 'Per cubic foot (cft)' }, { label: 'Per brass', note: '100 cft' }],
-    brands: [], search: 'P sand', image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'sand' },
+    brands: [], search: 'P sand', aliases: ['plastering sand', 'p sand', 'psand'], image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'sand' },
   },
   {
     id: 'river-sand', name: 'River sand', categorySlug: 'sand-aggregates', group: 'Sand',
     summary: 'Natural sand from river beds.',
     uses: ['Plastering', 'Concrete where specified'],
     specs: [], variants: [], soldAs: [{ label: 'Per tonne' }, { label: 'Per brass', note: '100 cft' }],
-    brands: [], search: 'river sand', image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'sand' },
+    brands: [], search: 'river sand', aliases: ['river sand'], image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'sand' },
     note: 'River sand mining is regulated by each state. Buy only from suppliers who can show it was legally sourced.',
   },
   {
@@ -169,14 +169,14 @@ export const CATALOG: CatalogItem[] = [
     standard: 'IS 383 (coarse aggregate)', specs: [{ label: 'Material', value: 'Crushed granite or basalt' }],
     variants: [{ label: 'Size', options: ['6 mm', '12 mm', '20 mm', '40 mm'] }],
     soldAs: [{ label: 'Per tonne' }, { label: 'Per cubic foot (cft)' }, { label: 'Per brass', note: '100 cft' }, { label: 'Per truck load' }],
-    brands: [], search: 'jelly aggregate', image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.5, material: 'aggregate' },
+    brands: [], search: 'jelly aggregate', aliases: ['jelly', 'crushed stone', 'stone chips', 'kapchi', 'blue metal', 'aggregate'], image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.5, material: 'aggregate' },
   },
   {
     id: 'stone-dust', name: 'Quarry dust', categorySlug: 'sand-aggregates', group: 'Fill and road base',
     summary: 'Fine crusher dust left after making aggregate.',
     uses: ['Paver and tile bedding', 'Filling and levelling'],
     specs: [], variants: [], soldAs: [{ label: 'Per tonne' }, { label: 'Per brass', note: '100 cft' }],
-    brands: [], search: 'quarry dust', image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'dust' },
+    brands: [], search: 'quarry dust', aliases: ['quarry dust', 'stone dust', 'crusher dust'], image: I('sand'), calculator: { kind: 'bulk', densityTPerM3: 1.6, material: 'dust' },
   },
   {
     id: 'gsb-wmm', name: 'GSB and wet mix macadam', categorySlug: 'sand-aggregates', group: 'Fill and road base',
@@ -204,7 +204,7 @@ export const CATALOG: CatalogItem[] = [
       { label: 'Diameter', options: ['8 mm', '10 mm', '12 mm', '16 mm', '20 mm', '25 mm', '32 mm'] },
     ],
     soldAs: [{ label: 'Per kg' }, { label: 'Per tonne' }, { label: 'Per bundle', note: 'bundle weight varies by brand and size' }],
-    brands: TMT_BRANDS, search: 'TMT', image: I('steel'), calculator: { kind: 'tmt' },
+    brands: TMT_BRANDS, search: 'TMT', aliases: ['tmt', 'rebar', 'fe 500', 'fe500', 'fe 550', 'fe550'], image: I('steel'), calculator: { kind: 'tmt' },
   },
   {
     id: 'binding-wire', name: 'Binding wire', categorySlug: 'steel-tmt-bars', group: 'Reinforcement',
@@ -212,7 +212,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Tying rebar at laps and crossings'],
     specs: [{ label: 'Finish', value: 'Black annealed or galvanised' }],
     variants: [{ label: 'Gauge', options: ['18 gauge', '20 gauge'] }], soldAs: [{ label: 'Per kg' }, { label: 'Per coil' }],
-    brands: [], search: 'binding wire', image: I('steel'),
+    brands: [], search: 'binding wire', aliases: ['binding wire'], image: I('steel'),
   },
   {
     id: 'structural-steel', name: 'Structural steel sections', categorySlug: 'steel-tmt-bars', group: 'Structural steel',
@@ -247,7 +247,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Hot and cold water lines', 'Geyser and solar heater connections'],
     standard: 'IS 15778', specs: [{ label: 'Rating', value: 'SDR 11 and SDR 13.5' }],
     variants: [{ label: 'Size', options: ['½″ (15 mm)', '¾″ (20 mm)', '1″ (25 mm)', '1¼″ (32 mm)', '1½″ (40 mm)', '2″ (50 mm)'] }],
-    soldAs: [{ label: 'Per length (pipe)' }, { label: 'Per metre' }], brands: PIPE_BRANDS, search: 'CPVC pipe', image: I('plumbing'),
+    soldAs: [{ label: 'Per length (pipe)' }, { label: 'Per metre' }], brands: PIPE_BRANDS, search: 'CPVC pipe', aliases: ['cpvc'], image: I('plumbing'),
   },
   {
     id: 'upvc-pipes', name: 'UPVC pipes', categorySlug: 'plumbing', group: 'Pipes',
@@ -255,7 +255,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Cold water lines', 'Overhead tank and sump connections'],
     specs: [{ label: 'Schedule', value: 'SCH 40 and SCH 80' }],
     variants: [{ label: 'Size', options: ['½″', '¾″', '1″', '1¼″', '1½″', '2″', '3″', '4″'] }],
-    soldAs: [{ label: 'Per length (pipe)' }, { label: 'Per metre' }], brands: PIPE_BRANDS, search: 'UPVC pipe', image: I('plumbing'),
+    soldAs: [{ label: 'Per length (pipe)' }, { label: 'Per metre' }], brands: PIPE_BRANDS, search: 'UPVC pipe', aliases: ['upvc'], image: I('plumbing'),
   },
   {
     id: 'swr-pipes', name: 'PVC SWR drainage pipes', categorySlug: 'plumbing', group: 'Pipes',
@@ -263,7 +263,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Toilet and kitchen drains', 'Rainwater down-takes'],
     standard: 'IS 13592', specs: [],
     variants: [{ label: 'Size', options: ['75 mm', '110 mm', '160 mm'] }, { label: 'Type', options: ['Type A (rainwater)', 'Type B (soil and waste)'] }],
-    soldAs: [{ label: 'Per length (pipe)' }], brands: PIPE_BRANDS, search: 'SWR pipe', image: I('plumbing'),
+    soldAs: [{ label: 'Per length (pipe)' }], brands: PIPE_BRANDS, search: 'SWR pipe', aliases: ['swr'], image: I('plumbing'),
   },
   {
     id: 'column-pipes', name: 'Borewell column pipes', categorySlug: 'plumbing', group: 'Pipes',
@@ -326,14 +326,14 @@ export const CATALOG: CatalogItem[] = [
       { label: 'Insulation', options: ['FR', 'FRLS', 'HFFR'] },
       { label: 'Colour', options: ['Red', 'Black', 'Yellow', 'Blue', 'Green'] },
     ],
-    soldAs: [{ label: 'Per coil', note: '90 m' }], brands: WIRE_BRANDS, search: 'house wire', image: I('electrical'), calculator: { kind: 'coil', metresPerCoil: 90 },
+    soldAs: [{ label: 'Per coil', note: '90 m' }], brands: WIRE_BRANDS, search: 'house wire', aliases: ['house wire', 'building wire', 'frls', 'hffr', 'sq mm'], image: I('electrical'), calculator: { kind: 'coil', metresPerCoil: 90 },
   },
   {
     id: 'modular-switches', name: 'Modular switches and sockets', categorySlug: 'electricals', group: 'Switches and protection',
     summary: 'Snap-in switches, sockets, regulators and the plates that hold them.',
     uses: ['Every switchboard in the building'], specs: [{ label: 'Ratings', value: '6A and 16A' }],
     variants: [{ label: 'Item', options: ['1-way switch', '2-way switch', '6A socket', '16A socket', 'Fan regulator', 'USB charger', 'Cover plate', 'Modular box'] }],
-    soldAs: [{ label: 'Per piece' }], brands: SWITCH_BRANDS, search: 'modular switch', image: I('electrical'),
+    soldAs: [{ label: 'Per piece' }], brands: SWITCH_BRANDS, search: 'modular switch', aliases: ['modular switch', 'socket'], image: I('electrical'),
   },
   {
     id: 'mcb-db', name: 'MCBs, RCCBs and DBs', categorySlug: 'electricals', group: 'Switches and protection',
@@ -343,7 +343,7 @@ export const CATALOG: CatalogItem[] = [
       { label: 'Item', options: ['MCB single pole', 'MCB double pole', 'RCCB', 'Isolator', 'Distribution board'] },
       { label: 'DB size', options: ['4 way', '6 way', '8 way', '12 way', '16 way'] },
     ],
-    soldAs: [{ label: 'Per piece' }], brands: ['Havells', 'Legrand', 'Schneider Electric', 'Lauritz Knudsen', 'Siemens', 'ABB', 'Polycab', 'V-Guard'], search: 'MCB', image: I('electrical'),
+    soldAs: [{ label: 'Per piece' }], brands: ['Havells', 'Legrand', 'Schneider Electric', 'Lauritz Knudsen', 'Siemens', 'ABB', 'Polycab', 'V-Guard'], search: 'MCB', aliases: ['mcb', 'rccb', 'distribution board'], image: I('electrical'),
   },
   {
     id: 'conduits', name: 'PVC conduits and accessories', categorySlug: 'electricals', group: 'Conduits and earthing',
@@ -422,7 +422,7 @@ export const CATALOG: CatalogItem[] = [
     summary: 'White-cement or acrylic putty that fills and smooths plaster before painting.',
     uses: ['Smoothing new and old walls'], specs: [],
     variants: [{ label: 'Type', options: ['White cement based', 'Acrylic'] }, { label: 'Pack', options: ['1 kg', '5 kg', '20 kg', '40 kg'] }],
-    soldAs: [{ label: 'Per bag or pack' }], brands: ['Birla White', 'JK WallMaxX', 'Asian Paints', 'Berger'], search: 'wall putty', image: I('paint'),
+    soldAs: [{ label: 'Per bag or pack' }], brands: ['Birla White', 'JK WallMaxX', 'Asian Paints', 'Berger'], search: 'wall putty', aliases: ['putty'], image: I('paint'),
   },
   {
     id: 'waterproofing', name: 'Waterproofing', categorySlug: 'paints-chemicals', group: 'Waterproofing',
@@ -439,7 +439,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Wardrobes and beds', 'Interior furniture'], standard: 'IS 303 (MR)',
     specs: [{ label: 'Sheet size', value: '8 × 4 ft (2440 × 1220 mm)' }],
     variants: [{ label: 'Thickness', options: ['4 mm', '6 mm', '9 mm', '12 mm', '16 mm', '19 mm'] }],
-    soldAs: [{ label: 'Per sheet' }, { label: 'Per square foot' }], brands: PLY_BRANDS, search: 'MR plywood', image: I('plywood'),
+    soldAs: [{ label: 'Per sheet' }, { label: 'Per square foot' }], brands: PLY_BRANDS, search: 'MR plywood', aliases: ['mr plywood', 'mr grade'], image: I('plywood'),
   },
   {
     id: 'bwr-bwp-plywood', name: 'BWR and BWP (marine) plywood', categorySlug: 'plywood-timber', group: 'Plywood',
@@ -447,7 +447,7 @@ export const CATALOG: CatalogItem[] = [
     uses: ['Kitchen cabinets', 'Bathroom vanities', 'Exterior and marine use (BWP)'], standard: 'IS 303 (BWR) / IS 710 (BWP)',
     specs: [{ label: 'Sheet size', value: '8 × 4 ft (2440 × 1220 mm)' }],
     variants: [{ label: 'Grade', options: ['BWR', 'BWP / Marine'] }, { label: 'Thickness', options: ['6 mm', '9 mm', '12 mm', '16 mm', '19 mm'] }],
-    soldAs: [{ label: 'Per sheet' }, { label: 'Per square foot' }], brands: PLY_BRANDS, search: 'BWP plywood', image: I('plywood'),
+    soldAs: [{ label: 'Per sheet' }, { label: 'Per square foot' }], brands: PLY_BRANDS, search: 'BWP plywood', aliases: ['bwr', 'bwp', 'marine ply'], image: I('plywood'),
   },
   {
     id: 'boards', name: 'Block board, MDF and HDHMR', categorySlug: 'plywood-timber', group: 'Boards and laminates',
@@ -525,7 +525,7 @@ export const CATALOG: CatalogItem[] = [
       { label: 'Type', options: ['GVT / PGVT', 'Double charge', 'Full body', 'Slab'] },
       { label: 'Size', options: ['600 × 600 mm', '800 × 800 mm', '600 × 1200 mm', '800 × 1600 mm', '1200 × 1800 mm'] },
     ],
-    soldAs: [{ label: 'Per box' }, { label: 'Per square foot' }], brands: TILE_BRANDS, search: 'vitrified tile', image: I('tiles'),
+    soldAs: [{ label: 'Per box' }, { label: 'Per square foot' }], brands: TILE_BRANDS, search: 'vitrified tile', aliases: ['vitrified', 'gvt', 'pgvt', 'double charge'], image: I('tiles'),
   },
   {
     id: 'ceramic-wall-tiles', name: 'Ceramic wall tiles', categorySlug: 'tiles-flooring', group: 'Tiles',
@@ -577,15 +577,27 @@ export function catalogItem(id: string): CatalogItem | undefined {
   return CATALOG.find((i) => i.id === id);
 }
 
-// Best catalogue match for a supplier listing, by its name (used on the product page)
+const normalise = (s: string) => ` ${s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()} `;
+
+// Best catalogue match for a supplier listing, by its name. Whole-phrase matches on the search
+// term or a trade alias win; otherwise most of the search words must appear.
 export function matchCatalogItem(productName: string, categorySlug?: string): CatalogItem | undefined {
-  const name = productName.toLowerCase();
+  const name = normalise(productName);
   const pool = categorySlug ? catalogItems(categorySlug) : CATALOG;
   let best: { item: CatalogItem; score: number } | undefined;
   for (const item of pool) {
-    const words = item.search.toLowerCase().split(/\s+/).filter((w) => w.length > 1);
-    const score = words.filter((w) => name.includes(w)).length / words.length;
+    const phrases = [item.search, ...(item.aliases ?? [])].map(normalise);
+    // longer matched phrase = more specific match
+    const phrase = Math.max(0, ...phrases.filter((p) => name.includes(p)).map((p) => p.length));
+    const words = normalise(item.search).trim().split(' ').filter((w) => w.length > 1);
+    const ratio = words.length ? words.filter((w) => name.includes(` ${w} `)).length / words.length : 0;
+    const score = phrase > 0 ? 10 + phrase : ratio;
     if (score > 0 && (!best || score > best.score)) best = { item, score };
   }
   return best && best.score >= 0.5 ? best.item : undefined;
+}
+
+// Search text for GET /products?q= (MongoDB text search matches any of the words)
+export function offerQuery(item: CatalogItem): string {
+  return [item.search, ...(item.aliases ?? [])].join(' ');
 }

@@ -55,10 +55,10 @@ export default function CategoryPage({ params }: { params: Promise<{ slug: strin
 
   return (
     <>
-      <Header />
+      <Header tone="dark" darkUntilId="category-hero" />
       <main id="main" className="pb-24">
         {/* banner */}
-        <section className="on-ink relative isolate overflow-hidden bg-ink text-sand">
+        <section id="category-hero" className="on-ink relative isolate overflow-hidden bg-ink text-sand">
           {meta?.photo && (
             <Image src={meta.photo} alt="" fill priority sizes="100vw" className="-z-10 object-cover opacity-55" />
           )}

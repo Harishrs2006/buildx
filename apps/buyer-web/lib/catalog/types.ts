@@ -31,6 +31,7 @@ export type CatalogItem = {
   soldAs: SoldAs[];
   brands: string[]; // well-known brands in the Indian market; availability depends on suppliers
   search: string; // text sent to GET /products?q= to find matching supplier listings
+  aliases?: string[]; // other names the trade uses, matched against listing names
   image: string; // illustration in public/illustrations
   calculator?: Calculator;
   note?: string; // honest caveat shown on the page

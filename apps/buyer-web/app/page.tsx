@@ -78,30 +78,6 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* ── Delivery check ───────────────────────────── */}
-        <section id="delivery" className="scroll-mt-24 py-20 md:py-28">
-          <div className="container-x grid gap-10 lg:grid-cols-12 lg:gap-16">
-            <Reveal className="lg:col-span-5">
-              <p className="eyebrow text-stone">Step one</p>
-              <h2 className="mt-4 font-display text-[clamp(2.25rem,4.6vw,3.75rem)] font-bold leading-[0.98] tracking-tightest text-balance">
-                Does BuildX deliver to <span className="font-serif font-normal italic">your</span> site?
-              </h2>
-              <p className="mt-5 max-w-md text-[17px] leading-relaxed text-stone">
-                A valid PIN code is not a delivery promise. We check yours against the service areas our suppliers have
-                actually set up, and show you only what can reach you.
-              </p>
-            </Reveal>
-            <Reveal delay={120} className="lg:col-span-7">
-              <div className="relative rounded-3xl border border-sand-4 bg-sand-2 p-2 shadow-[0_40px_80px_-40px_rgba(11,12,10,0.35)]">
-                <div className="blueprint-light absolute inset-0 rounded-3xl opacity-60" aria-hidden="true" />
-                <div className="relative rounded-[20px] bg-sand-2/90 p-5 sm:p-8 [&_input]:h-12 [&_input]:rounded-xl [&_button]:min-h-[48px] [&_button]:rounded-full [&_button]:px-5">
-                  <LocationSelector title="Your delivery PIN" className="max-w-none border-0 bg-transparent p-0 sm:p-0" />
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        </section>
-
         {/* ── Categories ───────────────────────────────── */}
         <section id="categories" className="scroll-mt-24 pb-20 md:pb-28">
           <div className="container-x">

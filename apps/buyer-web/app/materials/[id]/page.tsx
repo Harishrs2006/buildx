@@ -13,7 +13,7 @@ import { DeliveryCheck } from '@/components/catalog/DeliveryCheck';
 import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { useCategories } from '@/lib/categories';
-import { catalogItem, catalogItems } from '@/lib/catalog/data';
+import { catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@/lib/catalog/data';
 
 function OptionChips({ label, options, value, onChange }: { label: string; options: string[]; value: string | null; onChange: (v: string | null) => void }) {
   return (
@@ -50,7 +50,7 @@ export default function MaterialPage({ params }: { params: Promise<{ id: string 
   const [brand, setBrand] = useState<string | null>(null);
 
   const category = categories.status === 'success' ? categories.data.find((c) => c.slug === found?.categorySlug) : undefined;
-  const offers = useProductsForLocation({ category: found?.categorySlug, q: found?.search, limit: 24 });
+  const offers = useProductsForLocation({ category: found?.categorySlug, q: found ? offerQuery(found) : undefined, limit: 50 });
 
   // Listings are matched by text; a chosen brand must appear in the listing, chosen sizes rank first
   const shownOffers = useMemo(() => {
@@ -59,11 +59,13 @@ export default function MaterialPage({ params }: { params: Promise<{ id: string 
       norm(`${p.name as string} ${JSON.stringify((p as { specifications?: unknown }).specifications ?? {})}`);
     const picked = Object.values(choices).filter(Boolean).map((v) => norm(v!));
     return offers.data.products
+      // text search matches any word, so keep only listings that really are this material
+      .filter((p) => found && matchCatalogItem(p.name, found.categorySlug)?.id === found.id)
       .filter((p) => !brand || text(p).includes(norm(brand)))
       .map((p) => ({ p, score: picked.filter((v) => text(p).includes(v)).length }))
       .sort((a, b) => b.score - a.score)
       .map((x) => x.p);
-  }, [offers, brand, choices]);
+  }, [offers, brand, choices, found]);
 
   if (!found) notFound();
   const item = found;
