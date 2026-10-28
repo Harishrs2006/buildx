@@ -119,6 +119,7 @@ export class AuthController {
       res.json(
         ok({
           id: user._id,
+          phone: user.phone,
           name: user.name,
           role: user.role,
           onboardingComplete: true,

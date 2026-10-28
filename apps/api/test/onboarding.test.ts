@@ -41,6 +41,8 @@ describe('onboarding by role', () => {
     const res = await request(app).post(ONBOARD).set(headers).send({ name: 'Rajan', role: 'BUYER' });
     expect(res.status).toBe(200);
     expect(await User.findById(user._id).lean()).toMatchObject({ role: 'BUYER', onboardingComplete: true, name: 'Rajan' });
+    // Same shape as /auth/sync: the web apps parse it with a schema that requires phone
+    expect(res.body.data).toMatchObject({ phone: user.phone, name: 'Rajan', role: 'BUYER', onboardingComplete: true });
     expect(await SupplierProfile.countDocuments()).toBe(0);
     expect(await DeliveryPartner.countDocuments()).toBe(0);
   });

@@ -103,3 +103,6 @@ Times are IST.
   PEM block (+ vitest). PR #27 merged by user; this fix needs the user to merge (auto-merge blocked by permission
   classifier). Render deploys main automatically.
 - 19:55 User merged PR #27 (buyer pages live). Resolved SESSION_LOG conflict on PR #28 for the user to merge.
+- 20:10 User merged PR #28: sign-in with test number works. Onboarding showed 'Could not complete onboarding': API
+  /auth/onboard reply had no `phone`, web syncedUserSchema requires it, so a successful save was shown as an error (the
+  user IS onboarded server-side). Fix: PR fix/onboard-response adds phone to the reply + test. Needs user merge.
