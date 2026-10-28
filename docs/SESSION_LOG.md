@@ -17,8 +17,8 @@ Times are IST.
    Claude in Chrome tools were NOT connected in the 2026-10-28 session; user must run `/chrome` (or start `claude --chrome`).
 2. Optional env: NEXT_PUBLIC_SUPPORT_EMAIL, NEXT_PUBLIC_SUPPORT_PHONE, NEXT_PUBLIC_LEGAL_NAME, NEXT_PUBLIC_SELLER_PORTAL_URL
    (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
-3. Private backup of PRD + user-brief images: creating a private GitHub repo was blocked by the permission classifier;
-   user to approve or do it. Files are safe locally in Desktop/BuildX/user-brief and BuildX_PRD.pdf.
+3. DONE: user chose to keep PRD + images LOCAL in Desktop/BuildX/user-brief (not GitHub). Save new user files there.
+   (Do not push them; repo is public.)
 4. Restyle remaining buyer pages in depth (cart, checkout, orders, profile) beyond token remap.
 5. Apply Hi-Vis to apps/seller-web, then apps/mobile (spec: docs/DESIGN_SYSTEM.md).
 6. Add a strict CSP only together with an end-to-end OTP test.
@@ -68,3 +68,4 @@ Times are IST.
 - 16:55 Verified live: new title, security headers, /privacy 200, custom 404, categories load from production API,
   mobile layout OK. Contributors widget should drop "claude" now that main has a fresh push (API already clean).
 - 17:00 Claude in Chrome tools unavailable in this session. Private backup repo upload denied by permission classifier.
+- 17:10 User decision: keep PRD + reference images local in Desktop/BuildX/user-brief (consolidated there, incl. PRD and Stitch zip).
