@@ -5,7 +5,12 @@ export interface ISupplierProfile extends Document {
   userId: Types.ObjectId;
   businessName: string;
   description?: string;
-  categories: string[];
+  // How the business sells, as Indian trade knows it
+  businessType?: 'RETAILER' | 'DEALER' | 'DISTRIBUTOR' | 'MANUFACTURER';
+  gstin?: string; // 15-character GST identification number, optional (small traders may be unregistered)
+  address?: string; // shop or yard address
+  categories: string[]; // category slugs the supplier sells in
+  brands: string[]; // brands the supplier deals in (dealership / stockist)
   deliveryRadiusKm: number;
   serviceAreas: string[];   // free-text town names, display only (mobile shows them)
   // PIN codes this supplier delivers to; each validated against the India Post directory when
@@ -34,7 +39,11 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
     userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true, index: true },
     businessName: { type: String, required: true, trim: true },
     description: String,
+    businessType: { type: String, enum: ['RETAILER', 'DEALER', 'DISTRIBUTOR', 'MANUFACTURER'] },
+    gstin: { type: String, uppercase: true, trim: true, match: /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/ },
+    address: { type: String, trim: true, maxlength: 300 },
     categories: [{ type: String }],
+    brands: { type: [{ type: String, trim: true, maxlength: 60 }], default: [] },
     deliveryRadiusKm: { type: Number, default: 30 },
     serviceAreas: [String],
     servicePincodes: {
