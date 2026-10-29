@@ -199,3 +199,5 @@ Times are IST.
   new /stock page (+/- and input per product, save via PATCH stockQuantity, server flips ACTIVE/OUT_OF_STOCK),
   nav tabs Stock + Business, Overview banner 'Finish your business setup (n of 3 done)'. docs/BACKEND.md written.
   seller-web tsc + next build clean; API tests 265 pass (backend commit 0286061).
+- 13:42 User said 'run this': ran fix-dashes on prod (cluster0.xkcruay/buildx). Dry run showed 4 fields (3 products,
+  1 demo supplier name); applied with --yes; re-check finds 0 em dashes. DONE.
