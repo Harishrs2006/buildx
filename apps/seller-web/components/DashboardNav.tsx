@@ -9,6 +9,8 @@ const TABS = [
   { href: '/', label: 'Overview', icon: 'space_dashboard' },
   { href: '/orders', label: 'Orders', icon: 'receipt_long' },
   { href: '/products', label: 'Products', icon: 'inventory_2' },
+  { href: '/stock', label: 'Stock', icon: 'stacks' },
+  { href: '/setup', label: 'Business', icon: 'storefront' },
 ] as const;
 
 function isActive(pathname: string, href: string) {

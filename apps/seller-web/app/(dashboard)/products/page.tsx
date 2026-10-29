@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useApiClient } from '@buildx/web-core';
 import { useSupplierProducts, discontinueSupplierProduct, type SupplierProduct } from '../../../lib/products';
-import { Chip, ChipRow, EmptyState, ErrorNote, PageHead, Pager, Pill, PRODUCT_STATUS, rupees } from '../../../components/ui';
+import { Chip, ChipRow, EmptyState, ErrorNote, PageHead, Pager, Pill, PRODUCT_STATUS, rupees, UNIT } from '../../../components/ui';
 
 const FILTERS: { value: string | undefined; label: string }[] = [
   { value: undefined, label: 'All' },
@@ -13,10 +13,6 @@ const FILTERS: { value: string | undefined; label: string }[] = [
   { value: 'OUT_OF_STOCK', label: 'Out of stock' },
   { value: 'DISCONTINUED', label: 'Discontinued' },
 ];
-
-const UNIT: Record<string, string> = {
-  KG: 'kg', TON: 'tonne', PIECE: 'piece', BAG: 'bag', BUNDLE: 'bundle', CUBIC_METER: 'm³', SQUARE_METER: 'm²', LITER: 'litre', METER: 'metre',
-};
 
 function ProductRow({ product, onDiscontinue }: { product: SupplierProduct; onDiscontinue: (id: string) => Promise<void> }) {
   const [confirming, setConfirming] = useState(false);
