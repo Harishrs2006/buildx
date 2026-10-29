@@ -36,3 +36,6 @@ export {
 } from './catalog/data';
 export type { CatalogItem, CatalogCategory, Calculator, ListingUnit, Spec, VariantGroup, SoldAs } from './catalog/types';
 export * as units from './catalog/units';
+
+// Brand: the BuildX logo (vector) and its roof-and-X symbol
+export { BuildXLogo, BuildXMark } from './brand/BuildXLogo';

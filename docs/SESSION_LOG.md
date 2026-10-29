@@ -31,6 +31,10 @@ Times are IST.
 5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
    Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
 6. Add a strict CSP only together with an end-to-end OTP test.
+8. Ops console (apps/web, branch feat/admin-panel): needs a Vercel project (root apps/web, 4 NEXT_PUBLIC_FIREBASE_* +
+   NEXT_PUBLIC_API_URL), its domain in Firebase authorized domains + API CORS, and an ops account via
+   `npm run grant-role --workspace=apps/api -- --phone <n> --role ADMIN`. Mobile app still has the old logo
+   (needs react-native-svg or new icon PNGs = native rebuild, ask first).
 7. Supplier onboarding (branch feat/supplier-onboarding, PR for user to merge): OTP sign-in -> business setup
    (/setup: type, GSTIN, address, WhatsApp) -> delivery PINs -> categories + brands -> only then List a product
    (brand chips limited to chosen brands) -> /stock page. Backend guide: docs/BACKEND.md. After merge, check
@@ -199,3 +203,10 @@ Times are IST.
   new /stock page (+/- and input per product, save via PATCH stockQuantity, server flips ACTIVE/OUT_OF_STOCK),
   nav tabs Stock + Business, Overview banner 'Finish your business setup (n of 3 done)'. docs/BACKEND.md written.
   seller-web tsc + next build clean; API tests 265 pass (backend commit 0286061).
+- 16:28 PR #40 merged. Branch feat/admin-panel: apps/web rebuilt (old Clerk shell removed) as the ops console on
+  Firebase OTP, OPERATOR/ADMIN only: Today (status counts + 6 stuck-order queues), Suppliers (verify/reject with
+  reason, shows type/GSTIN/address/PINs/categories/brands), Orders (filter, search, detail with assign/unassign
+  driver, record COD, cancel with restock choice, notes, history), Drivers. tsc + next build clean.
+- New official logo from the user (house roof + BUILDX + grey X, tagline EXCELLENCE IN BUILDING), redrawn as SVG in
+  packages/web-core/src/brand/BuildXLogo.tsx (BuildXLogo, BuildXMark). Used in all 3 sites' Logo.tsx, buyer hero
+  (with tagline), footer, and app/icon.svg tab icons. Screenshots checked at 1440 and 390 px.

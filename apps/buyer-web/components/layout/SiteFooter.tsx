@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { LogoMark } from '../brand/Logo';
+import { BuildXLogo } from '@buildx/web-core';
 import { SITE } from '@/lib/site';
 
 export function SiteFooter() {
@@ -9,8 +9,7 @@ export function SiteFooter() {
       <div className="container-x relative z-10 grid gap-12 py-16 md:grid-cols-12 md:py-20">
         <div className="md:col-span-5">
           <div className="flex items-center gap-3">
-            <LogoMark size={40} onDark />
-            <span className="font-display text-2xl font-bold tracking-[-0.04em]">BuildX</span>
+            <BuildXLogo onDark tagline height={64} />
           </div>
           <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-sand/60">
             The construction materials marketplace. Verified suppliers, honest prices, delivery checked against your PIN code.
