@@ -31,6 +31,10 @@ Times are IST.
 5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
    Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
 6. Add a strict CSP only together with an end-to-end OTP test.
+8. Ops console (apps/web, branch feat/admin-panel): needs a Vercel project (root apps/web, 4 NEXT_PUBLIC_FIREBASE_* +
+   NEXT_PUBLIC_API_URL), its domain in Firebase authorized domains + API CORS, and an ops account via
+   `npm run grant-role --workspace=apps/api -- --phone <n> --role ADMIN`. Mobile app still has the old logo
+   (needs react-native-svg or new icon PNGs = native rebuild, ask first).
 7. Supplier onboarding (branch feat/supplier-onboarding, PR for user to merge): OTP sign-in -> business setup
    (/setup: type, GSTIN, address, WhatsApp) -> delivery PINs -> categories + brands -> only then List a product
    (brand chips limited to chosen brands) -> /stock page. Backend guide: docs/BACKEND.md. After merge, check
@@ -199,5 +203,23 @@ Times are IST.
   new /stock page (+/- and input per product, save via PATCH stockQuantity, server flips ACTIVE/OUT_OF_STOCK),
   nav tabs Stock + Business, Overview banner 'Finish your business setup (n of 3 done)'. docs/BACKEND.md written.
   seller-web tsc + next build clean; API tests 265 pass (backend commit 0286061).
+- 16:28 PR #40 merged. Branch feat/admin-panel: apps/web rebuilt (old Clerk shell removed) as the ops console on
+  Firebase OTP, OPERATOR/ADMIN only: Today (status counts + 6 stuck-order queues), Suppliers (verify/reject with
+  reason, shows type/GSTIN/address/PINs/categories/brands), Orders (filter, search, detail with assign/unassign
+  driver, record COD, cancel with restock choice, notes, history), Drivers. tsc + next build clean.
+- New official logo from the user (house roof + BUILDX + grey X, tagline EXCELLENCE IN BUILDING), redrawn as SVG in
+  packages/web-core/src/brand/BuildXLogo.tsx (BuildXLogo, BuildXMark). Used in all 3 sites' Logo.tsx, buyer hero
+  (with tagline), footer, and app/icon.svg tab icons. Screenshots checked at 1440 and 390 px.
+- 16:51 Ops console hosting: Vercel import form filled (project buildx-ops, root apps/web, Next.js, env
+  NEXT_PUBLIC_API_URL=https://buildx-api.onrender.com + 4 NEXT_PUBLIC_FIREBASE_* copied from the live seller bundle);
+  Deploy blocked by Vercel email-code re-auth (user must do it). buildx-ops.vercel.app ADDED to Firebase authorized
+  domains. BLOCKED: Render FRONTEND_URL must add https://buildx-ops.vercel.app (CORS test: not allowed yet); Render
+  not signed in on Chrome. Admin phone number for grant-role still needed from user (never use a test number:
+  fixed code 123456 = anyone could sign in as admin).
 - 13:42 User said 'run this': ran fix-dashes on prod (cluster0.xkcruay/buildx). Dry run showed 4 fields (3 products,
   1 demo supplier name); applied with --yes; re-check finds 0 em dashes. DONE.
+- 16:59 Vercel project buildx-ops created by user (re-auth done). PR #42 SESSION_LOG conflict fixed by merging main.
+  User chose +917019282018 as ADMIN (was BUYER, 0 orders): grant-role done. Because it is a Firebase test number,
+  its fixed code was changed from 123456 to a private random code (Identity Toolkit testPhoneNumbers), stored ONLY in
+  Desktop/BuildX/buildx-secrets/ADMIN_SIGNIN.txt (outside the repo). +917019282019 keeps 123456 for buyer/supplier tests.
+  Still pending: Render FRONTEND_URL += https://buildx-ops.vercel.app (user must sign in to Render), merge #42.
