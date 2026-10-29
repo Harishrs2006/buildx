@@ -218,3 +218,8 @@ Times are IST.
   fixed code 123456 = anyone could sign in as admin).
 - 13:42 User said 'run this': ran fix-dashes on prod (cluster0.xkcruay/buildx). Dry run showed 4 fields (3 products,
   1 demo supplier name); applied with --yes; re-check finds 0 em dashes. DONE.
+- 16:59 Vercel project buildx-ops created by user (re-auth done). PR #42 SESSION_LOG conflict fixed by merging main.
+  User chose +917019282018 as ADMIN (was BUYER, 0 orders): grant-role done. Because it is a Firebase test number,
+  its fixed code was changed from 123456 to a private random code (Identity Toolkit testPhoneNumbers), stored ONLY in
+  Desktop/BuildX/buildx-secrets/ADMIN_SIGNIN.txt (outside the repo). +917019282019 keeps 123456 for buyer/supplier tests.
+  Still pending: Render FRONTEND_URL += https://buildx-ops.vercel.app (user must sign in to Render), merge #42.
