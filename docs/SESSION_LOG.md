@@ -216,3 +216,5 @@ Times are IST.
   domains. BLOCKED: Render FRONTEND_URL must add https://buildx-ops.vercel.app (CORS test: not allowed yet); Render
   not signed in on Chrome. Admin phone number for grant-role still needed from user (never use a test number:
   fixed code 123456 = anyone could sign in as admin).
+- 13:42 User said 'run this': ran fix-dashes on prod (cluster0.xkcruay/buildx). Dry run showed 4 fields (3 products,
+  1 demo supplier name); applied with --yes; re-check finds 0 em dashes. DONE.
