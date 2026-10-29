@@ -210,3 +210,9 @@ Times are IST.
 - New official logo from the user (house roof + BUILDX + grey X, tagline EXCELLENCE IN BUILDING), redrawn as SVG in
   packages/web-core/src/brand/BuildXLogo.tsx (BuildXLogo, BuildXMark). Used in all 3 sites' Logo.tsx, buyer hero
   (with tagline), footer, and app/icon.svg tab icons. Screenshots checked at 1440 and 390 px.
+- 16:51 Ops console hosting: Vercel import form filled (project buildx-ops, root apps/web, Next.js, env
+  NEXT_PUBLIC_API_URL=https://buildx-api.onrender.com + 4 NEXT_PUBLIC_FIREBASE_* copied from the live seller bundle);
+  Deploy blocked by Vercel email-code re-auth (user must do it). buildx-ops.vercel.app ADDED to Firebase authorized
+  domains. BLOCKED: Render FRONTEND_URL must add https://buildx-ops.vercel.app (CORS test: not allowed yet); Render
+  not signed in on Chrome. Admin phone number for grant-role still needed from user (never use a test number:
+  fixed code 123456 = anyone could sign in as admin).
