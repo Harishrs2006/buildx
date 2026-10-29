@@ -25,16 +25,20 @@ export async function getProfile(req: Request, res: Response, next: NextFunction
 
 export async function updateProfile(req: Request, res: Response, next: NextFunction) {
   try {
-    const allowed = ['businessName', 'description', 'whatsappNumber', 'deliveryRadiusKm', 'serviceAreas', 'categories'];
-    const update: Record<string, unknown> = {};
-    for (const key of allowed) {
-      if (req.body[key] !== undefined) update[key] = req.body[key];
+    // req.body was validated by updateProfileSchema (supplier.routes.ts): only known fields remain
+    const update: Record<string, unknown> = { ...req.body };
+    const unset: Record<string, ''> = {};
+    if (update.gstin === '') {
+      delete update.gstin;
+      unset.gstin = '';
     }
+    if (Array.isArray(update.brands)) update.brands = [...new Set(update.brands as string[])];
+    if (Array.isArray(update.categories)) update.categories = [...new Set(update.categories as string[])];
 
     const profile = await SupplierProfile.findOneAndUpdate(
       { userId: req.auth!.userId },
-      update,
-      { new: true }
+      Object.keys(unset).length ? { $set: update, $unset: unset } : { $set: update },
+      { new: true, runValidators: true }
     ).lean();
     if (!profile) throw AppError.notFound('Supplier profile');
     res.json(ok(profile));
@@ -313,6 +317,16 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     const update: Record<string, unknown> = {};
     for (const key of editable) {
       if (req.body[key] !== undefined) update[key] = req.body[key];
+    }
+
+    // Stock drives availability: 0 hides the listing as out of stock, restocking brings it back.
+    // An explicit status in the same request (e.g. DRAFT or DISCONTINUED) always wins.
+    if (typeof update.stockQuantity === 'number' && update.status === undefined) {
+      const current = await Product.findOne({ _id: req.params.id, supplierId: profile._id }).select('status').lean();
+      if (current) {
+        if (update.stockQuantity <= 0 && current.status === 'ACTIVE') update.status = 'OUT_OF_STOCK';
+        if (update.stockQuantity > 0 && current.status === 'OUT_OF_STOCK') update.status = 'ACTIVE';
+      }
     }
 
     // runValidators: stock/price/GST bounds in the schema apply to edits too

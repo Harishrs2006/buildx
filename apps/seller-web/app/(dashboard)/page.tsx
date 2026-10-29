@@ -6,6 +6,7 @@ import { useApiClient } from '@buildx/web-core';
 import { useSupplierStats } from '../../lib/stats';
 import { useSupplierOrders } from '../../lib/orders';
 import { fetchSupplierProfile, type SupplierProfile } from '../../lib/auth';
+import { setupGaps } from '../../lib/setup';
 import { useAuth } from '../../components/auth/AuthProvider';
 import { ORDER_STATUS, Pill, rupees, shortDate } from '../../components/ui';
 
@@ -56,6 +57,24 @@ export default function DashboardPage() {
           </span>
         )}
       </div>
+
+      {profile && (() => {
+        const gaps = setupGaps(profile);
+        const left = [gaps.business && 'business details', gaps.area && 'delivery PIN codes', gaps.range && 'categories and brands'].filter(Boolean) as string[];
+        if (left.length === 0) return null;
+        return (
+          <Link href="/setup" className="group flex flex-col gap-4 rounded-2xl bg-lime p-5 text-ink sm:flex-row sm:items-center">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-ink text-lime">
+              <span className="material-symbols-outlined" aria-hidden="true">storefront</span>
+            </span>
+            <span className="flex-1">
+              <span className="block font-display text-lg font-semibold">Finish your business setup ({3 - left.length} of 3 done)</span>
+              <span className="block text-[15px] text-ink/75">Still needed: {left.join(', ')}. You can list products once this is done.</span>
+            </span>
+            <span className="btn-ink self-start px-5 sm:self-auto">Continue setup</span>
+          </Link>
+        );
+      })()}
 
       {profile?.verificationStatus === 'PENDING' && (
         <div className="flex items-start gap-3 rounded-2xl bg-[#FFF4D6] px-5 py-4 text-[#5C4300]">
@@ -139,13 +158,13 @@ export default function DashboardPage() {
             </span>
             <span className="material-symbols-outlined transition-transform group-hover:translate-x-1" aria-hidden="true">arrow_forward</span>
           </Link>
-          <Link href="/products" className="group flex items-center gap-4 rounded-2xl border border-sand-4 bg-sand-2 p-5 transition-colors hover:border-ink">
+          <Link href="/stock" className="group flex items-center gap-4 rounded-2xl border border-sand-4 bg-sand-2 p-5 transition-colors hover:border-ink">
             <span className="grid h-12 w-12 place-items-center rounded-xl bg-sand-3">
               <span className="material-symbols-outlined" aria-hidden="true">inventory_2</span>
             </span>
             <span className="flex-1">
-              <span className="block font-display text-lg font-semibold">Update prices and stock</span>
-              <span className="block text-[14px] text-stone">Keep listings accurate for buyers</span>
+              <span className="block font-display text-lg font-semibold">Update stock</span>
+              <span className="block text-[14px] text-stone">See what is left and top it up</span>
             </span>
             <span className="material-symbols-outlined text-stone transition-transform group-hover:translate-x-1" aria-hidden="true">arrow_forward</span>
           </Link>

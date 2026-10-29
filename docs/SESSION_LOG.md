@@ -31,6 +31,10 @@ Times are IST.
 5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
    Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
 6. Add a strict CSP only together with an end-to-end OTP test.
+7. Supplier onboarding (branch feat/supplier-onboarding, PR for user to merge): OTP sign-in -> business setup
+   (/setup: type, GSTIN, address, WhatsApp) -> delivery PINs -> categories + brands -> only then List a product
+   (brand chips limited to chosen brands) -> /stock page. Backend guide: docs/BACKEND.md. After merge, check
+   buildx-48kc deploys, then sign in with test number and walk the flow.
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -190,3 +194,8 @@ Times are IST.
   Chrome, 20 s): desktop 60 fps, 0 frames >33 ms, no long tasks, CLS 0.002; phone 390px with 4x CPU throttle 59.8 fps,
   1 frame >33 ms, no long tasks; slide every ~6.5 s; scroll/click/touch never changed the slide.
   Real worker motion needs AI video (Figma Weave not linked to the user's account), so camera motion only for now.
+- 07:29 Supplier onboarding UI on feat/supplier-onboarding: app/(dashboard)/setup (3-step wizard using lib/setup.ts),
+  products/new gated on isSetupComplete, ProductForm brands = supplier's brands that make the material (else all),
+  new /stock page (+/- and input per product, save via PATCH stockQuantity, server flips ACTIVE/OUT_OF_STOCK),
+  nav tabs Stock + Business, Overview banner 'Finish your business setup (n of 3 done)'. docs/BACKEND.md written.
+  seller-web tsc + next build clean; API tests 265 pass (backend commit 0286061).

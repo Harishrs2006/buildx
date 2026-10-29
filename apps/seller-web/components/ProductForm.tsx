@@ -26,6 +26,11 @@ const UNITS: { value: string; label: string }[] = [
 const MATERIAL_KEY = 'Material';
 const BRAND_KEY = 'Brand';
 
+function brandOptions(catalogue: string[], mine: string[]) {
+  const dealt = catalogue.filter((b) => mine.includes(b));
+  return dealt.length > 0 ? dealt : catalogue;
+}
+
 function Step({ n, title, hint, children }: { n: number; title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section className="card p-5 sm:p-6">
@@ -89,7 +94,9 @@ function initialItem(product: SupplierProduct | undefined): CatalogItem | undefi
   return byMaterial ?? matchCatalogItem(product.name, slug);
 }
 
-export function ProductForm({ product }: { product?: SupplierProduct }) {
+// `brands` are the brands the supplier said they deal in (business setup). When some of them make
+// this material, only those are offered, with Other for anything else.
+export function ProductForm({ product, brands = [] }: { product?: SupplierProduct; brands?: string[] }) {
   const client = useApiClient();
   const router = useRouter();
   const categories = useCategories();
@@ -232,7 +239,7 @@ export function ProductForm({ product }: { product?: SupplierProduct }) {
             <Choice key={v.label} label={v.label} options={v.options} value={specs[v.label] ?? ''} onChange={(val) => setSpec(v.label, val)} allowOther />
           ))}
           {item.brands.length > 0 ? (
-            <Choice label="Brand" options={item.brands} value={specs[BRAND_KEY] ?? ''} onChange={(val) => setSpec(BRAND_KEY, val)} allowOther />
+            <Choice label="Brand" options={brandOptions(item.brands, brands)} value={specs[BRAND_KEY] ?? ''} onChange={(val) => setSpec(BRAND_KEY, val)} allowOther />
           ) : (
             <Field label="Brand or make (optional)" hint="For local products, the manufacturer or kiln name.">
               <input value={specs[BRAND_KEY] ?? ''} onChange={(e) => setSpec(BRAND_KEY, e.target.value)} className="field" />

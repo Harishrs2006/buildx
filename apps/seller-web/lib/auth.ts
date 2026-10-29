@@ -21,6 +21,11 @@ export const supplierProfileSchema = z
     serviceAreas: z.array(z.string()).optional(),
     servicePincodes: z.array(z.string()).optional(),
     verificationStatus: z.enum(['PENDING', 'VERIFIED', 'REJECTED']),
+    businessType: z.enum(['RETAILER', 'DEALER', 'DISTRIBUTOR', 'MANUFACTURER']).optional(),
+    gstin: z.string().optional(),
+    address: z.string().optional(),
+    categories: z.array(z.string()).optional(),
+    brands: z.array(z.string()).optional(),
     avgRating: z.number().optional(),
     totalReviews: z.number().optional(),
   })
