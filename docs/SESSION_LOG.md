@@ -254,3 +254,6 @@ Times are IST.
   WhatsApp buttons. API: orders list accepts status=A,B and cashPending=1. Also restored line endings flipped by my
   Windows python edits in #45 (open(...,'w') writes CRLF: always pass newline=''). 281 tests pass. Tested on a local
   in-memory sandbox seeded with demo orders.
+- 2026-10-31 00:55 IST: #46 merged by user. Verified: Vercel buildx-48kc/vgud/ops production deploys succeeded, seller
+  /orders returns 200, API /health ok and /suppliers/me/orders answers 401 without a token. Seller website flow is
+  complete (setup, listing, stock, orders to cash collected). Next: wait for user (auth/SMS and mobile pass 2 parked).
