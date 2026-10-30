@@ -6,7 +6,7 @@ import { useApiClient, type ApiClient, type PaginationMeta } from '@buildx/web-c
 
 // Client for apps/api's /ops routes (OPERATOR and ADMIN only). Shapes mirror ops.controller.ts.
 
-const person = z.object({ _id: z.string(), name: z.string().optional(), phone: z.string().optional(), isActive: z.boolean().optional() }).passthrough();
+const person = z.object({ _id: z.string(), name: z.string().optional(), phone: z.string().optional(), email: z.string().optional(), isActive: z.boolean().optional() }).passthrough();
 const ref = <T extends z.ZodTypeAny>(s: T) => z.union([s, z.string()]).nullable().optional();
 
 export const ORDER_STATUSES = [

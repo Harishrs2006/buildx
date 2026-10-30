@@ -65,12 +65,12 @@ function ProfileDetails() {
             </span>
             <div className="min-w-0">
               <p className="truncate font-display text-2xl font-bold tracking-tight">{user.name}</p>
-              <p className="mt-0.5 font-mono text-[14px] text-stone-light">{user.phone}</p>
+              <p className="mt-0.5 font-mono text-[14px] text-stone-light">{user.phone ?? user.email}</p>
             </div>
           </div>
           <p className="relative mt-5 flex items-center gap-1.5 text-[13px] text-stone-light">
             <span className="material-symbols-outlined text-[16px]" aria-hidden="true">verified_user</span>
-            Signed in with your phone number
+            {user.phone ? 'Signed in with your phone number' : 'Signed in with Google'}
           </p>
         </section>
 

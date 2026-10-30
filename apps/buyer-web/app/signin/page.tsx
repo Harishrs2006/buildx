@@ -9,13 +9,27 @@ import { OtpInput } from '../../components/auth/OtpInput';
 import { safeNext } from '../../lib/safe-next';
 
 const RESEND_AFTER_S = 30;
+// SMS codes need Firebase's paid plan, so buyers sign in with Google. The phone form stays for the
+// Firebase test numbers (and for later): set NEXT_PUBLIC_PHONE_SIGNIN=true to show it.
+const PHONE_SIGNIN = process.env.NEXT_PUBLIC_PHONE_SIGNIN === 'true';
+
+function GoogleMark() {
+  return (
+    <svg viewBox="0 0 48 48" className="h-5 w-5" aria-hidden="true">
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
 
 function formatPhone(digits: string) {
   return digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits;
 }
 
 function SignInForm() {
-  const { status, error, sendOtp, confirmOtp, resetOtp, phoneInFlight } = useAuth();
+  const { status, error, sendOtp, signInWithGoogle, confirmOtp, resetOtp, phoneInFlight } = useAuth();
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
   const [phone, setPhone] = useState('');
@@ -23,6 +37,7 @@ function SignInForm() {
   const [submitting, setSubmitting] = useState(false);
   const [resendIn, setResendIn] = useState(RESEND_AFTER_S);
   const lastTried = useRef('');
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   const phoneValid = /^[6-9]\d{9}$/.test(phone);
   const otpStep = status === 'otp-sent';
@@ -39,6 +54,12 @@ function SignInForm() {
     const t = setInterval(() => setResendIn((s) => (s > 0 ? s - 1 : 0)), 1000);
     return () => clearInterval(t);
   }, [otpStep, phoneInFlight]);
+
+  async function handleGoogle() {
+    setGoogleBusy(true);
+    await signInWithGoogle();
+    setGoogleBusy(false);
+  }
 
   async function handleSendOtp(e?: React.FormEvent) {
     e?.preventDefault();
@@ -83,7 +104,7 @@ function SignInForm() {
       <AuthShell>
         <h1 className="font-display text-4xl font-bold tracking-tightest">Sign-in is not available yet</h1>
         <p className="mt-4 text-[16px] leading-relaxed text-stone">
-          Phone sign-in has not been configured for this site. You can still browse materials and check delivery.
+          Sign-in has not been configured for this site. You can still browse materials and check delivery.
         </p>
         <Link href="/" className="btn-ink mt-8 self-start">Browse materials</Link>
       </AuthShell>
@@ -93,71 +114,89 @@ function SignInForm() {
   if (status === 'wrong-role') {
     return (
       <AuthShell>
-        <h1 className="font-display text-4xl font-bold tracking-tightest">This number is not a buyer account</h1>
+        <h1 className="font-display text-4xl font-bold tracking-tightest">This account is not a buyer account</h1>
         <p className="mt-4 text-[16px] leading-relaxed text-stone">
-          It is already registered on BuildX with a different role, such as a supplier. Use another number to shop here.
+          It is already registered on BuildX with a different role, such as a supplier. Sign in with another Google account to shop here.
         </p>
       </AuthShell>
     );
   }
 
   return (
-    <AuthShell step={otpStep ? 'Step 2 of 2' : 'Step 1 of 2'}>
+    <AuthShell step={otpStep ? 'Step 2 of 2' : 'Sign in'} recaptcha={otpStep || PHONE_SIGNIN}>
       {!otpStep ? (
-        <form onSubmit={handleSendOtp} noValidate className="animate-fade-up">
+        <div className="animate-fade-up">
           <h1 className="font-display text-[clamp(2.4rem,6vw,3.25rem)] font-bold leading-[0.95] tracking-tightest">
             Sign in or create an account
           </h1>
           <p className="mt-4 text-[16px] leading-relaxed text-stone">
-            Enter your mobile number. We will text you a 6-digit code. New to BuildX? This creates your account.
+            Use your Google account. New to BuildX? This creates your account in a few seconds.
           </p>
 
-          <label htmlFor="phone" className="mt-10 block text-[13px] font-semibold text-ink">
-            Mobile number
-          </label>
-          <div className="group mt-2 flex h-16 items-center rounded-2xl border border-sand-4 bg-sand-2 transition-[border-color,box-shadow] duration-200 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
-            <span className="flex h-full items-center gap-2 border-r border-sand-4 pl-5 pr-4 text-[16px] font-medium text-ink">
-              <span aria-hidden="true" className="eyebrow rounded-md bg-ink px-1.5 py-1 text-[10px] text-lime">IN</span>
-              +91
-            </span>
-            <input
-              id="phone"
-              type="tel"
-              inputMode="numeric"
-              autoComplete="tel-national"
-              autoFocus
-              required
-              value={formatPhone(phone)}
-              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-              placeholder="98765 43210"
-              aria-describedby="phone-hint phone-error"
-              aria-invalid={(phone.length === 10 && !phoneValid) || undefined}
-              className="h-full w-full bg-transparent px-4 font-mono text-[20px] tracking-wide text-ink outline-none placeholder:text-stone-light"
-            />
-            {phoneValid && (
-              <span className="material-symbols-outlined mr-4 animate-fade-up text-[24px] text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
-                check_circle
-              </span>
-            )}
-          </div>
-          <p id="phone-hint" className="mt-2 text-[13px] text-stone">
-            Indian mobile numbers only, starting with 6, 7, 8 or 9.
-          </p>
-          <p id="phone-error" role="alert" className="mt-2 min-h-[20px] text-[14px] font-medium text-error">
-            {phone.length === 10 && !phoneValid ? 'That does not look like an Indian mobile number.' : error}
-          </p>
-
-          <button type="submit" disabled={!phoneValid || submitting} className="btn-ink mt-4 h-14 w-full text-[16px]">
-            {submitting ? <Spinner label="Sending code" /> : <>Send code <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_forward</span></>}
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={googleBusy || status === 'loading'}
+            className="mt-10 flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-sand-4 bg-white text-[16px] font-semibold text-ink transition-[border-color,box-shadow] duration-200 hover:border-ink focus-visible:shadow-[0_0_0_4px_rgba(200,255,61,0.55)] focus-visible:outline-none disabled:opacity-60"
+          >
+            {googleBusy || status === 'loading' ? <Spinner label="Signing in" /> : <><GoogleMark /> Continue with Google</>}
           </button>
+          <p role="alert" className="mt-3 min-h-[20px] text-[14px] font-medium text-error">{error}</p>
+
+          {PHONE_SIGNIN && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-[13px] text-stone">
+                <span className="h-px flex-1 bg-sand-4" />or use your mobile number<span className="h-px flex-1 bg-sand-4" />
+              </div>
+              <form onSubmit={handleSendOtp} noValidate className="animate-fade-up">
+                <label htmlFor="phone" className="block text-[13px] font-semibold text-ink">
+                  Mobile number
+                </label>
+                <div className="group mt-2 flex h-16 items-center rounded-2xl border border-sand-4 bg-sand-2 transition-[border-color,box-shadow] duration-200 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+                  <span className="flex h-full items-center gap-2 border-r border-sand-4 pl-5 pr-4 text-[16px] font-medium text-ink">
+                    <span aria-hidden="true" className="eyebrow rounded-md bg-ink px-1.5 py-1 text-[10px] text-lime">IN</span>
+                    +91
+                  </span>
+                  <input
+                    id="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    required
+                    value={formatPhone(phone)}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="98765 43210"
+                    aria-describedby="phone-hint phone-error"
+                    aria-invalid={(phone.length === 10 && !phoneValid) || undefined}
+                    className="h-full w-full bg-transparent px-4 font-mono text-[20px] tracking-wide text-ink outline-none placeholder:text-stone-light"
+                  />
+                  {phoneValid && (
+                    <span className="material-symbols-outlined mr-4 animate-fade-up text-[24px] text-tertiary" style={{ fontVariationSettings: "'FILL' 1" }} aria-hidden="true">
+                      check_circle
+                    </span>
+                  )}
+                </div>
+                <p id="phone-hint" className="mt-2 text-[13px] text-stone">
+                  Indian mobile numbers only, starting with 6, 7, 8 or 9.
+                </p>
+                <p id="phone-error" role="alert" className="mt-2 min-h-[20px] text-[14px] font-medium text-error">
+                  {phone.length === 10 && !phoneValid ? 'That does not look like an Indian mobile number.' : null}
+                </p>
+
+                <button type="submit" disabled={!phoneValid || submitting} className="btn-ink mt-4 h-14 w-full text-[16px]">
+                  {submitting ? <Spinner label="Sending code" /> : <>Send code <span className="material-symbols-outlined text-[20px]" aria-hidden="true">arrow_forward</span></>}
+                </button>
+              </form>
+            </>
+          )}
 
           <p className="mt-6 text-[13px] leading-relaxed text-stone">
             By continuing you agree to the BuildX{' '}
             <Link href="/terms" className="font-medium text-ink underline underline-offset-2">Terms of service</Link> and{' '}
-            <Link href="/privacy" className="font-medium text-ink underline underline-offset-2">Privacy policy</Link>. Standard SMS
-            rates may apply.
+            <Link href="/privacy" className="font-medium text-ink underline underline-offset-2">Privacy policy</Link>. You add a phone
+            number with your delivery address so the driver can reach you.
           </p>
-        </form>
+        </div>
       ) : (
         <form
           onSubmit={(e) => {

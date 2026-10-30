@@ -1,7 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 
-// BuildX identities are phone-OTP only (see apps/api's auth middleware) — this is the same
+// BuildX identities are a verified phone (OTP) or a Google account (see apps/api's auth middleware), the same
 // Firebase project apps/mobile and apps/seller-web sign in against, via the Web SDK.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
