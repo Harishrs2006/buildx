@@ -223,3 +223,8 @@ Times are IST.
   its fixed code was changed from 123456 to a private random code (Identity Toolkit testPhoneNumbers), stored ONLY in
   Desktop/BuildX/buildx-secrets/ADMIN_SIGNIN.txt (outside the repo). +917019282019 keeps 123456 for buyer/supplier tests.
   Still pending: Render FRONTEND_URL += https://buildx-ops.vercel.app (user must sign in to Render), merge #42.
+- 2026-10-30 19:16 User: console sign-in stuck on 'Sending code'. Cause: after 'Change number' / 'Resend', all 3
+  AuthProviders reused the used invisible RecaptchaVerifier, so signInWithPhoneNumber never settled. Fix (branch
+  fix/otp-resend-hang): fresh verifier in a fresh element per send + 45 s timeout with a clear message, in buyer-web,
+  seller-web and web. Tested on localhost console with +917019282019: send, Change number, send again -> both reach
+  the code step. Note: a first send takes ~10 s (Firebase falls back from reCAPTCHA Enterprise to v2).
