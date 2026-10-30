@@ -7,6 +7,11 @@ export const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', curren
 export const UNIT: Record<string, string> = {
   KG: 'kg', TON: 'tonne', PIECE: 'piece', BAG: 'bag', BUNDLE: 'bundle', CUBIC_METER: 'm³', SQUARE_METER: 'm²', LITER: 'litre', METER: 'metre',
 };
+// "500 bags", "1 bag", "12 m³": symbols and kg never take an s
+export function unitLabel(unit: string, count: number): string {
+  const u = UNIT[unit] ?? unit.toLowerCase();
+  return count === 1 || /[³²]|^kg$/.test(u) ? u : `${u}s`;
+}
 export const shortDate = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
 
 export function PageHead({ eyebrow, title, children }: { eyebrow: string; title: ReactNode; children?: ReactNode }) {
@@ -110,7 +115,7 @@ export function Pill({ tone, children, pulse }: { tone: Tone; children: ReactNod
 export const PRODUCT_STATUS: Record<string, { label: string; tone: Tone }> = {
   ACTIVE: { label: 'Live', tone: 'live' },
   DRAFT: { label: 'Draft', tone: 'muted' },
-  INACTIVE: { label: 'Hidden', tone: 'muted' },
+  INACTIVE: { label: 'Paused', tone: 'muted' },
   OUT_OF_STOCK: { label: 'Out of stock', tone: 'bad' },
   DISCONTINUED: { label: 'Discontinued', tone: 'muted' },
 };

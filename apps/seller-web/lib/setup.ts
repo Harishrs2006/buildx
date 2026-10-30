@@ -48,13 +48,17 @@ const REJECT_REASON: Record<string, string> = {
 };
 
 // Turns the API's per-PIN rejection list into one readable sentence
+/** The PINs the API refused, each with a readable reason (empty when the error was something else) */
+export function rejectedPincodes(err: unknown): { pincode: string; text: string }[] {
+  if (!(err instanceof ApiClientError) || !Array.isArray(err.details)) return [];
+  return (err.details as { pincode?: string; reason?: string }[])
+    .filter((d): d is { pincode: string; reason?: string } => !!d.pincode)
+    .map((d) => ({ pincode: d.pincode, text: `${d.pincode} ${REJECT_REASON[d.reason ?? ''] ?? 'was rejected'}` }));
+}
+
 export function describePincodeError(err: unknown): string {
-  if (err instanceof ApiClientError && Array.isArray(err.details)) {
-    const parts = (err.details as { pincode?: string; reason?: string }[])
-      .filter((d) => d.pincode)
-      .map((d) => `${d.pincode} ${REJECT_REASON[d.reason ?? ''] ?? 'was rejected'}`);
-    if (parts.length) return `${parts.join('; ')}. Nothing was added.`;
-  }
+  const bad = rejectedPincodes(err);
+  if (bad.length) return `${bad.map((b) => b.text).join('; ')}.`;
   return err instanceof Error ? err.message : 'Could not add the PIN codes. Try again.';
 }
 

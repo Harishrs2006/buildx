@@ -6,7 +6,7 @@ import { useApiClient } from '@buildx/web-core';
 import { useSupplierStats } from '../../lib/stats';
 import { useSupplierOrders } from '../../lib/orders';
 import { fetchSupplierProfile, type SupplierProfile } from '../../lib/auth';
-import { setupGaps } from '../../lib/setup';
+import { isSetupComplete, setupGaps } from '../../lib/setup';
 import { useAuth } from '../../components/auth/AuthProvider';
 import { ORDER_STATUS, Pill, rupees, shortDate } from '../../components/ui';
 
@@ -38,6 +38,8 @@ export default function DashboardPage() {
     fetchSupplierProfile(client).then(setProfile).catch(() => {});
   }, [client]);
 
+  // Unknown until the profile loads: treat as done so nothing flashes a wrong 'finish setup' hint
+  const setupDone = profile ? isSetupComplete(profile) : true;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
@@ -81,7 +83,7 @@ export default function DashboardPage() {
           <span className="material-symbols-outlined mt-0.5" aria-hidden="true">hourglass_top</span>
           <div>
             <p className="font-semibold">Your account is being verified</p>
-            <p className="mt-0.5 text-[15px]">You can add products now. They go live for buyers as soon as BuildX approves your account.</p>
+            <p className="mt-0.5 text-[15px]">{setupDone ? 'You can list products now. Buyers can order them as soon as BuildX approves your account.' : 'Meanwhile, finish your business setup and list your products. Buyers can order once BuildX approves your account.'}</p>
           </div>
         </div>
       )}
@@ -148,13 +150,13 @@ export default function DashboardPage() {
 
         <section aria-labelledby="quick-title" className="flex flex-col gap-3">
           <h2 id="quick-title" className="sr-only">Quick actions</h2>
-          <Link href="/products/new" className="group flex items-center gap-4 rounded-2xl bg-lime p-5 text-ink transition-transform hover:-translate-y-0.5">
+          <Link href={setupDone ? '/products/new' : '/setup'} className="group flex items-center gap-4 rounded-2xl bg-lime p-5 text-ink transition-transform hover:-translate-y-0.5">
             <span className="grid h-12 w-12 place-items-center rounded-xl bg-ink text-lime">
               <span className="material-symbols-outlined" aria-hidden="true">add</span>
             </span>
             <span className="flex-1">
               <span className="block font-display text-lg font-semibold">List a product</span>
-              <span className="block text-[14px] text-ink/70">Pick the material, brand and size</span>
+              <span className="block text-[14px] text-ink/70">{setupDone ? 'Pick the material, brand and size' : 'Opens after business setup'}</span>
             </span>
             <span className="material-symbols-outlined transition-transform group-hover:translate-x-1" aria-hidden="true">arrow_forward</span>
           </Link>

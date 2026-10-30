@@ -40,6 +40,9 @@ export function useAuth(): AuthContextValue {
   return ctx;
 }
 
+// Firebase can wait on reCAPTCHA indefinitely; give up with a clear message instead of a stuck button
+const SEND_TIMEOUT_MS = 45_000;
+
 function describeAuthError(err: unknown): string {
   const code = (err as { code?: string } | null)?.code;
   switch (code) {
@@ -49,6 +52,8 @@ function describeAuthError(err: unknown): string {
       return 'Too many attempts. Try again in a few minutes.';
     case 'auth/invalid-verification-code':
       return 'That code is incorrect. Check the SMS and try again.';
+    case 'app/send-timeout':
+      return 'Sending the code took too long. Check your connection and try again.';
     case 'auth/code-expired':
       return 'That code expired. Request a new one.';
     // Project-side SMS problems (Firebase billing off, daily SMS quota used up): not the user's fault
@@ -101,10 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const auth = getFirebaseAuth();
     const e164 = phone.startsWith('+') ? phone : `+91${phone}`;
     try {
-      if (!recaptchaRef.current) {
-        recaptchaRef.current = new RecaptchaVerifier(auth, 'recaptcha-container', { size: 'invisible' });
-      }
-      confirmationRef.current = await signInWithPhoneNumber(auth, e164, recaptchaRef.current);
+      // A reCAPTCHA token works once: reusing the verifier after "Change number" or "Resend code"
+      // left the send hanging forever. Every send gets a fresh verifier in a fresh element.
+      recaptchaRef.current?.clear();
+      const host = document.getElementById('recaptcha-container');
+      if (!host) throw new Error('reCAPTCHA container missing');
+      host.replaceChildren();
+      const el = document.createElement('div');
+      host.appendChild(el);
+      recaptchaRef.current = new RecaptchaVerifier(auth, el, { size: 'invisible' });
+      confirmationRef.current = await Promise.race([
+        signInWithPhoneNumber(auth, e164, recaptchaRef.current),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(Object.assign(new Error('timeout'), { code: 'app/send-timeout' })), SEND_TIMEOUT_MS)
+        ),
+      ]);
       setPhoneInFlight(e164);
       setStatus('otp-sent');
     } catch (err) {

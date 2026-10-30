@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useApiClient, catalogItems } from '@buildx/web-core';
 import { useCategories } from '../../../lib/categories';
 import {
-  BUSINESS_TYPES, addServicePincodes, describePincodeError, removeServicePincode, setupGaps, updateSupplierProfile,
+  BUSINESS_TYPES, addServicePincodes, describePincodeError, rejectedPincodes, removeServicePincode, setupGaps, updateSupplierProfile,
   useSupplierProfile, type BusinessType,
 } from '../../../lib/setup';
 import { ErrorNote } from '../../../components/ui';
@@ -59,6 +59,8 @@ export default function SetupPage() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A message belongs to the step it came from
+  useEffect(() => setError(null), [step]);
 
   // step 1
   const [businessType, setBusinessType] = useState<BusinessType | ''>('');
@@ -131,10 +133,17 @@ export default function SetupPage() {
       if (list.length === 0) return;
       try {
         await addServicePincodes(client, list);
+        setPinInput('');
       } catch (err) {
-        throw new Error(describePincodeError(err));
+        // The API adds all or nothing: add the good ones, leave only the refused ones in the box
+        const bad = rejectedPincodes(err);
+        const good = list.filter((p) => !bad.some((b) => b.pincode === p));
+        if (bad.length === 0 || good.length === 0) throw new Error(describePincodeError(err));
+        await addServicePincodes(client, good);
+        setPinInput(bad.map((b) => b.pincode).join(', '));
+        profile.reload();
+        throw new Error(`Added ${good.length} PIN code${good.length === 1 ? '' : 's'}. ${describePincodeError(err)}`);
       }
-      setPinInput('');
       profile.reload();
     });
 

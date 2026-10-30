@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
-import { useApiClient, type ApiClient, type PaginationMeta } from '@buildx/web-core';
+import { ApiClientError, useApiClient, type ApiClient, type PaginationMeta } from '@buildx/web-core';
 
 const imageSchema = z.object({ url: z.string(), publicId: z.string(), isPrimary: z.boolean().optional(), sortOrder: z.number().optional() });
 
@@ -20,9 +20,12 @@ export const supplierProductSchema = z
     deliveryDays: z.number().optional(),
     gstRate: z.number().optional(),
     isGstInclusive: z.boolean().optional(),
+    bulkPricing: z.array(z.object({ minQty: z.number(), price: z.number() })).optional(),
+    lowStockAlert: z.number().optional(),
     specifications: z.record(z.string(), z.string()).optional(),
     images: z.array(imageSchema).optional(),
     status: z.enum(['DRAFT', 'ACTIVE', 'INACTIVE', 'OUT_OF_STOCK', 'DISCONTINUED']),
+    // Every supplier product response populates the category (list, get, create and edit)
     categoryId: z.object({ _id: z.string(), name: z.string(), slug: z.string() }).nullable().optional(),
   })
   .passthrough();
@@ -37,19 +40,23 @@ export type ProductInput = {
   stockQuantity?: number;
   minOrderQuantity?: number;
   deliveryDays?: number;
+  gstRate?: number;
+  isGstInclusive?: boolean;
+  bulkPricing?: { minQty: number; price: number }[];
+  lowStockAlert?: number;
   specifications?: Record<string, string>;
   images?: { url: string; publicId: string; isPrimary?: boolean; sortOrder?: number }[];
 };
 
 export async function fetchSupplierProducts(
   client: ApiClient,
-  opts: { page?: number; status?: string } = {}
+  opts: { page?: number; status?: string; q?: string; lowStock?: boolean } = {}
 ): Promise<{ data: SupplierProduct[]; meta: PaginationMeta }> {
   return client.requestPage('/suppliers/me/products', {
     auth: true,
     envelope: true,
     schema: z.array(supplierProductSchema),
-    query: { page: opts.page, status: opts.status },
+    query: { page: opts.page, status: opts.status, q: opts.q || undefined, lowStock: opts.lowStock ? 1 : undefined },
   });
 }
 
@@ -57,7 +64,7 @@ export async function fetchSupplierProduct(client: ApiClient, id: string): Promi
   return client.request(`/suppliers/me/products/${id}`, { auth: true, envelope: true, schema: supplierProductSchema });
 }
 
-export async function createSupplierProduct(client: ApiClient, input: ProductInput): Promise<SupplierProduct> {
+export async function createSupplierProduct(client: ApiClient, input: ProductInput & { status?: 'DRAFT' | 'ACTIVE' }): Promise<SupplierProduct> {
   return client.request('/suppliers/me/products', {
     method: 'POST',
     auth: true,
@@ -95,7 +102,16 @@ export type ProductListState =
   | { status: 'success'; products: SupplierProduct[]; meta: PaginationMeta }
   | { status: 'error'; error: unknown };
 
-export function useSupplierProducts(page: number, statusFilter?: string) {
+// The API answers a bad form with { details: [{ field, message }] }: show the first reason, not "Validation failed"
+export function productErrorText(err: unknown, fallback = 'Could not save. Check the fields and try again.'): string {
+  if (err instanceof ApiClientError) {
+    const first = Array.isArray(err.details) ? (err.details[0] as { message?: string } | undefined)?.message : undefined;
+    return first ?? (err.message || fallback);
+  }
+  return err instanceof Error && err.message ? err.message : fallback;
+}
+
+export function useSupplierProducts(page: number, statusFilter?: string, opts: { q?: string; lowStock?: boolean } = {}) {
   const client = useApiClient();
   const [state, setState] = useState<ProductListState>({ status: 'loading' });
   const [reloadKey, setReloadKey] = useState(0);
@@ -103,14 +119,14 @@ export function useSupplierProducts(page: number, statusFilter?: string) {
   useEffect(() => {
     const controller = new AbortController();
     setState({ status: 'loading' });
-    fetchSupplierProducts(client, { page, status: statusFilter })
+    fetchSupplierProducts(client, { page, status: statusFilter, q: opts.q, lowStock: opts.lowStock })
       .then(({ data, meta }) => setState({ status: 'success', products: data, meta }))
       .catch((error) => {
         if (controller.signal.aborted) return;
         setState({ status: 'error', error });
       });
     return () => controller.abort();
-  }, [client, page, statusFilter, reloadKey]);
+  }, [client, page, statusFilter, opts.q, opts.lowStock, reloadKey]);
 
   const reload = useCallback(() => setReloadKey((k) => k + 1), []);
   return { ...state, reload };
