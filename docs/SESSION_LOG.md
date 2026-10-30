@@ -245,3 +245,12 @@ Times are IST.
   Save all, Undo, low-stock by lowStockAlert, search); setup PINs add the valid ones and keep refused ones; plurals.
   Tested end to end on localhost with an in-memory DB sandbox (test number 7019282019, nothing written to prod).
   Not visually checked at phone width (Chrome window would not resize).
+- 2026-10-30 21:14 PR #45 merged (seller listing/stock UX; #44 closed as included). Branch feat/seller-orders:
+  seller Orders page rebuilt around next actions (To dispatch, Cash to confirm, With BuildX driver, On the way,
+  Delivered, Cancelled). Fixes: 'New'/PENDING never used (orders start CONFIRMED) so New tab + overview 'Needs your
+  action' were always empty; own-vehicle COD had no confirm button (POST /me/orders/:id/cod now in UI with confirm);
+  status PATCH returns bare buyerId so every action showed an error after succeeding (schema accepts id); take over a
+  READY_FOR_PICKUP order with no driver; cancel needs a reason; delivered needs confirmation; PIN/district, call and
+  WhatsApp buttons. API: orders list accepts status=A,B and cashPending=1. Also restored line endings flipped by my
+  Windows python edits in #45 (open(...,'w') writes CRLF: always pass newline=''). 281 tests pass. Tested on a local
+  in-memory sandbox seeded with demo orders.

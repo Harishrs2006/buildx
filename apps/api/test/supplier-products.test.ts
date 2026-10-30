@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
-import { seedSupplier, seedProduct, startDb, stopDb, clearDb, makeApp } from './helpers';
+import { seedSupplier, seedProduct, seedUser, seedOrder, startDb, stopDb, clearDb, makeApp } from './helpers';
 import { Category } from '../src/infrastructure/database/models/Category.model';
 
 const app = makeApp();
@@ -193,5 +193,23 @@ describe('supplier product responses', () => {
     expect(created.body.data.categoryId).toMatchObject({ name: 'Cement & Concrete', slug: 'cement-concrete' });
     const edited = await request(app).patch(`/api/v1/suppliers/me/products/${created.body.data._id}`).set(headers).send({ stockQuantity: 9 });
     expect(edited.body.data.categoryId).toMatchObject({ slug: 'cement-concrete' });
+  });
+});
+
+describe('GET /suppliers/me/orders filters', () => {
+  it('accepts several statuses and lists own deliveries with cash still to confirm', async () => {
+    const { headers, profile } = await seedSupplier('ord-f1');
+    const { user: buyer } = await seedUser('ord-f1-buyer');
+    await seedOrder(buyer._id, profile._id, { status: 'CONFIRMED' });
+    await seedOrder(buyer._id, profile._id, { status: 'READY_FOR_PICKUP', deliveryMode: 'PLATFORM' });
+    await seedOrder(buyer._id, profile._id, { status: 'ASSIGNED', deliveryMode: 'PLATFORM' });
+    await seedOrder(buyer._id, profile._id, { status: 'DELIVERED', deliveryMode: 'SUPPLIER', paymentStatus: 'PENDING' });
+    await seedOrder(buyer._id, profile._id, { status: 'DELIVERED', deliveryMode: 'SUPPLIER', paymentStatus: 'CAPTURED' });
+
+    const waiting = await request(app).get('/api/v1/suppliers/me/orders?status=READY_FOR_PICKUP,ASSIGNED,NOPE').set(headers);
+    expect(waiting.body.data.map((o: { status: string }) => o.status).sort()).toEqual(['ASSIGNED', 'READY_FOR_PICKUP']);
+    const cash = await request(app).get('/api/v1/suppliers/me/orders?cashPending=1').set(headers);
+    expect(cash.body.data).toHaveLength(1);
+    expect(cash.body.data[0]).toMatchObject({ status: 'DELIVERED', paymentStatus: 'PENDING' });
   });
 });

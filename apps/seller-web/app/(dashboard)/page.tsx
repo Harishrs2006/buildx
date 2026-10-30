@@ -31,7 +31,8 @@ export default function DashboardPage() {
   const client = useApiClient();
   const { user } = useAuth();
   const stats = useSupplierStats();
-  const pending = useSupplierOrders(1, 'PENDING');
+  // Same as the 'New orders waiting' number: to dispatch, or on the road with your own vehicle
+  const pending = useSupplierOrders(1, 'CONFIRMED,IN_TRANSIT');
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export default function DashboardPage() {
         {stats.status === 'error' && <p className="col-span-full px-4 py-6 text-[15px] text-signal-red">Couldn&apos;t load your numbers right now.</p>}
         {stats.status === 'success' && (
           <>
-            <Stat label="New orders waiting" value={String(stats.data.pendingOrders)} icon="notifications_active" href="/orders" accent={stats.data.pendingOrders > 0} />
+            <Stat label="Orders to act on" value={String(stats.data.pendingOrders)} icon="notifications_active" href="/orders" accent={stats.data.pendingOrders > 0} />
             <Stat label="Orders today" value={String(stats.data.todayOrders)} icon="today" href="/orders" />
             <Stat label="Live products" value={String(stats.data.activeProducts)} icon="inventory_2" href="/products" />
             <Stat label="Revenue from delivered orders" value={rupees.format(stats.data.totalRevenue)} icon="payments" />
