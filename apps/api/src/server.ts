@@ -2,6 +2,7 @@
 import { initFirebase } from "./config/firebase";
 import { createApp } from "./app";
 import { connectDatabase, disconnectDatabase } from "./infrastructure/database/mongoose.client";
+import { dropLegacyUserIndexes } from "./infrastructure/database/models/User.model";
 import { connectRedis, redis } from "./infrastructure/cache/redis.client";
 import { logger } from "./shared/logger/logger";
 import { env } from "./config/env";
@@ -17,6 +18,7 @@ async function bootstrap(): Promise<void> {
   registerRoutes(app);
 
   await connectDatabase(env.MONGODB_URI);
+  await dropLegacyUserIndexes().catch((err) => logger.error("Could not drop legacy phone_1 index", { error: err?.message }));
   await connectRedis();
 
   const server = app.listen(env.API_PORT, () => {

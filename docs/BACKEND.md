@@ -13,7 +13,7 @@ the rules the server enforces. Code lives in `apps/api` (Express + MongoDB, Type
 | Admin / ops | `apps/web`. Verifies suppliers, handles stuck orders. Needs repair. | Not deployed yet |
 | API | `apps/api`. The only thing that touches the database. | Render (`render.yaml`) |
 | Database | MongoDB Atlas, database `buildx`. | Atlas cluster0 |
-| Sign-in | Firebase phone OTP (project buildx-15494). | Google |
+| Sign-in | Firebase phone OTP (project buildx-15494); Google sign-in on the seller website. | Google |
 | Images | Product photos uploaded through `POST /upload/image`. | Cloud storage |
 
 Every app calls the API through the shared client in `packages/web-core`. No app talks to the
@@ -22,7 +22,10 @@ status.
 
 ## 2. Sign-in and roles
 
-1. The user enters their mobile number. Firebase sends a 6-digit OTP.
+1. The user enters their mobile number and Firebase sends a 6-digit OTP. On the seller website the
+   supplier taps "Continue with Google" instead (free; SMS needs the paid Firebase plan). The API
+   accepts a token with a verified phone, or a Google token with a verified email, nothing else.
+   Google users have an email and no phone; their WhatsApp number comes from onboarding.
 2. The app gets a Firebase ID token and calls `POST /auth/sync`. The API checks the token with
    Firebase Admin and finds or creates the user.
 3. A new user calls `POST /auth/onboard` once and picks a role: `BUYER`, `SUPPLIER` or
@@ -34,7 +37,7 @@ status.
 
 The portal enforces this order:
 
-1. **Sign in with OTP** and onboard as a supplier (business name, city).
+1. **Sign in with Google** and onboard as a supplier (business name, city).
 2. **Business setup** (`/setup`), saved with `PATCH /suppliers/me`:
    - business type: retail shop, authorised dealer, distributor or manufacturer
    - GSTIN (optional; checked against the 15-character GSTIN format, stored in capitals)
@@ -111,7 +114,7 @@ supplier can never mark themselves verified.
 
 | Model | Holds |
 |---|---|
-| `User` | phone, name, role, addresses, active flag |
+| `User` | phone or email (each unique when set), name, role, addresses, active flag |
 | `SupplierProfile` | business name, type, GSTIN, address, WhatsApp, service PIN codes, categories, brands, verification status |
 | `Category` | the material categories shown on the site |
 | `Product` | supplier, category, name, unit, price, GST, stock, minimum order, specifications (Material, Brand...), images, status |

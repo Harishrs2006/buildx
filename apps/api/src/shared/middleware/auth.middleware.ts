@@ -8,14 +8,17 @@ declare global {
   namespace Express {
     interface Request {
       // Set by verifyFirebaseToken — identity proven by Firebase, may not exist in our DB yet
+      // Phone OTP sign-ins carry phone; Google sign-ins (seller website) carry a verified email instead
       firebase?: {
         uid: string;
-        phone: string;
+        phone?: string;
+        email?: string;
+        name?: string;
       };
       // Set by requireAuth — an active user that exists in our DB
       auth?: {
         uid: string;
-        phone: string;
+        phone?: string;
         userId: string;
         role: UserRole;
       };
@@ -45,12 +48,22 @@ export async function verifyFirebaseToken(req: Request, _res: Response, next: Ne
     // checkRevoked: also rejects revoked sessions and accounts disabled in Firebase
     const decoded = await getAuth().verifyIdToken(token, true);
 
-    // BuildX identities are phone-OTP only — a token without a verified phone is not one of ours
-    if (!decoded.phone_number) {
+    // BuildX identities are a verified phone (OTP) or a verified Google account. Anything else
+    // (anonymous, email/password, unverified email) is not one of ours.
+    const googleEmail =
+      decoded.firebase?.sign_in_provider === 'google.com' && decoded.email_verified === true && decoded.email
+        ? decoded.email.toLowerCase()
+        : undefined;
+    if (!decoded.phone_number && !googleEmail) {
       throw AppError.unauthorized('Phone number verification required');
     }
 
-    req.firebase = { uid: decoded.uid, phone: decoded.phone_number };
+    req.firebase = {
+      uid: decoded.uid,
+      phone: decoded.phone_number,
+      email: googleEmail,
+      name: typeof decoded.name === 'string' ? decoded.name : undefined,
+    };
     next();
   } catch (err) {
     next(mapAuthError(err));

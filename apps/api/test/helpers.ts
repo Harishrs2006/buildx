@@ -16,6 +16,9 @@ import type { UserRole } from '@buildx/shared';
 // Tokens are plain strings the mock understands:
 //   valid|<uid>|<phone>   → decodes to { uid, phone_number }
 //   valid|<uid>|          → decodes without a phone number
+//   google|<uid>|<email>|<name>            → verified Google sign-in (seller website)
+//   google-unverified|<uid>|<email>        → Google sign-in whose email is not verified
+//   password|<uid>|<email>                 → email/password sign-in (not a BuildX identity)
 //   expired | revoked | disabled | garbage → throw the matching Firebase auth error
 //   network               → throws a non-auth error (e.g. cert fetch failure)
 
@@ -28,6 +31,14 @@ const mocks = vi.hoisted(() => {
       case 'disabled': throw authError('auth/user-disabled');
       case 'garbage': throw authError('auth/argument-error');
       case 'network': throw new Error('getaddrinfo ENOTFOUND www.googleapis.com');
+    }
+    if (token.startsWith('google|') || token.startsWith('google-unverified|')) {
+      const [kind, uid, email, name] = token.split('|');
+      return { uid, email, name, email_verified: kind === 'google', firebase: { sign_in_provider: 'google.com' } };
+    }
+    if (token.startsWith('password|')) {
+      const [, uid, email] = token.split('|');
+      return { uid, email, email_verified: true, firebase: { sign_in_provider: 'password' } };
     }
     const [kind, uid, phone] = token.split('|');
     if (kind !== 'valid' || !uid) throw authError('auth/argument-error');

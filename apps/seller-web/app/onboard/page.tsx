@@ -6,9 +6,10 @@ import { useAuth } from '../../components/auth/AuthProvider';
 import { AuthShell } from '../../components/auth/AuthShell';
 
 export default function OnboardPage() {
-  const { status, error, onboard } = useAuth();
+  const { status, error, onboard, user } = useAuth();
   const router = useRouter();
-  const [name, setName] = useState('');
+  // Google sign-ins arrive with the account's name; phone sign-ins start as 'New User'
+  const [name, setName] = useState(user && user.name !== 'New User' ? user.name : '');
   const [businessName, setBusinessName] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
   const [submitting, setSubmitting] = useState(false);

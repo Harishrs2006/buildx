@@ -257,3 +257,8 @@ Times are IST.
 - 2026-10-31 00:55 IST: #46 merged by user. Verified: Vercel buildx-48kc/vgud/ops production deploys succeeded, seller
   /orders returns 200, API /health ok and /suppliers/me/orders answers 401 without a token. Seller website flow is
   complete (setup, listing, stock, orders to cash collected). Next: wait for user (auth/SMS and mobile pass 2 parked).
+- 2026-10-31 01:35 IST: User chose free Google sign-in for the seller website (SMS needs Blaze). Enabled the Google
+  provider in Firebase (public name BuildX). API: accepts verified-phone OR Google verified-email tokens only;
+  User.phone optional, new email field, partial unique indexes; server start drops the old phone_1 index. Seller
+  sign-in is now "Continue with Google" (phone form behind NEXT_PUBLIC_PHONE_SIGNIN=true). 288 tests pass.
+  CLAUDE.md auth rule updated. Branch feat/seller-google-signin.

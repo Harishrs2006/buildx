@@ -1,9 +1,9 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 
-// BuildX identities are phone-OTP only (see apps/api's auth middleware) — this is the same
-// Firebase project apps/mobile signs in against, just through the Web SDK instead of
-// @react-native-firebase.
+// BuildX identities are a verified phone (OTP) or, on this site, a Google account (see apps/api's
+// auth middleware). This is the same Firebase project apps/mobile signs in against, just through
+// the Web SDK instead of @react-native-firebase.
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,

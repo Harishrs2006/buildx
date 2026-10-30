@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import { verifyIdToken, bearer, tokenFor, seedUser, startDb, stopDb, clearDb, makeApp } from './helpers';
-import { User } from '../src/infrastructure/database/models/User.model';
+import { User, dropLegacyUserIndexes } from '../src/infrastructure/database/models/User.model';
 
 const app = makeApp();
 const SYNC = '/api/v1/auth/sync';
@@ -146,5 +146,60 @@ describe('disabled accounts', () => {
     const { headers } = await seedUser('suspended-sync-uid', { isActive: false });
     const res = await request(app).post(SYNC).set(headers);
     expect(res.status).toBe(403);
+  });
+});
+
+describe('Google sign-in (seller website)', () => {
+  it('creates a user from a verified Google account, with no phone', async () => {
+    const res = await request(app).post(SYNC).set(bearer('google|g-uid|Ravi.Traders@Gmail.com|Ravi Kumar'));
+    expect(res.status).toBe(200);
+    expect(res.body.data).toMatchObject({ email: 'ravi.traders@gmail.com', name: 'Ravi Kumar', role: 'BUYER', onboardingComplete: false });
+    const user = await User.findOne({ firebaseUid: 'g-uid' }).lean();
+    expect(user?.phone).toBeUndefined();
+  });
+
+  it('allows many Google users without phones, and many phone users without emails', async () => {
+    for (const n of [1, 2, 3]) {
+      expect((await request(app).post(SYNC).set(bearer(`google|g-${n}|seller${n}@gmail.com|Seller ${n}`))).status).toBe(200);
+      expect((await request(app).post(SYNC).set(bearer(tokenFor(`p-${n}`)))).status).toBe(200);
+    }
+    expect(await User.countDocuments()).toBe(6);
+  });
+
+  it('can reach protected routes after syncing', async () => {
+    const token = bearer('google|g-me|me@gmail.com|Meena');
+    await request(app).post(SYNC).set(token);
+    const me = await request(app).get(ME).set(token);
+    expect(me.status).toBe(200);
+    expect(me.body.data.email).toBe('me@gmail.com');
+  });
+
+  it('rejects a Google account whose email is not verified', async () => {
+    const res = await request(app).post(SYNC).set(bearer('google-unverified|gu-uid|x@gmail.com'));
+    expect(res.status).toBe(401);
+    expect(await User.countDocuments()).toBe(0);
+  });
+
+  it('rejects other sign-in methods such as email and password', async () => {
+    const res = await request(app).post(SYNC).set(bearer('password|pw-uid|x@gmail.com'));
+    expect(res.status).toBe(401);
+  });
+
+  it('returns 409 when the Google email is already linked to another Firebase account', async () => {
+    await request(app).post(SYNC).set(bearer('google|first-uid|same@gmail.com|First'));
+    const res = await request(app).post(SYNC).set(bearer('google|second-uid|same@gmail.com|Second'));
+    expect(res.status).toBe(409);
+    expect(res.body.error.message).toMatch(/Google account/);
+  });
+
+  it('drops the old phone_1 index that would allow only one user without a phone', async () => {
+    await User.collection.dropIndex('phone_unique_when_set');
+    await User.collection.createIndex({ phone: 1 }, { unique: true, name: 'phone_1' });
+    await dropLegacyUserIndexes();
+    await User.createIndexes();
+    const names = (await User.collection.indexes()).map((i) => i.name);
+    expect(names).not.toContain('phone_1');
+    expect(names).toContain('phone_unique_when_set');
+    await dropLegacyUserIndexes(); // second run is a no-op
   });
 });

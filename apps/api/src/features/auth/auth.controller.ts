@@ -12,15 +12,17 @@ export class AuthController {
   // Identity (uid + phone) comes only from the verified Firebase token; the body is ignored.
   async sync(req: Request, res: Response, next: NextFunction) {
     try {
-      const { uid, phone } = req.firebase!;
+      const { uid, phone, email, name } = req.firebase!;
+      const googleName = name?.trim().slice(0, 100);
 
       const user = await User.findOneAndUpdate(
         { firebaseUid: uid },
         {
           $setOnInsert: {
             firebaseUid: uid,
-            phone,
-            name: 'New User',
+            ...(phone ? { phone } : {}),
+            ...(email ? { email } : {}),
+            name: googleName && googleName.length >= 2 ? googleName : 'New User',
             role: 'BUYER',
             onboardingComplete: false,
           },
@@ -39,19 +41,26 @@ export class AuthController {
         } catch (lookupErr) {
           return next(lookupErr);
         }
-        // Otherwise the phone is linked to a different Firebase account (e.g. account re-created)
-        return next(AppError.conflict('This phone number is already linked to another account. Contact support.'));
+        // Otherwise the phone or email is linked to a different Firebase account (e.g. account re-created)
+        return next(
+          AppError.conflict(
+            req.firebase!.phone
+              ? 'This phone number is already linked to another account. Contact support.'
+              : 'This Google account is already linked to another BuildX account. Contact support.'
+          )
+        );
       }
       next(err);
     }
   }
 
-  private sendSynced(user: { _id: unknown; phone: string; name: string; role: string; onboardingComplete: boolean; isActive: boolean }, res: Response) {
+  private sendSynced(user: { _id: unknown; phone?: string; email?: string; name: string; role: string; onboardingComplete: boolean; isActive: boolean }, res: Response) {
     if (!user.isActive) throw AppError.forbidden('Account suspended. Contact support.');
     res.json(
       ok({
         id: user._id,
         phone: user.phone,
+        email: user.email,
         name: user.name,
         role: user.role,
         onboardingComplete: user.onboardingComplete,
@@ -120,6 +129,7 @@ export class AuthController {
         ok({
           id: user._id,
           phone: user.phone,
+          email: user.email,
           name: user.name,
           role: user.role,
           onboardingComplete: true,
