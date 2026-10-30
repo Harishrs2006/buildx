@@ -4,7 +4,9 @@ import type { ApiClient } from '@buildx/web-core';
 // Mirrors apps/api's AuthController.sendSynced / onboard response shapes.
 export const syncedUserSchema = z.object({
   id: z.string(),
-  phone: z.string(),
+  // Phone OTP accounts have a phone; Google accounts have an email instead
+  phone: z.string().optional(),
+  email: z.string().optional(),
   name: z.string(),
   role: z.enum(['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN']),
   onboardingComplete: z.boolean(),

@@ -8,7 +8,8 @@ const POINTS = [
 ];
 
 // Split-screen frame for supplier sign-in and onboarding, matching the storefront's
-export function AuthShell({ children, step }: { children: ReactNode; step?: string }) {
+// recaptcha: show Google's required reCAPTCHA notice, only on screens that send an SMS code
+export function AuthShell({ children, step, recaptcha = false }: { children: ReactNode; step?: string; recaptcha?: boolean }) {
   return (
     <div className="grid min-h-[100svh] lg:grid-cols-[1.05fr_1fr]">
       <aside className="on-ink grain relative hidden overflow-hidden bg-ink p-12 text-sand lg:flex lg:flex-col xl:p-16">
@@ -55,11 +56,11 @@ export function AuthShell({ children, step }: { children: ReactNode; step?: stri
           {children}
         </div>
 
-        <p className="mx-auto max-w-[420px] text-center text-[12px] leading-relaxed text-stone">
+        {recaptcha && <p className="mx-auto max-w-[420px] text-center text-[12px] leading-relaxed text-stone">
           Protected by reCAPTCHA. Google&apos;s{' '}
           <a className="underline underline-offset-2 hover:text-ink" href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Privacy Policy</a> and{' '}
           <a className="underline underline-offset-2 hover:text-ink" href="https://policies.google.com/terms" target="_blank" rel="noreferrer">Terms</a> apply.
-        </p>
+        </p>}
       </main>
     </div>
   );
