@@ -101,3 +101,71 @@ describe('GET /suppliers/me/products/:id', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('product rules (create and edit)', () => {
+  const base = (categoryId: string) => ({
+    name: 'UltraTech OPC 53 cement',
+    categoryId,
+    description: 'OPC 53 grade, 50 kg bag, fresh stock',
+    unit: 'BAG',
+    basePrice: 380,
+  });
+
+  it('publishes with stock, shows out of stock without, and keeps drafts hidden', async () => {
+    const { headers } = await seedSupplier('rule-1');
+    const category = await Category.create({ name: 'Cement & Concrete', slug: 'cement-concrete' });
+    const url = '/api/v1/suppliers/me/products';
+    const withStock = await request(app).post(url).set(headers).send({ ...base(category.id), stockQuantity: 200 });
+    const noStock = await request(app).post(url).set(headers).send(base(category.id));
+    const draft = await request(app).post(url).set(headers).send({ ...base(category.id), stockQuantity: 50, status: 'DRAFT' });
+    expect([withStock.body.data.status, noStock.body.data.status, draft.body.data.status]).toEqual(['ACTIVE', 'OUT_OF_STOCK', 'DRAFT']);
+  });
+
+  it('saves GST mode and sorted bulk prices', async () => {
+    const { headers } = await seedSupplier('rule-2');
+    const category = await Category.create({ name: 'Cement & Concrete', slug: 'cement-concrete' });
+    const res = await request(app).post('/api/v1/suppliers/me/products').set(headers).send({
+      ...base(category.id), gstRate: 28, isGstInclusive: false, stockQuantity: 10, lowStockAlert: 20,
+      bulkPricing: [{ minQty: 500, price: 360 }, { minQty: 100, price: 370 }],
+    });
+    expect(res.status).toBe(201);
+    expect(res.body.data).toMatchObject({ gstRate: 28, isGstInclusive: false, lowStockAlert: 20, bulkPricing: [{ minQty: 100, price: 370 }, { minQty: 500, price: 360 }] });
+  });
+
+  it.each([
+    [{ gstRate: 15 }, 'gstRate'],
+    [{ basePrice: 0 }, 'basePrice'],
+    [{ stockQuantity: 2.5 }, 'stockQuantity'],
+    [{ description: 'short' }, 'description'],
+    [{ bulkPricing: [{ minQty: 100, price: 400 }] }, 'bulkPricing'],
+    [{ bulkPricing: [{ minQty: 100, price: 370 }, { minQty: 500, price: 375 }] }, 'bulkPricing'],
+    [{ status: 'DISCONTINUED' }, 'status'],
+    [{ categoryId: 'nope' }, 'categoryId'],
+    [{ verified: true }, ''],
+  ])('rejects %o', async (patch, field) => {
+    const { headers } = await seedSupplier(`rule-bad-${field}-${Math.random()}`);
+    const category = await Category.create({ name: 'Cement & Concrete', slug: `cement-${Math.random()}`.replace('.', '') });
+    const res = await request(app).post('/api/v1/suppliers/me/products').set(headers).send({ ...base(category.id), ...patch });
+    expect(res.status).toBe(400);
+    if (field) expect(res.body.error.details.map((d: { field: string }) => d.field)).toContain(field);
+  });
+
+  it('rejects a category that does not exist', async () => {
+    const { headers } = await seedSupplier('rule-3');
+    const res = await request(app).post('/api/v1/suppliers/me/products').set(headers).send(base('64b000000000000000000000'));
+    expect(res.status).toBe(400);
+  });
+
+  it('checks bulk prices against the stored price on edit', async () => {
+    const { headers, profile } = await seedSupplier('rule-4');
+    const product = await seedProduct(profile._id, { basePrice: 380 });
+    const url = `/api/v1/suppliers/me/products/${product._id}`;
+    const bad = await request(app).patch(url).set(headers).send({ bulkPricing: [{ minQty: 100, price: 390 }] });
+    expect(bad.status).toBe(400);
+    const good = await request(app).patch(url).set(headers).send({ bulkPricing: [{ minQty: 100, price: 370 }] });
+    expect(good.status).toBe(200);
+    // Lowering the price under an existing tier is refused too
+    const lower = await request(app).patch(url).set(headers).send({ basePrice: 360 });
+    expect(lower.status).toBe(400);
+  });
+});

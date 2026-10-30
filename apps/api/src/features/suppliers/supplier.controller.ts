@@ -5,6 +5,8 @@ import { Product } from '../../infrastructure/database/models/Product.model';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
+import { Category } from '../../infrastructure/database/models/Category.model';
+import { bulkPricingProblem } from './product-rules';
 import { ok } from '@buildx/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
@@ -267,12 +269,12 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
   try {
     const profile = await getSupplierProfile(req.auth!.userId);
 
+    // Body is checked by createProductSchema (supplier.routes.ts)
     const { name, categoryId, description, shortDescription, unit, basePrice, gstRate, isGstInclusive,
-      stockQuantity, minOrderQuantity, deliveryDays, tags, specifications, images } = req.body;
+      stockQuantity, minOrderQuantity, deliveryDays, lowStockAlert, tags, specifications, images, bulkPricing,
+      status } = req.body;
 
-    if (!name || !categoryId || !description || !unit || basePrice == null) {
-      throw AppError.badRequest('name, categoryId, description, unit, basePrice are required');
-    }
+    if (!(await Category.exists({ _id: categoryId }))) throw AppError.badRequest('That category does not exist');
 
     const baseSlug = slugify(name);
     let slug = baseSlug;
@@ -299,7 +301,10 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
       tags: tags ?? [],
       specifications: specifications ?? {},
       images: images ?? [],
-      status: 'ACTIVE',
+      bulkPricing: [...(bulkPricing ?? [])].sort((a: { minQty: number }, b: { minQty: number }) => a.minQty - b.minQty),
+      ...(lowStockAlert !== undefined ? { lowStockAlert } : {}),
+      // Drafts stay hidden; anything published with no stock shows as out of stock, not live
+      status: status === 'DRAFT' ? 'DRAFT' : (stockQuantity ?? 0) > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
     });
 
     res.status(201).json(ok(product));
@@ -313,20 +318,30 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     const profile = await getSupplierProfile(req.auth!.userId);
 
     const editable = ['name', 'description', 'shortDescription', 'basePrice', 'gstRate', 'isGstInclusive',
-      'stockQuantity', 'minOrderQuantity', 'deliveryDays', 'tags', 'specifications', 'status', 'unit', 'images'];
+      'stockQuantity', 'minOrderQuantity', 'deliveryDays', 'tags', 'specifications', 'status', 'unit', 'images',
+      'lowStockAlert', 'bulkPricing'];
     const update: Record<string, unknown> = {};
     for (const key of editable) {
       if (req.body[key] !== undefined) update[key] = req.body[key];
     }
 
+    const current = await Product.findOne({ _id: req.params.id, supplierId: profile._id })
+      .select('status basePrice minOrderQuantity bulkPricing').lean();
+    if (!current) throw AppError.notFound('Product');
+
+    // Bulk prices are checked against the price and minimum order they will sit next to
+    if (update.bulkPricing !== undefined || update.basePrice !== undefined || update.minOrderQuantity !== undefined) {
+      const tiers = (update.bulkPricing ?? current.bulkPricing) as { minQty: number; price: number }[];
+      const problem = bulkPricingProblem(tiers, (update.basePrice ?? current.basePrice) as number, (update.minOrderQuantity ?? current.minOrderQuantity) as number);
+      if (problem) throw AppError.badRequest('Validation failed', [{ field: 'bulkPricing', message: problem }]);
+      if (update.bulkPricing !== undefined) update.bulkPricing = [...tiers].sort((a, b) => a.minQty - b.minQty);
+    }
+
     // Stock drives availability: 0 hides the listing as out of stock, restocking brings it back.
     // An explicit status in the same request (e.g. DRAFT or DISCONTINUED) always wins.
     if (typeof update.stockQuantity === 'number' && update.status === undefined) {
-      const current = await Product.findOne({ _id: req.params.id, supplierId: profile._id }).select('status').lean();
-      if (current) {
-        if (update.stockQuantity <= 0 && current.status === 'ACTIVE') update.status = 'OUT_OF_STOCK';
-        if (update.stockQuantity > 0 && current.status === 'OUT_OF_STOCK') update.status = 'ACTIVE';
-      }
+      if (update.stockQuantity <= 0 && current.status === 'ACTIVE') update.status = 'OUT_OF_STOCK';
+      if (update.stockQuantity > 0 && current.status === 'OUT_OF_STOCK') update.status = 'ACTIVE';
     }
 
     // runValidators: stock/price/GST bounds in the schema apply to edits too

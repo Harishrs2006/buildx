@@ -12,6 +12,7 @@ import {
   listServicePincodes, addServicePincodes, removeServicePincode, previewServicePincode,
 } from '../serviceability/service-pincodes.controller';
 import { MAX_PINCODES_PER_REQUEST } from '../serviceability/serviceability.service';
+import { bulkPricingProblem } from './product-rules';
 
 // Strings are format-checked per item in the controller so each bad entry gets its own reason
 const addPincodesSchema = z.object({
@@ -38,6 +39,58 @@ export const updateProfileSchema = z
   .partial()
   .strict();
 
+// GST slabs in force for building materials (cement, steel, tiles, paint, pipes, wires...)
+export const GST_RATES = [0, 5, 12, 18, 28] as const;
+export const PRODUCT_UNITS = ['KG', 'TON', 'PIECE', 'BAG', 'BUNDLE', 'CUBIC_METER', 'SQUARE_METER', 'LITER', 'METER'] as const;
+const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ID');
+
+const productFields = {
+  name: z.string().trim().min(3, 'Name is too short').max(150),
+  categoryId: objectId,
+  description: z.string().trim().min(10, 'Describe the product in at least 10 characters').max(3000),
+  shortDescription: z.string().trim().max(200),
+  unit: z.enum(PRODUCT_UNITS),
+  basePrice: z.number().positive('Price must be more than 0').max(10_000_000),
+  gstRate: z.number().refine((r) => (GST_RATES as readonly number[]).includes(r), 'GST must be 0, 5, 12, 18 or 28%'),
+  isGstInclusive: z.boolean(),
+  stockQuantity: z.number().int('Stock must be a whole number').min(0).max(10_000_000),
+  minOrderQuantity: z.number().int().min(1).max(100_000),
+  deliveryDays: z.number().int().min(0).max(60),
+  lowStockAlert: z.number().int().min(0).max(10_000_000),
+  tags: z.array(z.string().trim().min(1).max(40)).max(20),
+  specifications: z.record(z.string().trim().min(1).max(60), z.string().trim().max(200))
+    .refine((o) => Object.keys(o).length <= 30, 'Too many specifications'),
+  images: z.array(z.object({
+    url: z.string().url().startsWith('https://'),
+    publicId: z.string().min(1).max(300),
+    altText: z.string().max(200).optional(),
+    isPrimary: z.boolean().optional(),
+    sortOrder: z.number().int().min(0).max(50).optional(),
+  })).max(8, 'Up to 8 photos'),
+  // Cheaper unit price from a quantity upwards, e.g. 100+ bags at ₹365
+  bulkPricing: z.array(z.object({
+    minQty: z.number().int().min(2, 'A bulk price starts at 2 or more'),
+    price: z.number().positive().max(10_000_000),
+  })).max(5, 'Up to 5 bulk prices'),
+  status: z.enum(['DRAFT', 'ACTIVE', 'INACTIVE', 'OUT_OF_STOCK', 'DISCONTINUED']),
+};
+
+export const createProductSchema = z
+  .object({
+    ...productFields,
+    // A new listing is either published or kept as a draft; the server decides live vs out of stock
+    status: z.enum(['DRAFT', 'ACTIVE']),
+  })
+  .partial({ shortDescription: true, gstRate: true, isGstInclusive: true, stockQuantity: true, minOrderQuantity: true,
+    deliveryDays: true, lowStockAlert: true, tags: true, specifications: true, images: true, bulkPricing: true, status: true })
+  .strict()
+  .superRefine((v, ctx) => {
+    const problem = bulkPricingProblem(v.bulkPricing, v.basePrice, v.minOrderQuantity);
+    if (problem) ctx.addIssue({ code: 'custom', path: ['bulkPricing'], message: problem });
+  });
+
+export const updateProductSchema = z.object(productFields).omit({ categoryId: true }).partial().strict();
+
 const router = Router();
 
 // Supplier-only; every handler resolves the caller's own SupplierProfile
@@ -54,8 +107,8 @@ router.post('/me/orders/:id/cod', validate(codCollectedSchema), confirmCodCollec
 
 router.get('/me/products', listSupplierProducts);
 router.get('/me/products/:id', getSupplierProduct);
-router.post('/me/products', createProduct);
-router.patch('/me/products/:id', updateProduct);
+router.post('/me/products', validate(createProductSchema), createProduct);
+router.patch('/me/products/:id', validate(updateProductSchema), updateProduct);
 router.delete('/me/products/:id', deleteProduct);
 
 // Delivery coverage (PIN codes this supplier serves)
