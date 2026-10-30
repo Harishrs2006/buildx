@@ -7,6 +7,7 @@ import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPa
 import { AppError } from '../../shared/errors/AppError';
 import { Category } from '../../infrastructure/database/models/Category.model';
 import { bulkPricingProblem } from './product-rules';
+import { ORDER_STATUSES } from '../ops/ops.schemas';
 import { ok } from '@buildx/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
@@ -122,10 +123,14 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
     const profile = await getSupplierProfile(req.auth!.userId);
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const limit = Math.min(20, parseInt(req.query.limit as string, 10) || 10);
-    const status = req.query.status as string | undefined;
+    // status may be a comma list (e.g. READY_FOR_PICKUP,ASSIGNED); cashPending=1 lists own-vehicle
+    // deliveries whose cash the supplier still has to confirm
+    const statuses = String(req.query.status ?? '').split(',').filter((s) => ORDER_STATUSES.includes(s as never));
+    const cashPending = req.query.cashPending === '1';
 
     const filter: Record<string, unknown> = { supplierId: profile._id };
-    if (status) filter.status = status;
+    if (statuses.length) filter.status = { $in: statuses };
+    if (cashPending) Object.assign(filter, { status: 'DELIVERED', deliveryMode: 'SUPPLIER', paymentMethod: 'COD', paymentStatus: 'PENDING' });
 
     const [orders, total] = await Promise.all([
       Order.find(filter)
