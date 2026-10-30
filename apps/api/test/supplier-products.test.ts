@@ -169,3 +169,16 @@ describe('product rules (create and edit)', () => {
     expect(lower.status).toBe(400);
   });
 });
+
+describe('GET /suppliers/me/products search and low stock', () => {
+  it('finds by name and lists only products at or below their alert level', async () => {
+    const { headers, profile } = await seedSupplier('find-1');
+    await seedProduct(profile._id, { name: 'UltraTech OPC 53 (bag)', stockQuantity: 5, lowStockAlert: 10 });
+    await seedProduct(profile._id, { name: 'TATA Tiscon 12 mm', stockQuantity: 500, lowStockAlert: 10 });
+    await seedProduct(profile._id, { name: 'ACC PPC', stockQuantity: 0, lowStockAlert: 10, status: 'OUT_OF_STOCK' });
+    const byName = await request(app).get('/api/v1/suppliers/me/products?q=opc 53 (').set(headers);
+    expect(byName.body.data.map((p: { name: string }) => p.name)).toEqual(['UltraTech OPC 53 (bag)']);
+    const low = await request(app).get('/api/v1/suppliers/me/products?lowStock=1').set(headers);
+    expect(low.body.data.map((p: { name: string }) => p.name)).toEqual(['UltraTech OPC 53 (bag)']);
+  });
+});

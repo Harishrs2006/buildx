@@ -230,9 +230,18 @@ export async function listSupplierProducts(req: Request, res: Response, next: Ne
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const limit = Math.min(20, parseInt(req.query.limit as string, 10) || 10);
     const status = req.query.status as string | undefined;
+    // q: name search; lowStock=1: still in stock but at or below the supplier's own alert level
+    const q = typeof req.query.q === 'string' ? req.query.q.trim().slice(0, 60) : '';
+    const lowStock = req.query.lowStock === '1';
 
     const filter: Record<string, unknown> = { supplierId: profile._id };
-    if (status) filter.status = status;
+    if (status && ['DRAFT', 'ACTIVE', 'INACTIVE', 'OUT_OF_STOCK', 'DISCONTINUED'].includes(status)) filter.status = status;
+    if (q) filter.name = { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' };
+    if (lowStock) {
+      filter.status = { $in: ['ACTIVE', 'INACTIVE'] };
+      filter.$expr = { $lte: ['$stockQuantity', '$lowStockAlert'] };
+      filter.stockQuantity = { $gt: 0 };
+    }
 
     const [products, total] = await Promise.all([
       Product.find(filter)
