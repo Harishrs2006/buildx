@@ -68,7 +68,7 @@ export default function SignInPage() {
 
   if (status === 'otp-sent') {
     return (
-      <AuthShell step="Step 2 of 2">
+      <AuthShell step="Step 2 of 2" recaptcha>
         <h1 className="font-display text-[clamp(2.25rem,5vw,3rem)] font-bold leading-[0.95] tracking-tightest">Enter the code</h1>
         <p className="mt-4 text-[16px] text-stone">
           We sent a 6-digit code to <span className="font-mono text-ink">{phoneInFlight}</span>.{' '}
@@ -101,7 +101,7 @@ export default function SignInPage() {
   const signingIn = googleBusy || status === 'loading';
 
   return (
-    <AuthShell step="Sign in">
+    <AuthShell step="Sign in" recaptcha={PHONE_SIGNIN}>
       <h1 className="font-display text-[clamp(2.25rem,5vw,3rem)] font-bold leading-[0.95] tracking-tightest">Supplier sign in</h1>
       <p className="mt-4 text-[16px] text-stone">Sign in with your Google account. New suppliers create an account the same way, it takes a few seconds and costs nothing.</p>
       <div className="mt-8 flex flex-col gap-5">
