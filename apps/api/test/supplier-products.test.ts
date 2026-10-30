@@ -182,3 +182,16 @@ describe('GET /suppliers/me/products search and low stock', () => {
     expect(low.body.data.map((p: { name: string }) => p.name)).toEqual(['UltraTech OPC 53 (bag)']);
   });
 });
+
+describe('supplier product responses', () => {
+  it('return the category populated after create and edit (the web portal validates it)', async () => {
+    const { headers } = await seedSupplier('shape-1');
+    const category = await Category.create({ name: 'Cement & Concrete', slug: 'cement-concrete' });
+    const created = await request(app).post('/api/v1/suppliers/me/products').set(headers).send({
+      name: 'ACC PPC cement', categoryId: category.id, description: 'PPC, 50 kg bag', unit: 'BAG', basePrice: 360, stockQuantity: 5,
+    });
+    expect(created.body.data.categoryId).toMatchObject({ name: 'Cement & Concrete', slug: 'cement-concrete' });
+    const edited = await request(app).patch(`/api/v1/suppliers/me/products/${created.body.data._id}`).set(headers).send({ stockQuantity: 9 });
+    expect(edited.body.data.categoryId).toMatchObject({ slug: 'cement-concrete' });
+  });
+});

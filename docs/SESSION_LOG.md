@@ -31,6 +31,7 @@ Times are IST.
 5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
    Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
 6. Add a strict CSP only together with an end-to-end OTP test.
+9. PARKED by user 2026-10-30: real SMS / Blaze / Google sign-in decision. Mobile app pass 2 also not started.
 8. DONE 2026-10-29: ops console LIVE at https://buildx-ops.vercel.app (Vercel buildx-ops). Was: needs a Vercel project (root apps/web, 4 NEXT_PUBLIC_FIREBASE_* +
    NEXT_PUBLIC_API_URL), its domain in Firebase authorized domains + API CORS, and an ops account via
    `npm run grant-role --workspace=apps/api -- --phone <n> --role ADMIN`. Mobile app still has the old logo
@@ -232,3 +233,15 @@ Times are IST.
   vgud,48kc,ops (saved + redeployed). Verified: CORS allows all 3 origins; buildx-ops.vercel.app serves the new console.
   Admin signs in with +917019282018 and the private code in buildx-secrets/ADMIN_SIGNIN.txt (not tested by me: I do not
   enter credentials on production). Next: mobile pass 2 / new logo in app (native rebuild, ask), real SMS (Blaze, ask).
+- 2026-10-30 20:43 User: seller website UX must be 10/10 for listing and updating products (auth parked).
+  Branch feat/seller-ux (based on fix/otp-resend-hang, so PR #44 should merge first). API: product create/edit now
+  Zod-validated (GST slab 0/5/12/18/28, whole stock, bulk tiers rule in features/suppliers/product-rules.ts, max 8
+  photos, strict keys); create with stock 0 = OUT_OF_STOCK, DRAFT allowed; isGstInclusive/bulkPricing/lowStockAlert
+  editable; create/edit responses populate categoryId (web schema needed it: saves used to error after succeeding);
+  list supports q= and lowStock=1. 280 tests pass. Seller web: ProductForm rewrite (GST rate + included/on-top switch
+  with live breakdown, bulk prices editor, low-stock level, live buyer preview, missing-items bar, Save draft,
+  unsaved-changes guard, ?from= 'list another size', own categories first/preselected); products page (saved banner +
+  List another size, search, Running low/Paused filters, inline Price & stock, Pause/Resume); stock page (+10/+50/+100,
+  Save all, Undo, low-stock by lowStockAlert, search); setup PINs add the valid ones and keep refused ones; plurals.
+  Tested end to end on localhost with an in-memory DB sandbox (test number 7019282019, nothing written to prod).
+  Not visually checked at phone width (Chrome window would not resize).

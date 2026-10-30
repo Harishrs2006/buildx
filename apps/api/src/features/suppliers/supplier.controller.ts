@@ -316,6 +316,8 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
       status: status === 'DRAFT' ? 'DRAFT' : (stockQuantity ?? 0) > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
     });
 
+    // Same shape as the list and GET responses: the web portal validates it
+    await product.populate('categoryId', 'name slug');
     res.status(201).json(ok(product));
   } catch (err) { next(err); }
 }
@@ -358,7 +360,7 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
       { _id: req.params.id, supplierId: profile._id },
       update,
       { new: true, runValidators: true }
-    ).lean();
+    ).populate('categoryId', 'name slug').lean();
     if (!product) throw AppError.notFound('Product');
     res.json(ok(product));
   } catch (err) { next(err); }
