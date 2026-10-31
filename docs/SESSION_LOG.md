@@ -266,3 +266,7 @@ Times are IST.
   NEXT_PUBLIC_PHONE_SIGNIN=true; checkout asks contact phone; profile shows email). Ops console shows owner email
   when there is no phone. Rule in CLAUDE.md updated. NOTE: I overwrote apps/buyer-web/.env.local by mistake and
   restored it from apps/web/.env.local (same Firebase project, API = Render). Branch feat/buyer-google-signin.
+- 2026-10-31 15:55 IST: #49 merged by user; Vercel prod deploys OK. Live buyer /signin in my Chrome showed the new
+  "not a buyer account" screen (session from a seller/admin account), which had no way out. Added a Sign out button
+  and account-neutral copy to wrong-role screens on buyer (signin + RequireAuth) and seller (RequireSupplier).
+  Firebase has 1 Google user so far. Branch fix/wrong-role-signout.

@@ -7,7 +7,7 @@ import { useAuth } from './AuthProvider';
 // Wraps just the pages that need a signed-in buyer (cart/checkout, orders, profile) — browsing
 // and product pages stay public, unlike apps/seller-web's whole-app RequireSupplier.
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { status } = useAuth();
+  const { status, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -25,11 +25,12 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
   if (status === 'wrong-role') {
     return (
       <div className="flex flex-col items-center gap-2 px-6 py-24 text-center">
-        <p className="font-headline text-lg font-bold text-on-surface">This number isn't a buyer account</p>
+        <p className="font-headline text-lg font-bold text-on-surface">This account isn't a buyer account</p>
         <p className="max-w-sm font-body text-sm text-on-surface-variant">
-          This phone number is already registered on BuildX with a different role. Sign in with a
-          different number to shop here.
+          It is already registered on BuildX with a different role, such as a supplier. Sign out, then
+          sign in with another account to shop here.
         </p>
+        <button type="button" onClick={() => void signOut()} className="btn-ink mt-4">Sign out</button>
       </div>
     );
   }
