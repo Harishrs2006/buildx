@@ -4,13 +4,14 @@ import { Logo, LogoMark } from '../brand/Logo';
 import { SplitLines } from '../motion/Reveal';
 
 const POINTS = [
-  { icon: 'smartphone', text: 'One phone number, no passwords' },
+  { icon: 'account_circle', text: 'Sign in with Google, no new password' },
   { icon: 'pin_drop', text: 'Delivery checked against your site PIN' },
   { icon: 'payments', text: 'Pay cash when materials arrive' },
 ];
 
 // Split-screen frame for sign-in and onboarding: brand story on ink (desktop), form on sand.
-export function AuthShell({ children, step }: { children: ReactNode; step?: string }) {
+// recaptcha: show Google's required reCAPTCHA notice, only on screens that send an SMS code
+export function AuthShell({ children, step, recaptcha = false }: { children: ReactNode; step?: string; recaptcha?: boolean }) {
   return (
     <div className="grid min-h-[100svh] lg:grid-cols-[1.05fr_1fr]">
       <aside className="on-ink grain relative hidden overflow-hidden bg-ink p-12 text-sand lg:flex lg:flex-col xl:p-16">
@@ -75,7 +76,7 @@ export function AuthShell({ children, step }: { children: ReactNode; step?: stri
           {children}
         </div>
 
-        <p className="mx-auto max-w-[420px] text-center text-[12px] leading-relaxed text-stone">
+        {recaptcha && <p className="mx-auto max-w-[420px] text-center text-[12px] leading-relaxed text-stone">
           Protected by reCAPTCHA. Google&apos;s{' '}
           <a className="underline underline-offset-2 hover:text-ink" href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">
             Privacy Policy
@@ -85,7 +86,7 @@ export function AuthShell({ children, step }: { children: ReactNode; step?: stri
             Terms
           </a>{' '}
           apply.
-        </p>
+        </p>}
       </main>
     </div>
   );

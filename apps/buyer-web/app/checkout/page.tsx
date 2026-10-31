@@ -36,7 +36,7 @@ function CheckoutForm() {
   const [quote, setQuote] = useState<{ status: 'loading' } | { status: 'success'; data: Quote } | { status: 'error'; message: string }>({ status: 'loading' });
   const [label, setLabel] = useState('Site');
   const [fullAddress, setFullAddress] = useState('');
-  const [contactPhone, setContactPhone] = useState(user?.phone.replace(/\D/g, '').slice(-10) ?? '');
+  const [contactPhone, setContactPhone] = useState(user?.phone?.replace(/\D/g, '').slice(-10) ?? '');
   const [placing, setPlacing] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   const idempotencyKey = useMemo(() => crypto.randomUUID(), []);

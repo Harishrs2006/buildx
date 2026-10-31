@@ -262,3 +262,7 @@ Times are IST.
   User.phone optional, new email field, partial unique indexes; server start drops the old phone_1 index. Seller
   sign-in is now "Continue with Google" (phone form behind NEXT_PUBLIC_PHONE_SIGNIN=true). 288 tests pass.
   CLAUDE.md auth rule updated. Branch feat/seller-google-signin.
+- 2026-10-31 02:20 IST: Google sign-in for the BUYER website too (same pattern as seller; phone form behind
+  NEXT_PUBLIC_PHONE_SIGNIN=true; checkout asks contact phone; profile shows email). Ops console shows owner email
+  when there is no phone. Rule in CLAUDE.md updated. NOTE: I overwrote apps/buyer-web/.env.local by mistake and
+  restored it from apps/web/.env.local (same Firebase project, API = Render). Branch feat/buyer-google-signin.

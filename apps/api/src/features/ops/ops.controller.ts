@@ -96,7 +96,7 @@ export async function listOrders(req: Request, res: Response, next: NextFunction
       Order.find(filter)
         .select(summaryFields)
         .populate('supplierId', 'businessName')
-        .populate('buyerId', 'name phone')
+        .populate('buyerId', 'name phone email')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
@@ -112,7 +112,7 @@ export async function getOrder(req: Request, res: Response, next: NextFunction) 
   try {
     const order = await Order.findById(orderId(req))
       .select('+opsNotes')
-      .populate('buyerId', 'name phone')
+      .populate('buyerId', 'name phone email')
       .populate('supplierId', 'businessName whatsappNumber userId')
       .populate('driverId', 'name phone')
       .lean();
@@ -269,7 +269,7 @@ export async function addNote(req: Request, res: Response, next: NextFunction) {
 export async function listDrivers(_req: Request, res: Response, next: NextFunction) {
   try {
     const [drivers, load] = await Promise.all([
-      DeliveryPartner.find().populate('userId', 'name phone isActive').sort({ isAvailable: -1 }).limit(200).lean(),
+      DeliveryPartner.find().populate('userId', 'name phone email isActive').sort({ isAvailable: -1 }).limit(200).lean(),
       Order.aggregate([
         { $match: { status: { $in: ['ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'] }, driverId: { $exists: true }, ...modeFilter('PLATFORM') } },
         { $group: { _id: '$driverId', active: { $sum: 1 } } },
@@ -288,7 +288,7 @@ export async function listSuppliers(req: Request, res: Response, next: NextFunct
   try {
     const { verification } = req.query as { verification?: string };
     const suppliers = await SupplierProfile.find(verification ? { verificationStatus: verification } : {})
-      .populate('userId', 'name phone isActive')
+      .populate('userId', 'name phone email isActive')
       .sort({ createdAt: -1 })
       .limit(200)
       .lean();
@@ -328,7 +328,7 @@ export async function setUserActive(req: Request, res: Response, next: NextFunct
       { _id: id, role: { $ne: 'ADMIN' } }, // admins can't be suspended through the API
       { isActive },
       { new: true }
-    ).select('name phone role isActive').lean();
+    ).select('name phone email role isActive').lean();
     if (!user) throw AppError.notFound('User (or user is an admin)');
     logger.info('[ops] user active changed', { adminUserId: req.auth!.userId, userId: id, isActive, reason });
     res.json(ok(user));

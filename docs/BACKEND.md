@@ -13,7 +13,7 @@ the rules the server enforces. Code lives in `apps/api` (Express + MongoDB, Type
 | Admin / ops | `apps/web`. Verifies suppliers, handles stuck orders. Needs repair. | Not deployed yet |
 | API | `apps/api`. The only thing that touches the database. | Render (`render.yaml`) |
 | Database | MongoDB Atlas, database `buildx`. | Atlas cluster0 |
-| Sign-in | Firebase phone OTP (project buildx-15494); Google sign-in on the seller website. | Google |
+| Sign-in | Firebase phone OTP (project buildx-15494); Google sign-in on the seller and buyer websites. | Google |
 | Images | Product photos uploaded through `POST /upload/image`. | Cloud storage |
 
 Every app calls the API through the shared client in `packages/web-core`. No app talks to the
@@ -22,10 +22,11 @@ status.
 
 ## 2. Sign-in and roles
 
-1. The user enters their mobile number and Firebase sends a 6-digit OTP. On the seller website the
-   supplier taps "Continue with Google" instead (free; SMS needs the paid Firebase plan). The API
+1. The user enters their mobile number and Firebase sends a 6-digit OTP. On the seller and buyer
+   websites people tap "Continue with Google" instead (free; SMS needs the paid Firebase plan). The API
    accepts a token with a verified phone, or a Google token with a verified email, nothing else.
-   Google users have an email and no phone; their WhatsApp number comes from onboarding.
+   Google users have an email and no phone: sellers give a WhatsApp number at onboarding,
+   buyers give a contact phone with each delivery address.
 2. The app gets a Firebase ID token and calls `POST /auth/sync`. The API checks the token with
    Firebase Admin and finds or creates the user.
 3. A new user calls `POST /auth/onboard` once and picks a role: `BUYER`, `SUPPLIER` or

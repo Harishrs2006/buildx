@@ -11,8 +11,9 @@ and terminal chat history is lost; this log is the only memory.
 - PRD (`docs/BuildX_PRD.pdf`): never invent prices, stock, ratings, reviews, delivery promises,
   supplier coverage or statistics. Sample data must be labelled as sample.
 - Backend (apps/api) is authoritative for prices, stock, roles and order status.
-- Auth is Firebase phone OTP, plus Google sign-in on the seller website only (user decision
-  2026-10-31: free, SMS needs the paid Firebase plan). Do not add any other auth provider.
+- Auth is Firebase phone OTP, plus Google sign-in on the seller and buyer websites (user decision
+  2026-10-31: free, SMS needs the paid Firebase plan). Ops console and mobile app stay phone OTP.
+  Do not add any other auth provider.
 - Every asset (images, logos, fonts, animations) lives in the repo and is pushed.
 
 ## Map

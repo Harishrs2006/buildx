@@ -82,7 +82,7 @@ function SupplierCard({ supplier, onChanged }: { supplier: OpsSupplier; onChange
             </div>
             <h2 className="mt-2 font-display text-xl font-semibold tracking-tight">{supplier.businessName}</h2>
             <p className="mt-0.5 text-[14px] text-stone">
-              {owner?.name ?? 'Owner'} · <span className="font-mono">{owner?.phone ?? 'no phone'}</span>
+              {owner?.name ?? 'Owner'} · <span className="font-mono">{owner?.phone ?? owner?.email ?? 'no phone'}</span>
               {owner?.isActive === false && <span className="text-error"> · account suspended</span>}
             </p>
           </div>

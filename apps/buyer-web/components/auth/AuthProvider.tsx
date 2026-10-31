@@ -3,12 +3,15 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   RecaptchaVerifier,
+  GoogleAuthProvider,
   signInWithPhoneNumber,
+  signInWithPopup,
+  signInWithRedirect,
   onAuthStateChanged,
   signOut as firebaseSignOut,
   type ConfirmationResult,
 } from 'firebase/auth';
-import { useApiClient } from '@buildx/web-core';
+import { ApiClientError, useApiClient } from '@buildx/web-core';
 import { getFirebaseAuth } from '../../lib/firebase';
 import { syncAuth, onboardBuyer, type SyncedUser } from '../../lib/auth';
 
@@ -27,6 +30,8 @@ type AuthContextValue = {
   error: string | null;
   phoneInFlight: string | null;
   sendOtp: (phone: string) => Promise<void>;
+  // Free sign-in: SMS codes need Firebase's paid plan, Google sign-in does not
+  signInWithGoogle: () => Promise<void>;
   confirmOtp: (code: string) => Promise<void>;
   onboard: (name: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -56,6 +61,13 @@ function describeAuthError(err: unknown): string {
       return 'That code is incorrect. Check the SMS and try again.';
     case 'app/send-timeout':
       return 'Sending the code took too long. Check your connection and try again.';
+    case 'auth/operation-not-allowed':
+    case 'auth/unauthorized-domain':
+      return 'Google sign-in is not available on this site yet. Please try again later.';
+    case 'auth/network-request-failed':
+      return 'No internet connection. Check your connection and try again.';
+    case 'auth/account-exists-with-different-credential':
+      return 'This email is already used with another sign-in method. Contact BuildX support.';
     case 'auth/code-expired':
       return 'That code expired. Request a new one.';
     // Project-side SMS problems (Firebase billing off, daily SMS quota used up): not the user's fault
@@ -91,14 +103,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus((s) => (s === 'otp-sent' ? s : 'signed-out'));
         return;
       }
+      // Signed in to Firebase; keep screens busy until BuildX has loaded the account
+      setStatus('loading');
       try {
         const synced = await syncAuth(client);
         setUser(synced);
         if (!synced.onboardingComplete) setStatus('needs-onboarding');
         else if (synced.role !== 'BUYER') setStatus('wrong-role');
         else setStatus('signed-in');
-      } catch {
-        setError('Could not reach BuildX. Check your connection and try again.');
+      } catch (err) {
+        // 401/403/409 carry a message meant for the user (suspended, already linked); otherwise it was the network
+        const known = err instanceof ApiClientError && (err.status === 401 || err.status === 403 || err.status === 409);
+        setError(known ? err.message : 'Could not reach BuildX. Check your connection and try again.');
+        if (known) await firebaseSignOut(getFirebaseAuth()).catch(() => undefined);
         setStatus('signed-out');
       }
     });
@@ -130,6 +147,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(describeAuthError(err));
       recaptchaRef.current?.clear();
       recaptchaRef.current = null;
+    }
+  }, []);
+
+  const signInWithGoogle = useCallback(async () => {
+    setError(null);
+    const auth = getFirebaseAuth();
+    const provider = new GoogleAuthProvider();
+    // Shared family or site-office computers: always let the buyer pick which Google account
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged fires next and drives the sync + status transition above
+    } catch (err) {
+      const code = (err as { code?: string } | null)?.code;
+      // Closing the Google window is a choice, not an error
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return;
+      if (code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, provider).catch((e) => setError(describeAuthError(e)));
+        return;
+      }
+      setError(describeAuthError(err));
     }
   }, []);
 
@@ -176,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ status, user, error, phoneInFlight, sendOtp, confirmOtp, onboard, signOut, resetOtp }}>
+    <AuthContext.Provider value={{ status, user, error, phoneInFlight, sendOtp, signInWithGoogle, confirmOtp, onboard, signOut, resetOtp }}>
       {children}
       <div id="recaptcha-container" />
     </AuthContext.Provider>
