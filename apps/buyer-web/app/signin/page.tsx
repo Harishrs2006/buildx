@@ -29,7 +29,7 @@ function formatPhone(digits: string) {
 }
 
 function SignInForm() {
-  const { status, error, sendOtp, signInWithGoogle, confirmOtp, resetOtp, phoneInFlight } = useAuth();
+  const { status, error, sendOtp, signInWithGoogle, confirmOtp, resetOtp, phoneInFlight, signOut } = useAuth();
   const router = useRouter();
   const next = safeNext(useSearchParams().get('next'));
   const [phone, setPhone] = useState('');
@@ -116,8 +116,9 @@ function SignInForm() {
       <AuthShell>
         <h1 className="font-display text-4xl font-bold tracking-tightest">This account is not a buyer account</h1>
         <p className="mt-4 text-[16px] leading-relaxed text-stone">
-          It is already registered on BuildX with a different role, such as a supplier. Sign in with another Google account to shop here.
+          It is already registered on BuildX with a different role, such as a supplier. Sign out, then sign in with another Google account to shop here.
         </p>
+        <button type="button" onClick={() => void signOut()} className="btn-ink mt-8 self-start">Sign out</button>
       </AuthShell>
     );
   }

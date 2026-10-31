@@ -7,7 +7,7 @@ import { useAuth } from './AuthProvider';
 // Wraps every page under the dashboard shell. Firebase restoring a session is async, so this
 // also owns the brief "loading" flash rather than letting each page guess.
 export function RequireSupplier({ children }: { children: React.ReactNode }) {
-  const { status, error } = useAuth();
+  const { status, error, signOut } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -29,11 +29,12 @@ export function RequireSupplier({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen items-center justify-center px-6 text-center">
         <div className="max-w-sm">
-          <p className="font-display text-2xl font-semibold tracking-tight">This number isn&apos;t a supplier account</p>
+          <p className="font-display text-2xl font-semibold tracking-tight">This account isn&apos;t a supplier account</p>
           <p className="mt-2 text-[15px] text-stone">
-            This phone number is already registered on BuildX with a different role. Sign in with the
-            number you use for your supplier business, or contact support if this looks wrong.
+            It is already registered on BuildX as a buyer or another role. Sign out, then sign in with the
+            Google account you use for your business, or contact support if this looks wrong.
           </p>
+          <button type="button" onClick={() => void signOut()} className="btn-ink mt-6 px-6">Sign out</button>
         </div>
       </div>
     );
