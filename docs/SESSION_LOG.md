@@ -304,3 +304,8 @@ Times are IST.
   the sign-in screen silently. Fix (pushed to PR #52): sync waits 60s and retries once, sign-in screen shows a
   "Try again" / "Use a different account" box (auth.store syncError). New APK at Desktop/BuildX/BuildX-test.apk.
   NEXT: user installs it and confirms; then user merges PR #52.
+- 2026-11-04 18:30 IST: Still spinning on the user's phone (Google sign-in at 18:14, API awake). Root cause (old bug):
+  AuthGate in app/_layout.tsx never navigated out of (auth) for onboarded users (every branch required !inAuth), so
+  set-up accounts stayed on the sign-in screen after both Google and OTP sign-in. Fixed: route each role to its home
+  whenever it is outside its group (also removed the 2 old typed-route TS errors). Reading the user's DB record was
+  blocked by the permission classifier (not attempted further). New APK at Desktop/BuildX/BuildX-test.apk.
