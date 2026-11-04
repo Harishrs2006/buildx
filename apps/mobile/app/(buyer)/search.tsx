@@ -1,172 +1,164 @@
-import {
-  View, Text, TextInput, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Image,
-} from 'react-native';
+import { View, Text, TextInput, StyleSheet, FlatList, Pressable, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useProductSearch, getProductImageUrl, type Product } from '../../src/hooks/useProducts';
 import { useCartStore } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { Button, EmptyState, Eyebrow, Icon } from '../../src/components/ui';
+import { CartButton } from '../../src/components/CartButton';
+import { useAddToCart } from '../../src/components/useAddToCart';
 
-const SUGGESTIONS = ['Cement', 'Sand', 'Bricks', 'Steel', 'JCB Rental', 'Plywood', 'PVC Pipes', 'Paint'];
+const SUGGESTIONS = ['Cement', 'Sand', 'Bricks', 'Steel', 'JCB rental', 'Plywood', 'PVC pipes', 'Paint'];
 
-function SearchProductCard({ item }: { item: Product }) {
+function ResultRow({ item, onAdd }: { item: Product; onAdd: (p: Product) => void }) {
   const router = useRouter();
-  const addItem = useCartStore((s) => s.addItem);
   const inCart = useCartStore((s) => s.items.some((i) => i.productId === item._id));
   const thumbUrl = getProductImageUrl(item.images);
+  const outOfStock = item.stockQuantity <= 0;
 
   return (
-    <TouchableOpacity
-      style={styles.resultCard}
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
       onPress={() => router.push({ pathname: '/(buyer)/product/[id]', params: { id: item._id } })}
-      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={item.name}
     >
       {thumbUrl ? (
-        <Image source={{ uri: thumbUrl }} style={styles.resultThumb} resizeMode="cover" />
+        <Image source={{ uri: thumbUrl }} style={styles.thumb} contentFit="cover" transition={150} />
       ) : (
-        <View style={styles.resultThumbPlaceholder}><Text style={{ fontSize: 20 }}>🏗️</Text></View>
+        <View style={[styles.thumb, styles.thumbEmpty]}><Icon name="package-variant-closed" size={24} color={Colors.stone} /></View>
       )}
-      <View style={styles.resultBody}>
-        <Text style={styles.resultSupplier} numberOfLines={1}>{item.supplierId?.businessName}</Text>
-        <Text style={styles.resultName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.resultPrice}>₹{item.basePrice.toLocaleString('en-IN')} / {item.unit}</Text>
+      <View style={styles.rowBody}>
+        <Text style={styles.supplier} numberOfLines={1}>{item.supplierId?.businessName}</Text>
+        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.price}>
+          ₹{item.basePrice.toLocaleString('en-IN')} <Text style={styles.unit}>/ {item.unit}</Text>
+        </Text>
+        {outOfStock ? <Text style={styles.oos}>Out of stock</Text> : null}
       </View>
-      <TouchableOpacity
-        style={[styles.resultAddBtn, inCart && styles.resultAddBtnActive]}
-        onPress={() => addItem({
-          productId: item._id,
-          name: item.name,
-          image: thumbUrl,
-          unit: item.unit,
-          basePrice: item.basePrice,
-          gstRate: item.gstRate,
-          isGstInclusive: item.isGstInclusive,
-          bulkPricing: item.bulkPricing,
-          supplierId: item.supplierId?._id ?? '',
-          supplierName: item.supplierId?.businessName ?? '',
-        })}
-      >
-        <Text style={[styles.resultAddBtnText, inCart && { color: '#fff' }]}>{inCart ? '✓' : '+'}</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
+      {outOfStock ? null : (
+        <Pressable
+          style={[styles.addBtn, inCart && styles.addBtnOn]}
+          onPress={() => onAdd(item)}
+          hitSlop={6}
+          accessibilityRole="button"
+          accessibilityLabel={inCart ? `Add another ${item.name}` : `Add ${item.name} to cart`}
+        >
+          <Icon name={inCart ? 'check' : 'plus'} size={20} color={inCart ? Colors.ink : Colors.sand} />
+        </Pressable>
+      )}
+    </Pressable>
   );
 }
 
 export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState('');
+  const { add, sheet } = useAddToCart();
 
-  const { data, isLoading } = useProductSearch(query);
-  const products = query.length >= 2 ? (data?.products ?? []) : [];
-  const cartCount = useCartStore((s) => s.itemCount());
+  const { data, isLoading, isError, refetch } = useProductSearch(query);
+  const searching = query.trim().length >= 2;
+  const products = searching ? (data?.products ?? []) : [];
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Search bar row */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          placeholder="Search cement, JCB, pipes..."
-          placeholderTextColor={Colors.textMuted}
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-          autoFocus
-        />
-        {query.length > 0 && (
-          <TouchableOpacity onPress={() => setQuery('')} style={styles.clearBtn}>
-            <Text style={styles.clearText}>✕</Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity style={styles.cartBtn} onPress={() => router.push('/(buyer)/cart' as never)}>
-          <Text style={styles.cartIcon}>🛒</Text>
-          {cartCount > 0 && (
-            <View style={styles.cartBadge}><Text style={styles.cartBadgeText}>{cartCount}</Text></View>
-          )}
-        </TouchableOpacity>
+        <Pressable onPress={() => router.back()} style={styles.back} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back">
+          <Icon name="arrow-left" size={22} />
+        </Pressable>
+        <View style={styles.field}>
+          <Icon name="magnify" size={20} color={Colors.stone} />
+          <TextInput
+            style={styles.input}
+            placeholder="Cement, JCB, pipes…"
+            placeholderTextColor={Colors.stoneLight}
+            value={query}
+            onChangeText={setQuery}
+            returnKeyType="search"
+            autoFocus
+            accessibilityLabel="Search materials"
+          />
+          {query.length > 0 ? (
+            <Pressable onPress={() => setQuery('')} hitSlop={10} accessibilityRole="button" accessibilityLabel="Clear search">
+              <Icon name="close-circle" size={18} color={Colors.stone} />
+            </Pressable>
+          ) : null}
+        </View>
+        <CartButton />
       </View>
 
-      {query.length < 2 ? (
+      {!searching ? (
         <View style={styles.suggestions}>
-          <Text style={styles.suggestTitle}>Popular searches</Text>
-          <View style={styles.suggestChips}>
+          <Eyebrow>Try searching for</Eyebrow>
+          <View style={styles.chips}>
             {SUGGESTIONS.map((s) => (
-              <TouchableOpacity
-                key={s}
-                style={styles.suggestChip}
-                onPress={() => setQuery(s)}
-              >
-                <Text style={styles.suggestChipText}>{s}</Text>
-              </TouchableOpacity>
+              <Pressable key={s} style={styles.chip} onPress={() => setQuery(s)} accessibilityRole="button">
+                <Text style={styles.chipText}>{s}</Text>
+              </Pressable>
             ))}
           </View>
         </View>
       ) : isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
+      ) : isError ? (
+        <EmptyState
+          icon="wifi-off"
+          title="Search did not work"
+          body="Check your connection and try again."
+          action={<Button title="Try again" variant="ghost" onPress={() => refetch()} />}
+        />
       ) : products.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={{ fontSize: 36, marginBottom: 12 }}>🔍</Text>
-          <Text style={styles.emptyTitle}>No results for "{query}"</Text>
-          <Text style={styles.emptySub}>Try a different keyword or browse categories.</Text>
-          <TouchableOpacity style={styles.browseBtn} onPress={() => router.back()}>
-            <Text style={styles.browseBtnText}>Browse categories</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState
+          icon="magnify-close"
+          title={`Nothing for "${query.trim()}"`}
+          body="Try a different word, or browse the categories."
+          action={<Button title="Browse categories" variant="ghost" onPress={() => router.back()} />}
+        />
       ) : (
-        <>
-          <Text style={styles.resultCount}>{data?.pagination.total} results for "{query}"</Text>
-          <FlatList
-            data={products}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item }) => <SearchProductCard item={item} />}
-            contentContainerStyle={styles.list}
-          />
-        </>
+        <FlatList
+          data={products}
+          keyExtractor={(item) => item._id}
+          renderItem={({ item }) => <ResultRow item={item} onAdd={add} />}
+          contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
+          ListHeaderComponent={
+            <Text style={styles.count}>
+              {data?.pagination.total ?? products.length} result{(data?.pagination.total ?? products.length) === 1 ? '' : 's'}
+            </Text>
+          }
+        />
       )}
+      {sheet}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 8 },
-  backBtn: { padding: 4 },
-  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
-  input: { fontFamily: Font.regular, flex: 1, height: 40, backgroundColor: Colors.surfaceAlt, borderRadius: 10, paddingHorizontal: 12, fontSize: 15, color: Colors.text, borderWidth: 1, borderColor: Colors.border },
-  clearBtn: { padding: 4 },
-  clearText: { fontFamily: Font.regular, fontSize: 14, color: Colors.textMuted },
-  cartBtn: { position: 'relative', padding: 4 },
-  cartIcon: { fontFamily: Font.regular, fontSize: 22 },
-  cartBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: Colors.primary, borderRadius: 8, minWidth: 14, height: 14, alignItems: 'center', justifyContent: 'center' },
-  cartBadgeText: { fontFamily: Font.bold, fontSize: 9, color: '#fff' },
-  suggestions: { paddingHorizontal: 20, paddingTop: 24 },
-  suggestTitle: { fontFamily: Font.bold, fontSize: 13, color: Colors.textSecondary, marginBottom: 14 },
-  suggestChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  suggestChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
-  suggestChipText: { fontFamily: Font.regular, fontSize: 13, color: Colors.text },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  emptyTitle: { fontFamily: Font.bold, fontSize: 16, color: Colors.text, marginBottom: 8 },
-  emptySub: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20, marginBottom: 20 },
-  browseBtn: { borderWidth: 1, borderColor: Colors.primary, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 },
-  browseBtnText: { fontFamily: Font.bold, color: Colors.primary, fontSize: 14 },
-  resultCount: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, paddingHorizontal: 16, paddingVertical: 10 },
-  list: { paddingHorizontal: 16, paddingBottom: 24 },
-  resultCard: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  resultThumb: { width: 64, height: 64, borderRadius: 10 },
-  resultThumbPlaceholder: { width: 64, height: 64, borderRadius: 10, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-  resultBody: { flex: 1 },
-  resultSupplier: { fontFamily: Font.regular, fontSize: 10, color: Colors.textMuted, marginBottom: 2 },
-  resultName: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text, lineHeight: 18 },
-  resultPrice: { fontFamily: Font.bold, fontSize: 13, color: Colors.primary, marginTop: 4 },
-  resultAddBtn: { width: 32, height: 32, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
-  resultAddBtnActive: { backgroundColor: Colors.primary },
-  resultAddBtnText: { fontFamily: Font.bold, fontSize: 16, color: Colors.primary, lineHeight: 20 },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  header: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 12 },
+  back: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4, alignItems: 'center', justifyContent: 'center' },
+  field: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, height: 48, borderRadius: 24, paddingHorizontal: 14, backgroundColor: Colors.sand2, borderWidth: 1.5, borderColor: Colors.ink },
+  input: { fontFamily: Font.regular, flex: 1, fontSize: 16, color: Colors.ink, paddingVertical: 0 },
+  loading: { marginTop: 40 },
+  suggestions: { paddingHorizontal: 20, paddingTop: 12 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  chip: { height: 40, paddingHorizontal: 16, borderRadius: 20, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4, justifyContent: 'center' },
+  chipText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink },
+  list: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
+  count: { fontFamily: Font.mono, fontSize: 11, letterSpacing: 1, color: Colors.stone, textTransform: 'uppercase', marginBottom: 4 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  rowPressed: { borderColor: Colors.ink },
+  thumb: { width: 72, height: 72, borderRadius: 12, backgroundColor: Colors.sand3 },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  rowBody: { flex: 1 },
+  supplier: { fontFamily: Font.mono, fontSize: 10, letterSpacing: 0.5, color: Colors.stone, textTransform: 'uppercase' },
+  name: { fontFamily: Font.semiBold, fontSize: 15, lineHeight: 20, color: Colors.ink, marginTop: 2 },
+  price: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink, marginTop: 4 },
+  unit: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone },
+  oos: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.error, marginTop: 2 },
+  addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
+  addBtnOn: { backgroundColor: Colors.lime },
 });
