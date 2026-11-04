@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+   <rect width="1024" height="1024" rx="225.28" fill="#F3B806"/>
+   <svg x="133.12" y="133.12" width="757.76" height="757.76" viewBox="140 140 1256 1256"><defs><mask id="it1b2u" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1536">
+    <polygon points="768,168 1288,468 1288,1068 768,1368 248,1068 248,468" fill="#fff" stroke="none"/>
+    <path d="M1184 316 L1002 303 C820 290 630 380 636 560 C640 680 720 740 768 768 C816 796 896 856 900 976 C906 1156 716 1246 534 1233 L352 1220" fill="none" stroke="#000" stroke-width="48" stroke-linecap="butt"/></mask></defs>
+  <g mask="url(#it1b2u)"><rect x="0" y="0" width="1536" height="1536" fill="#FAF8F3"/><path d="M1002 303 C820 290 630 380 636 560 C640 680 720 740 768 768 C816 796 896 856 900 976 C906 1156 716 1246 534 1233 L400 1600 L-100 1600 L-100 -100 L1150 -100 L1150 220 Z" fill="#1B1B19"/></g></svg></svg>

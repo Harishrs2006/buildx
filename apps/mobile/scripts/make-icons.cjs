@@ -1,27 +1,32 @@
-// Renders the Sthiva app icons from the owner's logo artwork (docs/brand/sthiva-logo-original.png, vectorised in
-// packages/web-core/src/brand/SthivaLogo.tsx). Usage, from apps/mobile: node scripts/make-icons.cjs <path-to-sharp>
+// Renders the Sthiva app icons from the brand mark (docs/brand; shapes in src/constants/brand.ts).
+// Usage, from apps/mobile: node scripts/make-icons.cjs <path-to-sharp>
 const sharp = require(process.argv[2] || 'sharp');
-const YELLOW = '#F3B806', INK = '#1B1B19', WHITE = '#FBFAF6', DARK = '#0B0C0A';
-const TOP = 'M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z';
-const BOTTOM = 'M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z';
-// The S spans 900 of the 1536 artwork canvas. `s` = share of the icon the S should take.
-function icon({ bg, tile, s, top, bottom }) {
-  const size = 1024, art = (size * s * 1536) / 900, off = (size - art) / 2;
+const fs = require('fs');
+const src = fs.readFileSync(__dirname + '/../src/constants/brand.ts', 'utf8');
+const pick = (k) => src.match(new RegExp(`${k}: '([^']+)'`))[1];
+const HEX = pick('hex'), CURVE = pick('curve'), LEFT = pick('left');
+const YELLOW = '#F3B806', INK = '#1B1B19', WHITE = '#FAF8F3', DARK = '#0B0C0A';
+let n = 0;
+// `s` = share of the icon the mark's 1256-unit box takes
+function icon({ bg, s, left, right }) {
+  const size = 1024, inner = size * s, off = (size - inner) / 2, id = 'm' + n++;
   return Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     ${bg ? `<rect width="${size}" height="${size}" fill="${bg}"/>` : ''}
-    <svg x="${off}" y="${off}" width="${art}" height="${art}" viewBox="0 0 1536 1536">
-      ${tile ? `<rect width="1536" height="1536" rx="340" fill="${tile}"/>` : ''}
-      <path d="${TOP}" fill="${top}"/><path d="${BOTTOM}" fill="${bottom}"/></svg></svg>`);
+    <svg x="${off}" y="${off}" width="${inner}" height="${inner}" viewBox="140 140 1256 1256">
+      <defs><mask id="${id}" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1536">
+        <polygon points="${HEX}" fill="#fff" stroke="none"/>
+        <path d="${CURVE}" fill="none" stroke="#000" stroke-width="48"/></mask></defs>
+      <g mask="url(#${id})"><rect width="1536" height="1536" fill="${right}"/><path d="${LEFT}" fill="${left}"/></g></svg></svg>`);
 }
 const png = (o, f) => sharp(icon(o)).png().toFile(f);
 (async () => {
-  // Sthiva (buyers): the logo as designed, yellow with ink and white S
-  await png({ bg: YELLOW, s: 0.586, top: INK, bottom: WHITE }, 'assets/icon.png');
-  await png({ bg: null, s: 0.42, top: INK, bottom: WHITE }, 'assets/android-icon-foreground.png'); // bg colour in app.json
-  await png({ bg: null, s: 0.42, top: '#000000', bottom: '#000000' }, 'assets/android-icon-monochrome.png');
-  await png({ bg: null, tile: YELLOW, s: 0.3, top: INK, bottom: WHITE }, 'assets/splash-icon.png');
-  // Sthiva Partner (suppliers, drivers): same S on ink, top half yellow
-  await png({ bg: DARK, s: 0.586, top: YELLOW, bottom: WHITE }, 'assets/partner/icon.png');
-  await png({ bg: null, s: 0.42, top: YELLOW, bottom: WHITE }, 'assets/partner/android-icon-foreground.png');
+  // Sthiva (buyers): yellow, mark in ink and white
+  await png({ bg: YELLOW, s: 0.74, left: INK, right: WHITE }, 'assets/icon.png');
+  await png({ bg: null, s: 0.56, left: INK, right: WHITE }, 'assets/android-icon-foreground.png'); // bg colour in app.json
+  await png({ bg: null, s: 0.56, left: '#000000', right: '#000000' }, 'assets/android-icon-monochrome.png');
+  await png({ bg: null, s: 0.42, left: WHITE, right: YELLOW }, 'assets/splash-icon.png'); // dark splash
+  // Sthiva Partner (sellers, drivers): ink, mark in white and yellow
+  await png({ bg: DARK, s: 0.74, left: WHITE, right: YELLOW }, 'assets/partner/icon.png');
+  await png({ bg: null, s: 0.56, left: WHITE, right: YELLOW }, 'assets/partner/android-icon-foreground.png');
   console.log('icons written');
 })();

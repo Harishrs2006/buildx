@@ -1,87 +1,110 @@
-// The Sthiva logo, drawn as vectors from the owner's artwork (docs/brand/sthiva-logo-original.png):
-// a yellow rounded tile with an S made of two interlocking halves, the top in ink and the bottom in white.
-// The wordmark "sthiva" sits next to the tile in the display font (Bricolage Grotesque).
+import { useId, type ReactElement } from 'react';
+import { BRAND_COLORS as C, MARK, WORD_PARTNER, WORD_STHIVA } from './paths';
 
-export const STHIVA_COLORS = { yellow: '#F3B806', ink: '#1B1B19', white: '#FBFAF6' } as const;
+// The Sthiva brand system (docs/brand). One mark for both sides of the marketplace:
+//   Sthiva          (buyers):   ink and yellow halves, ink wordmark on light, white on dark.
+//   Sthiva Partner  (sellers):  same mark, white and yellow halves on ink, "PARTNER" in yellow.
 
-/** The artwork on its original 1536 x 1536 canvas (exported so icons and OG images draw the same shape). */
-export const STHIVA_MARK = {
-  viewBox: '0 0 1536 1536',
-  tileRadius: 340,
-  top: 'M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z',
-  bottom: 'M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z',
-} as const;
-
-function Tile({ x = 0, y = 0, size }: { x?: number; y?: number; size: number }) {
+/** The hexagon S mark. `left` / `right` colour the two halves; the gap between them is transparent. */
+function Mark({ left, right, size, x = 0, y = 0 }: { left: string; right: string; size: number; x?: number; y?: number }) {
+  const id = `sthiva-mask-${useId().replace(/:/g, '')}`;
   return (
-    <svg x={x} y={y} width={size} height={size} viewBox={STHIVA_MARK.viewBox}>
-      <rect width="1536" height="1536" rx={STHIVA_MARK.tileRadius} fill={STHIVA_COLORS.yellow} />
-      <path d={STHIVA_MARK.top} fill={STHIVA_COLORS.ink} />
-      <path d={STHIVA_MARK.bottom} fill={STHIVA_COLORS.white} />
+    <svg x={x} y={y} width={size} height={size} viewBox={MARK.viewBox} aria-hidden="true">
+      <defs>
+        <mask id={id} maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1536">
+          <polygon points={MARK.hex} fill="#fff" stroke="#fff" strokeWidth={MARK.cornerRound} strokeLinejoin="round" />
+          <path d={MARK.curve} fill="none" stroke="#000" strokeWidth={MARK.gap} />
+        </mask>
+      </defs>
+      <g mask={`url(#${id})`}>
+        <rect x="0" y="0" width="1536" height="1536" fill={right} />
+        <path d={MARK.left} fill={left} />
+      </g>
     </svg>
   );
 }
 
-/** Full logo: the tile plus the "sthiva" wordmark and (optionally) a tagline. `height` in px; width follows. */
+const H = 200; // mark size in logo units
+const GAP = 56;
+
+/** Full horizontal logo. `height` in px; width follows. `partner` gives the seller (Sthiva Partner) lockup. */
 export function SthivaLogo({
   height = 36,
   onDark = false,
-  tagline = false,
+  partner = false,
   className,
 }: {
   height?: number;
   onDark?: boolean;
+  partner?: boolean;
+  /** Kept for older callers; the logo no longer carries a tagline */
   tagline?: boolean;
   className?: string;
 }) {
-  const text = onDark ? '#F2EFE7' : '#0B0C0A';
-  const vbH = tagline ? 64 : 48;
-  const vbW = 184;
+  const word = onDark ? C.white : C.ink;
+  const markLeft = onDark ? C.white : C.ink;
+  let width: number;
+  let text: ReactElement;
+  if (!partner) {
+    const s = 1.5;
+    const baseline = (H + WORD_STHIVA.capHeight * s) / 2;
+    width = H + GAP + WORD_STHIVA.width * s;
+    text = <path d={WORD_STHIVA.d} fill={word} transform={`translate(${H + GAP} ${baseline}) scale(${s})`} />;
+  } else {
+    const s1 = 1.18;
+    const s2 = 0.6;
+    const lineGap = 34;
+    const top = (H - (WORD_STHIVA.capHeight * s1 + lineGap + WORD_PARTNER.capHeight * s2)) / 2;
+    const b1 = top + WORD_STHIVA.capHeight * s1;
+    const b2 = b1 + lineGap + WORD_PARTNER.capHeight * s2;
+    width = H + GAP + Math.max(WORD_STHIVA.width * s1, WORD_PARTNER.width * s2);
+    text = (
+      <>
+        <path d={WORD_STHIVA.d} fill={word} transform={`translate(${H + GAP} ${b1}) scale(${s1})`} />
+        <path d={WORD_PARTNER.d} fill={onDark ? C.yellow : C.yellowDeep} transform={`translate(${H + GAP} ${b2}) scale(${s2})`} />
+      </>
+    );
+  }
   return (
-    <svg viewBox={`0 0 ${vbW} ${vbH}`} height={height} width={(height * vbW) / vbH} role="img" aria-label="Sthiva" className={className}>
-      <Tile size={48} />
-      <text
-        x="56"
-        y="37"
-        fill={text}
-        style={{ fontFamily: 'var(--font-display), "Bricolage Grotesque", system-ui, sans-serif', fontWeight: 800 }}
-        fontSize="40"
-        textLength="124"
-        lengthAdjust="spacingAndGlyphs"
-      >
-        sthiva
-      </text>
-      {tagline && (
-        <text
-          x="2"
-          y="61"
-          fill="#8A8A82"
-          style={{ fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
-          fontSize="9"
-          textLength="178"
-          lengthAdjust="spacingAndGlyphs"
-        >
-          SOLID MATERIALS, STEADY SUPPLY
-        </text>
-      )}
+    <svg
+      viewBox={`0 0 ${width} ${H}`}
+      height={height}
+      width={(height * width) / H}
+      role="img"
+      aria-label={partner ? 'Sthiva Partner' : 'Sthiva'}
+      className={className}
+    >
+      <Mark left={markLeft} right={C.yellow} size={H} />
+      {text}
     </svg>
   );
 }
 
-/** The tile alone, square, for small places (icons, avatars). It reads on light and dark backgrounds alike. */
+/** The mark alone, for small places. `tile` draws it like the app icon (yellow tile for buyers, ink for partners). */
 export function SthivaMark({
   size = 32,
+  onDark = false,
+  partner = false,
+  tile = false,
   className,
 }: {
   size?: number;
-  /** Kept for older callers: the tile looks the same on any background */
   onDark?: boolean;
+  partner?: boolean;
   tile?: boolean;
   className?: string;
 }) {
+  if (tile) {
+    return (
+      <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" className={className}>
+        <rect width="48" height="48" rx="11" fill={partner ? C.ink : C.yellow} />
+        <Mark left={partner ? C.white : C.ink} right={partner ? C.yellow : C.white} size={36} x={6} y={6} />
+      </svg>
+    );
+  }
   return (
     <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" className={className}>
-      <Tile size={48} />
+      <Mark left={onDark ? C.white : C.ink} right={C.yellow} size={48} />
     </svg>
   );
 }

@@ -1,10 +1,12 @@
-import type { ComponentProps, ReactNode } from 'react';
+import { useId, type ComponentProps, type ReactNode } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Svg, { Path, Rect } from 'react-native-svg';
+import Svg, { Defs, G, Mask, Path, Polygon, Rect } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
+import { BRAND_COLORS, MARK } from '../constants/brand';
+import { IS_PARTNER } from '../lib/appVariant';
 
 // Hi-Vis building blocks for the app, matching the websites (docs/DESIGN_SYSTEM.md)
 
@@ -122,16 +124,36 @@ export function Icon({ name, size = 22, color = Colors.ink }: { name: IconName; 
   return <MaterialCommunityIcons name={name} size={size} color={color} />;
 }
 
-// The Sthiva logo tile (owner's artwork: yellow tile, ink and white S), same vectors as
-// packages/web-core/src/brand/SthivaLogo.tsx. It reads on light and dark backgrounds, so onDark/tile are kept only
-// for older callers.
-export function SthivaMark({ size = 32 }: { size?: number; onDark?: boolean; tile?: boolean }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 1536 1536" accessibilityElementsHidden importantForAccessibility="no">
-      <Rect width={1536} height={1536} rx={340} fill="#F3B806" />
-      <Path d="M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z" fill="#1B1B19" />
-      <Path d="M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z" fill="#FBFAF6" />
+// The Sthiva mark: a hexagon split by an S into two halves (docs/brand). `tile` draws it like the app icon:
+// yellow tile in Sthiva, ink tile in Sthiva Partner. Without a tile: ink and yellow halves, white and yellow on dark.
+export function SthivaMark({ size = 32, onDark = false, tile = false }: { size?: number; onDark?: boolean; tile?: boolean }) {
+  const maskId = `sthiva-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
+  const [left, right] = tile
+    ? IS_PARTNER ? [BRAND_COLORS.white, BRAND_COLORS.yellow] : [BRAND_COLORS.ink, BRAND_COLORS.white]
+    : [onDark ? BRAND_COLORS.white : BRAND_COLORS.ink, BRAND_COLORS.yellow];
+  const mark = (
+    <Svg width={tile ? size * 0.76 : size} height={tile ? size * 0.76 : size} viewBox={MARK.viewBox}>
+      <Defs>
+        <Mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1536">
+          <Polygon points={MARK.hex} fill="#fff" stroke="#fff" strokeWidth={MARK.cornerRound} strokeLinejoin="round" />
+          <Path d={MARK.curve} fill="none" stroke="#000" strokeWidth={MARK.gap} />
+        </Mask>
+      </Defs>
+      <G mask={`url(#${maskId})`}>
+        <Rect x={0} y={0} width={1536} height={1536} fill={right} />
+        <Path d={MARK.left} fill={left} />
+      </G>
     </Svg>
+  );
+  if (!tile) return <View accessibilityElementsHidden importantForAccessibility="no">{mark}</View>;
+  return (
+    <View
+      accessibilityElementsHidden
+      importantForAccessibility="no"
+      style={{ width: size, height: size, borderRadius: size * 0.23, backgroundColor: IS_PARTNER ? BRAND_COLORS.ink : BRAND_COLORS.yellow, alignItems: 'center', justifyContent: 'center' }}
+    >
+      {mark}
+    </View>
   );
 }
 
