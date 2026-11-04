@@ -3,24 +3,22 @@
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE (2026-11-04 18:40 IST)
+## CURRENT STATE (2026-11-04 21:30 IST)
+- Project lives at C:/dev/BuildX (moved out of OneDrive). Start Claude there. Libraries are not installed in this copy;
+  for mobile typecheck/builds use C:/bx/mobile (copy changed files there first, it has node_modules).
 - Live: buyer site https://buildx-vgud.vercel.app, seller site (Vercel buildx-48kc), ops console https://buildx-ops.vercel.app,
-  API https://buildx-api.onrender.com (Render free: sleeps when idle, ~1 min to wake). Google sign-in on both websites.
-- Mobile app Google sign-in: PR #52 merged 17:19 IST, before 3 fixes; those are in PR fix/mobile-signin-followups
-  (user confirmed the fixed build works on their phone 2026-11-04). Waiting for the user to merge.
-- Mobile builds: OneDrive breaks Gradle, so build from the copy at C:/bx/mobile (robocopy app/ and src/ there first).
-  Phone APK: `cd C:/bx/mobile/android && EXPO_PUBLIC_API_URL=https://buildx-api.onrender.com ./gradlew assembleRelease
-  --max-workers=2 -PreactNativeArchitectures=arm64-v8a`, copy to Desktop/BuildX/BuildX-test.apk (not in git).
-  Emulator is too heavy for this laptop for Google sign-in tests; use the user's phone.
+  API https://buildx-api.onrender.com (Render free: sleeps when idle, ~1 min to wake).
+- Mobile app: Google sign-in (#52, #53) and full Hi-Vis redesign (#54) are merged to main.
+- Mobile builds: from C:/bx/mobile/android, foreground, see 2026-11-04 19:40 entry for the exact gradle command.
+- Open PR: fix/ai-one-supplier (AI assistant no longer fills a cart from several suppliers). Needs the user to merge.
 
 ## NEXT STEPS
-1. User merges the follow-up PR (fix/mobile-signin-followups). Nothing to deploy for it (mobile app is installed from the APK; websites unaffected).
-2. Not yet tested on the phone: buyer checkout contact-phone step (needs a buyer account; the user's Google account is
-   a seller), and a brand-new Google account going through "Who are you on BuildX?".
-3. Mobile pass 2 (remaining ~30 screens to the Hi-Vis look, new logo/fonts; native rebuild is fine now, see above).
-4. Launch prep: NEXT_PUBLIC_SUPPORT_EMAIL / SUPPORT_PHONE / LEGAL_NAME (need the user's details), NEXT_PUBLIC_ALLOW_INDEXING=true.
-5. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
-6. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping would fix (ask user).
+1. User merges fix/ai-one-supplier. Mobile only, goes out with the next APK.
+2. Not yet tested on the phone: buyer checkout contact-phone step (needs a buyer account), and a brand-new Google
+   account going through "How will you use BuildX?".
+3. Launch prep: NEXT_PUBLIC_SUPPORT_EMAIL / SUPPORT_PHONE / LEGAL_NAME (need the user's details), NEXT_PUBLIC_ALLOW_INDEXING=true.
+4. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
+5. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping (ask user).
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -322,3 +320,8 @@ Times are IST.
   (`-x lintVitalRelease -x lintVitalAnalyzeRelease`) and use -Xmx1536m -XX:MaxMetaspaceSize=640m (384m ran out).
   Verified: live API URL, new screens and fonts in the bundle, signed with SHA-1 5e8f...f625.
   NEXT: user installs and checks the redesign on their phone, then merges PR #54.
+- 2026-11-04 21:30 IST: User merged PR #54. OneDrive still showed 4 GB: local OneDrive is 0.43 GB, the rest is the
+  OneDrive online recycle bin (deleted files count for 30 days); told the user to empty it themselves.
+  Fix on branch fix/ai-one-supplier: AI price list pre-selects the supplier covering most items; "Add selected to
+  cart" refuses picks from several suppliers or a cart holding another supplier, with a plain explanation.
+  Typecheck clean (in C:/bx/mobile).
