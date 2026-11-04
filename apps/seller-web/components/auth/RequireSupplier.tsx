@@ -31,7 +31,7 @@ export function RequireSupplier({ children }: { children: React.ReactNode }) {
         <div className="max-w-sm">
           <p className="font-display text-2xl font-semibold tracking-tight">This account isn&apos;t a supplier account</p>
           <p className="mt-2 text-[15px] text-stone">
-            It is already registered on BuildX as a buyer or another role. Sign out, then sign in with the
+            It is already registered on Sthiva as a buyer or another role. Sign out, then sign in with the
             Google account you use for your business, or contact support if this looks wrong.
           </p>
           <button type="button" onClick={() => void signOut()} className="btn-ink mt-6 px-6">Sign out</button>

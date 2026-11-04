@@ -9,7 +9,7 @@ import { Product } from '../../infrastructure/database/models/Product.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { AppError } from '../../shared/errors/AppError';
 import { logger } from '../../shared/logger/logger';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 
 const router = Router();
 
@@ -78,7 +78,7 @@ router.delete('/me', requireAuth, async (req, res, next) => {
   try {
     const { userId, role, uid } = req.auth!;
     if (role !== 'BUYER' && role !== 'SUPPLIER') {
-      throw AppError.forbidden('This account is closed by BuildX support. Please contact them.');
+      throw AppError.forbidden('This account is closed by Sthiva support. Please contact them.');
     }
 
     const profile = role === 'SUPPLIER' ? await SupplierProfile.findOne({ userId }).select('_id').lean() : null;

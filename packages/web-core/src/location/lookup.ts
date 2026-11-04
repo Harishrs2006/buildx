@@ -2,7 +2,7 @@ import { ApiClientError, isAbortError, type ApiClient } from '../api/client';
 import { postalLookupSchema, serviceabilitySchema, reverseLookupSchema, type PostalLookup, type ReverseLookup, type Serviceability } from '../api/schemas';
 import { validatePincode } from './pincode';
 
-// Postal validity and BuildX serviceability are different questions with different endpoints.
+// Postal validity and Sthiva serviceability are different questions with different endpoints.
 // A location is only ever reported as deliverable when the serviceability endpoint itself
 // returned serviceable === true for that exact PIN.
 
@@ -99,7 +99,7 @@ export async function checkPincode(client: ApiClient, input: string, signal?: Ab
     status: 'not-serviceable',
     pincode,
     place,
-    message: `BuildX doesn't deliver to ${pincode} yet. You can still browse products.`,
+    message: `Sthiva doesn't deliver to ${pincode} yet. You can still browse products.`,
   };
 }
 

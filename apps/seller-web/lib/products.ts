@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
-import { ApiClientError, useApiClient, type ApiClient, type PaginationMeta } from '@buildx/web-core';
+import { ApiClientError, useApiClient, type ApiClient, type PaginationMeta } from '@sthiva/web-core';
 
 const imageSchema = z.object({ url: z.string(), publicId: z.string(), isPrimary: z.boolean().optional(), sortOrder: z.number().optional() });
 

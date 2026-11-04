@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { productErrorText, updateSupplierProduct, useSupplierProducts, type SupplierProduct } from '../../../lib/products';
 import { Chip, ChipRow, EmptyState, ErrorNote, PageHead, Pager, Pill, PRODUCT_STATUS, UNIT, unitLabel } from '../../../components/ui';
 

@@ -77,7 +77,7 @@ export async function verifyDeliveryForCheckout(client: ApiClient, pincode: stri
     const s = await fetchServiceability(client, v.pincode, signal, 'no-store');
     if (s.pincode === v.pincode && s.serviceable) return { deliverable: true, pincode: v.pincode, supplierCount: s.supplierCount };
     if (s.pincode !== v.pincode) throw new ApiClientError('Mismatched response', 'INVALID_RESPONSE', null);
-    return { deliverable: false, pincode: v.pincode, reason: 'NO_SUPPLIERS', message: `BuildX doesn't deliver to ${v.pincode} yet.` };
+    return { deliverable: false, pincode: v.pincode, reason: 'NO_SUPPLIERS', message: `Sthiva doesn't deliver to ${v.pincode} yet.` };
   } catch (err) {
     if (isAbortError(err)) throw err;
     if (err instanceof ApiClientError && err.code === 'PINCODE_NOT_FOUND') {

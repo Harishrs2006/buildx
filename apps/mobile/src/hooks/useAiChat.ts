@@ -34,6 +34,31 @@ export type ChatMessage =
   | { id: string; role: 'assistant'; type: 'price_list'; items: AnalysedItem[]; summary: string }
   | { id: string; role: 'user'; type: 'image'; uri: string; caption?: string };
 
+export type AddResult =
+  | { status: 'added'; count: number }
+  | { status: 'nothing' }
+  | { status: 'mixed'; suppliers: string[] }
+  | { status: 'cart_conflict'; cartSupplier: string; supplier: string };
+
+/**
+ * One order comes from one supplier (the API refuses mixed carts). Start each item on the option from the
+ * supplier that can cover the most items in the list, so the default picks can go into one order.
+ */
+export function preselectOneSupplier(items: AnalysedItem[]): AnalysedItem[] {
+  const coverage = new Map<string, number>();
+  for (const it of items) {
+    for (const sid of new Set(it.options.map((o) => o.supplierId))) coverage.set(sid, (coverage.get(sid) ?? 0) + 1);
+  }
+  return items.map((it) => {
+    if (it.notFound || it.options.length === 0) return it;
+    let best = 0;
+    it.options.forEach((o, i) => {
+      if ((coverage.get(o.supplierId) ?? 0) > (coverage.get(it.options[best].supplierId) ?? 0)) best = i;
+    });
+    return { ...it, selectedOptionIndex: best };
+  });
+}
+
 function uid() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
@@ -44,7 +69,7 @@ export function useAiChat() {
       id: uid(),
       role: 'assistant',
       type: 'text',
-      content: "Hi! I'm BuildX Assistant. I can help you find materials, compare prices, and place orders.\n\nYou can also **upload a photo** of your materials list and I'll calculate prices instantly across brands.",
+      content: "Hi! I'm Sthiva Assistant. I can help you find materials, compare prices, and place orders.\n\nYou can also **upload a photo** of your materials list and I'll calculate prices instantly across brands.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -94,7 +119,7 @@ export function useAiChat() {
         if (data.success && data.items.length > 0) {
           return [
             ...filtered,
-            { id: uid(), role: 'assistant', type: 'price_list', items: data.items, summary: data.message },
+            { id: uid(), role: 'assistant', type: 'price_list', items: preselectOneSupplier(data.items), summary: data.message },
           ];
         }
         return [
@@ -124,12 +149,23 @@ export function useAiChat() {
   }, []);
 
   const addSelectedToCart = useCallback(
-    (msg: Extract<ChatMessage, { type: 'price_list' }>) => {
-      let addedCount = 0;
-      for (const item of msg.items) {
-        const idx = item.selectedOptionIndex ?? 0;
-        const opt = item.options[idx];
-        if (!opt || !item.quantity || item.notFound) continue;
+    (msg: Extract<ChatMessage, { type: 'price_list' }>): AddResult => {
+      const picks = msg.items
+        .filter((item) => !item.notFound && !!item.quantity)
+        .map((item) => ({ item, opt: item.options[item.selectedOptionIndex ?? 0] }))
+        .filter((p): p is { item: AnalysedItem; opt: PriceOption } => !!p.opt);
+      if (picks.length === 0) return { status: 'nothing' };
+
+      const suppliers = [...new Map(picks.map((p) => [p.opt.supplierId, p.opt.supplier])).values()];
+      if (suppliers.length > 1) return { status: 'mixed', suppliers };
+
+      const cart = useCartStore.getState();
+      const { supplierId, supplier } = picks[0].opt;
+      if (cart.hasConflict(supplierId)) {
+        return { status: 'cart_conflict', cartSupplier: cart.items[0]?.supplierName ?? 'another supplier', supplier };
+      }
+
+      for (const { item, opt } of picks) {
         addToCart({
           productId: opt.productId,
           name: opt.name,
@@ -139,10 +175,9 @@ export function useAiChat() {
           basePrice: opt.pricePerUnit,
           unit: opt.unit,
           gstRate: opt.gstRate,
-        }, item.quantity);
-        addedCount++;
+        }, item.quantity!);
       }
-      return addedCount;
+      return { status: 'added', count: picks.length };
     },
     [addToCart]
   );
@@ -153,7 +188,7 @@ export function useAiChat() {
         id: uid(),
         role: 'assistant',
         type: 'text',
-        content: "Hi! I'm BuildX Assistant. Upload a photo of your materials list or ask me anything.",
+        content: "Hi! I'm Sthiva Assistant. Upload a photo of your materials list or ask me anything.",
       },
     ]);
   }, []);

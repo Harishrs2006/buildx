@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import {
   confirmCashCollected, useSupplierOrders, updateSupplierOrderStatus, type SupplierOrder, type SupplierOrderAction,
 } from '../../../lib/orders';
@@ -13,7 +13,7 @@ type Tab = { key: string; label: string; status?: string; cashPending?: boolean;
 const TABS: Tab[] = [
   { key: 'todo', label: 'To dispatch', status: 'CONFIRMED', empty: 'Nothing to dispatch. New orders land here first.' },
   { key: 'cash', label: 'Cash to confirm', cashPending: true, empty: 'No cash waiting. Orders you deliver yourself show here until you confirm the cash.' },
-  { key: 'driver', label: 'With BuildX driver', status: 'READY_FOR_PICKUP,ASSIGNED,PICKED_UP', empty: 'No orders waiting for or with a BuildX driver.' },
+  { key: 'driver', label: 'With Sthiva driver', status: 'READY_FOR_PICKUP,ASSIGNED,PICKED_UP', empty: 'No orders waiting for or with a Sthiva driver.' },
   { key: 'road', label: 'On the way', status: 'IN_TRANSIT', empty: 'Nothing on the road right now.' },
   { key: 'done', label: 'Delivered', status: 'DELIVERED', empty: 'No delivered orders yet.' },
   { key: 'cancelled', label: 'Cancelled', status: 'CANCELLED', empty: 'No cancelled orders.' },
@@ -42,7 +42,7 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
   const own = order.deliveryMode === 'SUPPLIER';
   const cod = (order.paymentMethod ?? 'COD') === 'COD';
   const cashDue = cod && order.status === 'DELIVERED' && own && order.paymentStatus === 'PENDING';
-  // The supplier may still take over or cancel until a BuildX driver has accepted it
+  // The supplier may still take over or cancel until a Sthiva driver has accepted it
   const canDispatch = order.status === 'CONFIRMED';
   const canTakeOver = order.status === 'READY_FOR_PICKUP' && !driver;
   const canCancel = order.status === 'CONFIRMED' || canTakeOver;
@@ -103,14 +103,14 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">call</span>
               {a.contactPhone}
             </a>
-            <a href={`https://wa.me/${waNumber(a.contactPhone)}?text=${encodeURIComponent(`BuildX order ${order.orderNumber}: `)}`} target="_blank" rel="noreferrer" className="btn-ghost h-10 px-3 text-[14px]">
+            <a href={`https://wa.me/${waNumber(a.contactPhone)}?text=${encodeURIComponent(`Sthiva order ${order.orderNumber}: `)}`} target="_blank" rel="noreferrer" className="btn-ghost h-10 px-3 text-[14px]">
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">chat</span>
               WhatsApp
             </a>
           </div>
           {order.deliveryMode && (
             <p className="mt-3 text-[13px] text-stone">
-              {own ? 'You are delivering this order with your own vehicle.' : driver ? `BuildX driver: ${driver.name ?? 'assigned'}${driver.phone ? ` (${driver.phone})` : ''}.` : 'Waiting for a BuildX driver to accept it.'}
+              {own ? 'You are delivering this order with your own vehicle.' : driver ? `Sthiva driver: ${driver.name ?? 'assigned'}${driver.phone ? ` (${driver.phone})` : ''}.` : 'Waiting for a Sthiva driver to accept it.'}
             </p>
           )}
         </div>
@@ -126,7 +126,7 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
                 <>
                   <button type="button" disabled={busy} onClick={() => move('READY_FOR_PICKUP')} className="btn-ink">
                     <span className="material-symbols-outlined text-[20px]" aria-hidden="true">local_shipping</span>
-                    Ready for BuildX pickup
+                    Ready for Sthiva pickup
                   </button>
                   <button type="button" disabled={busy} onClick={() => move('IN_TRANSIT')} className="btn-ghost">I&apos;ll deliver it myself</button>
                 </>
@@ -165,7 +165,7 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
           {confirming === 'cash' && (
             <div role="alertdialog" aria-label="Confirm cash received?" className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <p className="flex-1 text-[15px]">
-                <span className="font-semibold">Received the full {rupees.format(order.total)}?</span> If the buyer paid less, don&apos;t confirm here: contact BuildX support to record it.
+                <span className="font-semibold">Received the full {rupees.format(order.total)}?</span> If the buyer paid less, don&apos;t confirm here: contact Sthiva support to record it.
               </p>
               <div className="flex gap-2">
                 <button type="button" disabled={busy} onClick={() => run(() => confirmCashCollected(client, order._id, order.total))} className="btn-lime">{busy ? 'Saving' : 'Yes, full amount'}</button>
@@ -204,7 +204,7 @@ export default function OrdersPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHead eyebrow="Orders" title="Incoming orders">
-        <p className="max-w-sm text-[15px] text-stone">Dispatch new orders quickly: buyers see every step. Hand it to a BuildX driver or deliver it yourself.</p>
+        <p className="max-w-sm text-[15px] text-stone">Dispatch new orders quickly: buyers see every step. Hand it to a Sthiva driver or deliver it yourself.</p>
       </PageHead>
 
       <ChipRow label="Filter orders">

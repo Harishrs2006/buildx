@@ -3,14 +3,14 @@
 import { use, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useProductsForLocation, useSelectedLocation } from '@buildx/web-core';
+import { useProductsForLocation, useSelectedLocation } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ProductListCard } from '@/components/ProductListCard';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { useCategories } from '@/lib/categories';
-import { catalogCategory, catalogItems } from '@buildx/web-core';
+import { catalogCategory, catalogItems } from '@sthiva/web-core';
 
 // Only sort orders the API actually supports, so no filter promises a feature that isn't real
 const SORTS = [

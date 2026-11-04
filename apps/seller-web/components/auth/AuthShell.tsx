@@ -40,7 +40,7 @@ export function AuthShell({ children, step, recaptcha = false }: { children: Rea
         </div>
 
         <div className="relative mt-16 flex items-center justify-between border-t border-white/10 pt-6 text-[12px] text-sand/40">
-          <span className="font-mono uppercase tracking-[0.16em]">BuildX supplier portal</span>
+          <span className="font-mono uppercase tracking-[0.16em]">Sthiva supplier portal</span>
           <LogoMark size={22} onDark />
         </div>
       </aside>

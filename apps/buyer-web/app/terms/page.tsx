@@ -4,7 +4,7 @@ import { LegalPage, Section } from '@/components/layout/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Terms of service',
-  description: 'The rules for buying construction materials on the BuildX marketplace.',
+  description: 'The rules for buying construction materials on the Sthiva marketplace.',
   alternates: { canonical: '/terms' },
 };
 
@@ -13,12 +13,12 @@ export default function TermsPage() {
     <LegalPage
       path="/terms"
       title="Terms of service"
-      intro="These terms explain how BuildX works and what you and we can expect from each other. By creating an account or placing an order you agree to them."
+      intro="These terms explain how Sthiva works and what you and we can expect from each other. By creating an account or placing an order you agree to them."
     >
-      <Section title="What BuildX is">
+      <Section title="What Sthiva is">
         <p>
-          BuildX is an online marketplace that connects buyers with independent suppliers of construction materials. Products are
-          sold by the suppliers listed on each product page. BuildX provides the platform, checks supplier verification and
+          Sthiva is an online marketplace that connects buyers with independent suppliers of construction materials. Products are
+          sold by the suppliers listed on each product page. Sthiva provides the platform, checks supplier verification and
           processes orders.
         </p>
       </Section>
@@ -27,7 +27,7 @@ export default function TermsPage() {
         <ul>
           <li>You must be 18 or older and use a mobile number you control.</li>
           <li>
-            You are responsible for activity on your account. Do not share one-time codes with anyone. BuildX staff will never ask
+            You are responsible for activity on your account. Do not share one-time codes with anyone. Sthiva staff will never ask
             for them.
           </li>
           <li>We may suspend accounts used for fraud, abuse or in breach of these terms.</li>
@@ -80,7 +80,7 @@ export default function TermsPage() {
       <Section title="Liability">
         <p>
           Suppliers are responsible for the quality and specification of the products they sell. To the extent permitted by law,
-          BuildX is not liable for indirect or consequential losses, such as project delays. Nothing in these terms limits rights
+          Sthiva is not liable for indirect or consequential losses, such as project delays. Nothing in these terms limits rights
           you have under the Consumer Protection Act, 2019.
         </p>
       </Section>

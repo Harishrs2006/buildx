@@ -50,13 +50,14 @@ export const VEHICLE_LABELS: Record<string, string> = {
   TRACTOR: 'Tractor',
 };
 
-export const VEHICLE_ICONS: Record<string, string> = {
-  BIKE: '🏍️',
-  AUTO: '🛺',
-  MINI_TRUCK: '🚐',
-  TEMPO: '🚚',
-  TRUCK: '🚛',
-  TRACTOR: '🚜',
+// MaterialCommunityIcons names (see src/components/ui.tsx Icon)
+export const VEHICLE_ICONS: Record<string, 'motorbike' | 'rickshaw' | 'van-utility' | 'truck-outline' | 'truck' | 'tractor' | 'car'> = {
+  BIKE: 'motorbike',
+  AUTO: 'rickshaw',
+  MINI_TRUCK: 'van-utility',
+  TEMPO: 'truck-outline',
+  TRUCK: 'truck',
+  TRACTOR: 'tractor',
 };
 
 export function useDriverProfile() {

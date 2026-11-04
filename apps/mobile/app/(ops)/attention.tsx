@@ -1,6 +1,8 @@
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
+import { Icon } from '../../src/components/ui';
 import { useOpsSummary, type OpsSummary } from '../../src/hooks/useOps';
 import { OpsOrderRow } from '../../src/components/OpsOrderRow';
 
@@ -45,7 +47,7 @@ export default function AttentionScreen() {
                   </Text>
                   <Text style={styles.hint}>{q.hint(summary.thresholds)}</Text>
                   {orders.length === 0 ? (
-                    <Text style={styles.clear}>✓ All clear</Text>
+                    <View style={styles.clearRow}><Icon name="check-circle-outline" size={16} color={Colors.success} /><Text style={styles.clear}>All clear</Text></View>
                   ) : (
                     orders.map((o) => <OpsOrderRow key={o._id} order={o} />)
                   )}
@@ -69,16 +71,17 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const styles = StyleSheet.create({
+  clearRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
   container: { padding: 20, paddingBottom: 40 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 16 },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text, marginBottom: 16 },
   statsRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
   stat: { flex: 1, backgroundColor: Colors.surface, borderRadius: 12, padding: 12, borderWidth: 1, borderColor: Colors.border, alignItems: 'center' },
-  statValue: { fontSize: 20, fontWeight: '800', color: Colors.text },
-  statLabel: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  statValue: { fontFamily: Font.display, fontSize: 20, color: Colors.text },
+  statLabel: { fontFamily: Font.regular, fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
   section: { marginBottom: 20 },
-  sectionTitle: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  hint: { fontSize: 12, color: Colors.textSecondary, marginBottom: 8, marginTop: 2 },
-  clear: { fontSize: 13, color: Colors.success },
+  sectionTitle: { fontFamily: Font.bold, fontSize: 15, color: Colors.text },
+  hint: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginBottom: 8, marginTop: 2 },
+  clear: { fontFamily: Font.regular, fontSize: 13, color: Colors.success },
   empty: { textAlign: 'center', color: Colors.textSecondary, marginTop: 48 },
 });

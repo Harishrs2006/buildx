@@ -2,7 +2,7 @@ import type { CatalogCategory, CatalogItem, ListingUnit } from './types';
 
 // Material types, specs, trade units and well-known brands in the Indian market (checked against
 // BIS standards and public product listings, October 2026). Brand lists say what exists in the
-// market, not what BuildX suppliers stock: buyers only ever order from real supplier listings.
+// market, not what Sthiva suppliers stock: buyers only ever order from real supplier listings.
 // No prices, stock or delivery promises live here.
 
 const I = (name: string) => `/illustrations/${name}.svg`;

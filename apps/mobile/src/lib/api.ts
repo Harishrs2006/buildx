@@ -28,6 +28,9 @@ api.interceptors.response.use(
       error.response?.data?.message ??
       error.message ??
       'Something went wrong';
-    return Promise.reject(new Error(message));
+    // Keep the HTTP status so screens can tell a refusal (e.g. 409) from a network problem
+    const err = new Error(message) as Error & { status?: number };
+    err.status = error.response?.status;
+    return Promise.reject(err);
   }
 );

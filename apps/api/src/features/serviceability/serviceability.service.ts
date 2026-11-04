@@ -4,7 +4,7 @@ import { User } from '../../infrastructure/database/models/User.model';
 import { AppError } from '../../shared/errors/AppError';
 import { lookupPincode, PINCODE_RE, PostalLookupUnavailable, type PostalLookup } from '../locations/postal-directory.service';
 
-// Serviceability = "can BuildX deliver this supplier's goods to this PIN?"
+// Serviceability = "can Sthiva deliver this supplier's goods to this PIN?"
 // It is deliberately separate from postal validity (features/locations): a PIN that India
 // Post knows is NOT serviceable unless an eligible supplier has explicitly listed it.
 // A supplier with no configured PINs serves nowhere.

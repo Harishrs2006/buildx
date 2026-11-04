@@ -1,11 +1,11 @@
-# BuildX launch runbook
+# Sthiva launch runbook
 
 The order of work to go from today's pilot setup to a real public launch. Prices were checked on
 4 Nov 2026 (USD, about Rs 88 to the dollar); confirm them on each provider's page before paying.
 
 Rule: nothing below that costs money happens without the owner saying yes. Never paste a secret into
 GitHub, chat or a screenshot. Secrets live only in the provider's dashboard and in
-`Desktop/BuildX/buildx-secrets` (outside the repo).
+`C:/dev/BuildX/buildx-secrets` (outside the repo).
 
 ## 0. Already done (free)
 
@@ -20,8 +20,8 @@ GitHub, chat or a screenshot. Secrets live only in the provider's dashboard and 
 
 - [ ] Remove the demo supplier "BuildX Demo Supplier (placeholder, not a real business)" and its 10
       listings (ops console, or ask Claude to run it with your OK). Buyers must never see fake stock.
-- [ ] Decide the name: buildx.in and buildx.com are taken, and "Buildx" is also a Docker tool. Do a
-      trademark search (CA or lawyer) before buying a domain or printing anything.
+- [x] Name decided (2026-11-05): **Sthiva**. buildx.in/.com were taken and BuildX clashed with existing companies.
+- [ ] Register "Sthiva Private Limited" (backup Setuzo or Udvora), file the STHIVA trademark (class 35), buy sthiva.com.
 - [ ] Register the business and GST with a CA. Needed for Razorpay, a Play organisation account,
       Apple, DLT SMS and the invoices contractors ask for.
 - [ ] Choose a support phone (with WhatsApp) and a support email.

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Calculator } from '@buildx/web-core';
-import { units } from '@buildx/web-core';
+import type { Calculator } from '@sthiva/web-core';
+import { units } from '@sthiva/web-core';
 const { bagsForKg, bulkFromBrass, bulkFromTonnes, coilsForMetres, round, tmtBarsForKg, tmtKgPerBar, tmtKgPerMetre } = units;
 
 const fmt = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });
@@ -11,7 +11,7 @@ function NumberField({ label, value, onChange, suffix, step = 'any' }: { label: 
   return (
     <label className="flex flex-col gap-2">
       <span className="text-[13px] font-medium text-stone">{label}</span>
-      <span className="flex items-center rounded-xl border border-sand-4 bg-sand-2 pr-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+      <span className="flex items-center rounded-xl border border-sand-4 bg-sand-2 pr-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
         <input
           type="number"
           inputMode="decimal"

@@ -7,6 +7,7 @@ import { useOrders } from '../../src/hooks/useOrders';
 import { useCategories } from '../../src/hooks/useProducts';
 import { useCartStore } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { Button, Eyebrow, type } from '../../src/components/ui';
 
 // Category photos are the same ones the website uses (apps/buyer-web/public/categories)
@@ -112,31 +113,31 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-end', gap: 12, paddingHorizontal: 20, paddingTop: 12 },
   headerTitle: { marginTop: 6 },
   cartBtn: { height: 44, minWidth: 64, paddingHorizontal: 16, borderRadius: 22, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
-  cartText: { color: Colors.sand, fontSize: 14, fontWeight: '700' },
+  cartText: { fontFamily: Font.bold, color: Colors.sand, fontSize: 14 },
   cartBadge: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 5, backgroundColor: Colors.lime, alignItems: 'center', justifyContent: 'center' },
-  cartBadgeText: { color: Colors.ink, fontSize: 11, fontWeight: '800' },
+  cartBadgeText: { fontFamily: Font.bold, color: Colors.ink, fontSize: 11 },
   search: { marginHorizontal: 20, marginTop: 18, flexDirection: 'row', alignItems: 'center', gap: 10, height: 52, borderRadius: 26, paddingHorizontal: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
-  searchGlyph: { fontSize: 22, color: Colors.stone, marginTop: -2 },
-  searchText: { fontSize: 15, color: Colors.stone },
+  searchGlyph: { fontFamily: Font.regular, fontSize: 22, color: Colors.stone, marginTop: -2 },
+  searchText: { fontFamily: Font.regular, fontSize: 15, color: Colors.stone },
   active: { marginHorizontal: 20, marginTop: 14, flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: Colors.cobaltSoft },
   activeDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.cobalt },
-  activeTitle: { fontSize: 15, fontWeight: '700', color: Colors.ink },
-  activeSub: { fontSize: 13, color: '#0F2A8A', marginTop: 2 },
-  activeArrow: { fontSize: 26, color: '#0F2A8A' },
+  activeTitle: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  activeSub: { fontFamily: Font.regular, fontSize: 13, color: '#0F2A8A', marginTop: 2 },
+  activeArrow: { fontFamily: Font.regular, fontSize: 26, color: '#0F2A8A' },
   hero: { marginHorizontal: 20, marginTop: 18, padding: 22, borderRadius: 26, backgroundColor: Colors.ink },
-  heroTitle: { marginTop: 12, fontSize: 30, lineHeight: 32, fontWeight: '800', letterSpacing: -1, color: Colors.sand },
-  heroAccent: { color: Colors.lime, fontStyle: 'italic', fontWeight: '400' },
-  heroBody: { marginTop: 12, fontSize: 15, lineHeight: 22, color: 'rgba(242,239,231,0.72)' },
+  heroTitle: { fontFamily: Font.display, marginTop: 12, fontSize: 30, lineHeight: 32, letterSpacing: -1, color: Colors.sand },
+  heroAccent: { fontFamily: Font.serifItalic, color: Colors.lime },
+  heroBody: { fontFamily: Font.regular, marginTop: 12, fontSize: 15, lineHeight: 22, color: 'rgba(242,239,231,0.72)' },
   heroCta: { marginTop: 18, alignSelf: 'flex-start' },
   sectionHead: { marginTop: 30, marginHorizontal: 20 },
   sectionTitle: { marginTop: 6 },
   loading: { marginTop: 30 },
   errorBox: { marginHorizontal: 20, marginTop: 16, padding: 20, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4, alignItems: 'flex-start' },
-  errorTitle: { fontSize: 18, fontWeight: '700', color: Colors.ink, marginBottom: 4 },
+  errorTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.ink, marginBottom: 4 },
   retry: { marginTop: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, paddingHorizontal: 20, marginTop: 16 },
   cat: { width: '47.8%', borderRadius: 18, overflow: 'hidden', backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
   catPressed: { transform: [{ scale: 0.98 }], borderColor: Colors.ink },
   catPhoto: { width: '100%', aspectRatio: 3 / 2, backgroundColor: Colors.sand3 },
-  catName: { paddingHorizontal: 12, paddingVertical: 12, fontSize: 15, lineHeight: 19, fontWeight: '700', color: Colors.ink },
+  catName: { fontFamily: Font.bold, paddingHorizontal: 12, paddingVertical: 12, fontSize: 15, lineHeight: 19, color: Colors.ink },
 });

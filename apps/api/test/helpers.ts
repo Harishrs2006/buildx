@@ -10,7 +10,7 @@ import { DeliveryPartner } from '../src/infrastructure/database/models/DeliveryP
 import { Order } from '../src/infrastructure/database/models/Order.model';
 import { Product } from '../src/infrastructure/database/models/Product.model';
 import { Category } from '../src/infrastructure/database/models/Category.model';
-import type { UserRole } from '@buildx/shared';
+import type { UserRole } from '@sthiva/shared';
 
 // ─── Firebase token fake ────────────────────────────────────────────────────
 // Tokens are plain strings the mock understands:
@@ -18,7 +18,7 @@ import type { UserRole } from '@buildx/shared';
 //   valid|<uid>|          → decodes without a phone number
 //   google|<uid>|<email>|<name>            → verified Google sign-in (seller website)
 //   google-unverified|<uid>|<email>        → Google sign-in whose email is not verified
-//   password|<uid>|<email>                 → email/password sign-in (not a BuildX identity)
+//   password|<uid>|<email>                 → email/password sign-in (not a Sthiva identity)
 //   expired | revoked | disabled | garbage → throw the matching Firebase auth error
 //   network               → throws a non-auth error (e.g. cert fetch failure)
 

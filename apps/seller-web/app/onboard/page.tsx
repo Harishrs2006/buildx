@@ -34,7 +34,7 @@ export default function OnboardPage() {
     <AuthShell step="Last step">
       <h1 className="font-display text-[clamp(2.25rem,5vw,3rem)] font-bold leading-[0.95] tracking-tightest">Set up your business</h1>
       <p className="mt-4 text-[16px] text-stone">
-        So buyers know who they are ordering from. You can list products straight away; BuildX verifies new suppliers before
+        So buyers know who they are ordering from. You can list products straight away; Sthiva verifies new suppliers before
         their listings go live.
       </p>
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
@@ -49,7 +49,7 @@ export default function OnboardPage() {
         </label>
         <label className="flex flex-col gap-2">
           <span className="text-[14px] font-semibold">WhatsApp number</span>
-          <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+          <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
             <span className="border-r border-sand-4 pr-3 font-mono text-[15px]">+91</span>
             <input
               type="tel"
@@ -61,7 +61,7 @@ export default function OnboardPage() {
               className="h-14 w-full bg-transparent pr-4 font-mono text-[17px] outline-none"
             />
           </span>
-          <span className="text-[13px] text-stone">For order updates from BuildX. Buyers never see this number.</span>
+          <span className="text-[13px] text-stone">For order updates from Sthiva. Buyers never see this number.</span>
         </label>
         {error && <p role="alert" className="text-[14px] text-error">{error}</p>}
         <button type="submit" disabled={submitting || !valid} className="btn-ink mt-2 h-14 w-full text-[16px]">

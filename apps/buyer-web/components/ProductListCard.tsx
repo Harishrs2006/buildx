@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { ProductSummary } from '@buildx/web-core';
+import type { ProductSummary } from '@sthiva/web-core';
 import { illustrationFor } from '@/lib/illustrations';
 
 type ProductExtras = {

@@ -3,7 +3,7 @@ import { isValidObjectId } from 'mongoose';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { AppError } from '../../shared/errors/AppError';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { notifyUser } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
 import { createOrder as createOrderTx, quoteOrder, cancelOrder as cancelOrderTx } from './order.service';
@@ -42,8 +42,8 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
 
     if (!replayed) {
       notifySupplier(order.supplierId, {
-        title: '🛒 New Order!',
-        body: `Order ${order.orderNumber} — ₹${order.total.toLocaleString('en-IN')} · ${order.items.length} item${order.items.length > 1 ? 's' : ''}`,
+        title: 'New order',
+        body: `Order ${order.orderNumber}: ₹${order.total.toLocaleString('en-IN')}, ${order.items.length} item${order.items.length > 1 ? 's' : ''}`,
         data: { screen: 'supplier_orders', orderId: order._id.toString() },
       });
     }
@@ -76,7 +76,7 @@ export async function cancelOrder(req: Request, res: Response, next: NextFunctio
     });
     if (changed) {
       notifySupplier(order.supplierId, {
-        title: '❌ Order Cancelled',
+        title: 'Order cancelled',
         body: `Order ${order.orderNumber} was cancelled by the buyer.`,
         data: { screen: 'supplier_orders', orderId: order._id.toString() },
       });

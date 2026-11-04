@@ -3,43 +3,42 @@
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE (2026-10-28 18:20 IST)
-- Redesign is LIVE on https://buildx-vgud.vercel.app (PR #25 squash-merged to main as 1b8fa24, Vercel buildx9/buildx-vgud).
-- Local repo: Desktop/BuildX/buildx on branch main. Old local main saved as backup/local-main-old.
-- Preview tooling: `node <scratchpad>/shot.mjs <url> <w> <h> <out.png> [full] [scrollY]` (CDP, real mobile widths).
-  Recreate it if the scratchpad is gone (headless Chrome + Emulation.setDeviceMetricsOverride).
+## CURRENT STATE (2026-11-05 02:20 IST)
+- Brand is **Sthiva** (renamed from BuildX, PR #58 merged). Live and showing Sthiva: buyer https://buildx-vgud.vercel.app,
+  seller https://buildx-48kc.vercel.app, ops https://buildx-ops.vercel.app, API https://buildx-api.onrender.com.
+  Service ids keep "buildx" on purpose (see 2026-11-05 01:55 entry).
+- Project lives at C:/dev/BuildX (root has node_modules now). Mobile builds: C:/bx/mobile. Sync with
+  `cp -r app src assets scripts app.json app.config.ts /c/bx/mobile/` (robocopy via `cmd //c` silently copied NOTHING
+  once: always grep a renamed string in C:/bx/mobile before building, and grep the bundle in the APK after).
+- Two apps from one codebase: Sthiva (com.sthiva.app) and Sthiva Partner (com.sthiva.partner, APP_VARIANT=partner).
+  APKs in C:/dev/BuildX: Sthiva.apk, Sthiva-Partner.apk (old BuildX*.apk are obsolete).
+- API keep-alive: .github/workflows/keep-api-awake.yml (every 10 min).
 
 ## NEXT STEPS
-0. Landing story: photo version live (PR #31). All 9 chapters have photos after PR feat/landing-all-chapters
-   (user merges). Figma scratch file 'BuildX landing photos' in the user's Figma drafts holds the 4 Figma images.
-0b. Pending user decision: free sign-in alternative (Google sign-in via Firebase recommended; SMS is never free).
-1. DONE 2026-10-28 (Chrome session): Firebase web app 'BuildX Web' registered in project buildx-15494; the 4
-   NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
-   Firebase Auth authorized domains (via Identity Toolkit admin API, the console form kept rejecting it). Production
-   redeploy triggered by pushing to main (manual Vercel redeploy needs an email-code re-auth). VERIFIED live: /signin
-   shows the phone form + reCAPTCHA. BLOCKER: real SMS fails with auth/billing-not-enabled. Firebase needs the Blaze
-   (billing) plan to send SMS; only the 2 test numbers (+917019282018/19, code 123456) work. User decision 2026-10-28: stay on
-   test numbers for now (no billing). Revisit Blaze before public launch.
-2. Optional env: NEXT_PUBLIC_SUPPORT_EMAIL, NEXT_PUBLIC_SUPPORT_PHONE, NEXT_PUBLIC_LEGAL_NAME, NEXT_PUBLIC_SELLER_PORTAL_URL
-   (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
-3. DONE: user chose to keep PRD + images LOCAL in Desktop/BuildX/user-brief (not GitHub). Save new user files there.
-   (Do not push them; repo is public.)
-4. DONE (PR feat/buyer-pages-restyle): Hi-Vis cart, checkout (3 steps + dark summary with GST/delivery from quote),
-   orders list, order detail (dark header, timeline, in-page cancel confirm instead of window.confirm), profile.
-   Shared: components/account/AccountUI.tsx + OrderRow.tsx, lib/format.ts. Signed-in screens not screenshot-tested
-   (need login); user can check with test number 70192 82018 / code 123456.
-5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
-   Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
-6. Add a strict CSP only together with an end-to-end OTP test.
-9. PARKED by user 2026-10-30: real SMS / Blaze / Google sign-in decision. Mobile app pass 2 also not started.
-8. DONE 2026-10-29: ops console LIVE at https://buildx-ops.vercel.app (Vercel buildx-ops). Was: needs a Vercel project (root apps/web, 4 NEXT_PUBLIC_FIREBASE_* +
-   NEXT_PUBLIC_API_URL), its domain in Firebase authorized domains + API CORS, and an ops account via
-   `npm run grant-role --workspace=apps/api -- --phone <n> --role ADMIN`. Mobile app still has the old logo
-   (needs react-native-svg or new icon PNGs = native rebuild, ask first).
-7. Supplier onboarding (branch feat/supplier-onboarding, PR for user to merge): OTP sign-in -> business setup
-   (/setup: type, GSTIN, address, WhatsApp) -> delivery PINs -> categories + brands -> only then List a product
-   (brand chips limited to chosen brands) -> /stock page. Backend guide: docs/BACKEND.md. After merge, check
-   buildx-48kc deploys, then sign in with test number and walk the flow.
+0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
+   Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
+   projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
+   commits do not build the websites. Until then avoid pushing many branches (each push = 3 deployments).
+1. User installs Sthiva-Partner.apk (their Google account is a supplier) and Sthiva.apk, checks look and order alerts.
+2. User registers "Sthiva Private Limited" (backup Setuzo/Udvora), files trademark (class 35), buys sthiva.com.
+   Then follow DOMAIN PLAN below.
+3. User will send new MongoDB credentials: switch Render MONGODB_URI (keep dbName decision in mind).
+4. Government sign-in method later (user decides; likely DigiLocker). Google stays until then.
+5. Launch prep: support email / phone / legal name for the websites; NEXT_PUBLIC_ALLOW_INDEXING=true after the domain.
+6. Real SMS needs Firebase Blaze (money: user decides).
+7. Open old PRs #51 (launch prep) and #34 (README refresh) predate the rename: review/rebase or close.
+
+## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
+Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
+1. Vercel (Claude in Chrome): sthiva.com + www.sthiva.com -> buyer project (buildx-vgud),
+   seller.sthiva.com -> seller project (buildx-48kc), ops.sthiva.com -> ops project (buildx-ops).
+2. Render: custom domain api.sthiva.com on the API service (free plan allows it).
+3. DNS at the user's registrar: records Vercel and Render show (A/CNAME). Keep the old *.vercel.app URLs working.
+4. Env: buyer NEXT_PUBLIC_SITE_URL=https://sthiva.com, NEXT_PUBLIC_SELLER_PORTAL_URL=https://seller.sthiva.com,
+   NEXT_PUBLIC_ALLOW_INDEXING=true; all web apps NEXT_PUBLIC_API_URL=https://api.sthiva.com; API FRONTEND_URL add
+   the three new origins (keep old ones). Mobile: EXPO_PUBLIC_API_URL / EXPO_PUBLIC_WEB_URL in the next APK.
+   keep-api-awake.yml can keep pinging onrender.com.
+5. DONE already: Firebase Auth authorized domains include sthiva.com, www., seller., ops. (2026-11-05).
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -270,10 +269,142 @@ Times are IST.
   "not a buyer account" screen (session from a seller/admin account), which had no way out. Added a Sign out button
   and account-neutral copy to wrong-role screens on buyer (signin + RequireAuth) and seller (RequireSupplier).
   Firebase has 1 Google user so far. Branch fix/wrong-role-signout.
+- 2026-11-04 IST: User chose NEXT STEP "mobile app Google sign-in". Branch feat/mobile-google-signin. Firebase Android
+  app already had the debug keystore SHA-1 (5e8f...f625); downloaded fresh google-services.json and
+  GoogleService-Info.plist via Firebase Management API with gcloud (both gitignored, local only). Added
+  @react-native-google-signin/google-signin 17 (Firebase-mode config plugin), src/lib/googleAuth.ts (web client
+  5ibngc...), sign-in screen: Continue with Google first, "Use mobile number instead" second (billing-not-enabled
+  mapped to a clear message), sign-out also signs out of Google, profiles show email when no phone, checkout
+  requires a contact phone. Needs a native rebuild (expo run:android). Claude in Chrome was not connected.
+- 2026-11-04 IST: Native Android build NOT verified yet. Code typechecks. Problems hit: emulator Pixel_8 first stuck
+  "offline" (fixed by cold boot -no-snapshot); Gradle could not delete build folders inside node_modules because the
+  repo lives in OneDrive (cleared 22 stale Gradle build dirs, only folders next to a build.gradle). Then Claude Code
+  stopped both the emulator and the clean Gradle build because the laptop ran low on memory. NEXT: when the user says
+  so, run the build alone (no emulator), e.g. `cd apps/mobile/android && ./gradlew assembleDebug`, then boot the
+  emulator and install; test Google sign-in + phone test number. If OneDrive locks continue, pause OneDrive sync or
+  build from a copy outside OneDrive. Then open the PR.
+- 2026-11-04 16:45 IST: Android build VERIFIED on emulator Pixel_8. OneDrive breaks Gradle (turns new build files into
+  cloud placeholders: "not a regular file"), so build from a copy OUTSIDE OneDrive: robocopy apps/mobile to C:/bx/mobile
+  (exclude android build dirs), then `cd C:/bx/mobile/android && ./gradlew assembleDebug --max-workers=2
+  -PreactNativeArchitectures=x86_64`; run Metro from the real repo (`npx expo start`), `adb reverse tcp:8081 tcp:8081`.
+  Emulator: use -no-snapshot (snapshot boot hangs "offline"), -memory 2048. Checked: new sign-in screen renders,
+  Continue with Google opens Google's account flow (no DEVELOPER_ERROR, so client IDs + SHA-1 are right), mobile number
+  option opens, a real number shows "Text message codes are not available yet..." (Android sends BILLING_NOT_ENABLED
+  inside auth/internal-error, now handled). NOT checked: finishing a Google sign-in (needs the user's Google account on
+  the emulator) and the checkout phone step. PR opened for the user to merge.
+- 2026-11-04 18:00 IST: Emulator too heavy for this laptop (Google sign-in page stuck rendering, ~1.7 GB free). Built a
+  standalone release APK for real phones instead: in C:/bx/mobile/android, `EXPO_PUBLIC_API_URL=https://buildx-api.onrender.com
+  ./gradlew assembleRelease --max-workers=2 -PreactNativeArchitectures=arm64-v8a` (apps/mobile/.env points at
+  10.0.2.2:4000 = emulator-local API, so the env var override matters). Verified: bundle has the live API URL and new
+  sign-in screen, signed with SHA-1 5e8f...f625 (registered in Firebase). Copied to Desktop/BuildX/BuildX-test.apk
+  (not in git). Waiting for the user to install it on their Android phone and try Continue with Google.
+- 2026-11-04 18:12 IST: User: Google sign-in "not happening" on their phone. Firebase showed their Google account signed in
+  at 18:06, so Google worked; the API /auth/sync failed (Render free host asleep, app timeout 15s) and the app stayed on
+  the sign-in screen silently. Fix (pushed to PR #52): sync waits 60s and retries once, sign-in screen shows a
+  "Try again" / "Use a different account" box (auth.store syncError). New APK at Desktop/BuildX/BuildX-test.apk.
+  NEXT: user installs it and confirms; then user merges PR #52.
+- 2026-11-04 18:30 IST: Still spinning on the user's phone (Google sign-in at 18:14, API awake). Root cause (old bug):
+  AuthGate in app/_layout.tsx never navigated out of (auth) for onboarded users (every branch required !inAuth), so
+  set-up accounts stayed on the sign-in screen after both Google and OTP sign-in. Fixed: route each role to its home
+  whenever it is outside its group (also removed the 2 old typed-route TS errors). Reading the user's DB record was
+  blocked by the permission classifier (not attempted further). New APK at Desktop/BuildX/BuildX-test.apk.
+- 2026-11-04 18:40 IST: User installed the 18:17 APK: sign-in works. Updated CURRENT STATE / NEXT STEPS.
+- 2026-11-04 18:45 IST: Found PR #52 was squash-merged at 17:19 before the 3 fixes; opened follow-up PR from origin/main.
+- 2026-11-04 IST: Mobile pass 2 started, branch feat/mobile-hivis-2. Foundation: brand fonts (Bricolage Grotesque,
+  Geist, Geist Mono, Instrument Serif italic; OFL, TTFs + licences in apps/mobile/assets/fonts, loaded in
+  app/_layout.tsx via useFonts under the names in src/constants/typography.ts `Font`), @expo/vector-icons
+  (MaterialCommunityIcons = Material family like the websites) and react-native-svg (needs native rebuild).
+  ui.tsx: Icon, BuildXMark (real roof logo), Notice (replaces error/success Alerts), ConfirmSheet (replaces confirm
+  Alerts), EmptyState, ScreenHeader, TabItem icons. Codemod: 419 StyleSheet text styles -> Font.* (fontWeight
+  dropped; Android ignores custom fonts with fontWeight). npm installs need --legacy-peer-deps (old react-dom peer clash).
+  Next: per-role screens (emoji -> Icon, Alert -> Notice/ConfirmSheet), then a phone test APK.
+- 2026-11-04 IST: Mobile pass 2, buyer side done on feat/mobile-hivis-2: cart, checkout, orders, order detail,
+  order placed, products, product detail, search, review, AI chat, buyer profile; shared Profile pieces for all 4
+  roles. Fixed along the way: hard-coded "Delivery FREE" (now the server's deliveryCharge), timeline missing
+  IN_TRANSIT, product min order qty ignored, "+GST" shown for GST-inclusive prices, description never shown,
+  "Add anyway" for a second supplier (API refuses mixed carts: now asks to start a new cart; cart warns and blocks
+  checkout when the AI assistant mixed suppliers), dead profile buttons removed, "Popular searches" -> "Try searching for".
+  Next: driver (available, deliveries, order), supplier (home, orders, products, add/edit, analytics), ops
+  (attention, orders, order, suppliers), onboarding role, OTP screen; then build a phone APK for the user.
+- 2026-11-04 19:10 IST: Mobile pass 2 code COMPLETE on feat/mobile-hivis-2 (all pushed): supplier (home, orders with
+  ChoiceSheet/ConfirmSheet, products with photos + plain status names, shared src/components/ProductForm.tsx for
+  add/edit matching API rules incl. GST 0%, draft, full fields on edit via GET /suppliers/me/products/:id, sales),
+  driver (pickups, deliveries, order: list now sends on-the-way/delivered/cash steps to the order screen so cash is
+  always recorded; Route component), ops (suppliers, order: Notice + cancel sheet, attention), onboarding (name
+  prefilled from Google, "Use a different account"), real logo on sign-in, app icons rendered from the logo vectors
+  (assets/icon.png, android-icon-foreground/monochrome.png, adaptive bg sand). Zero emojis and zero Alert.alert left.
+  Typecheck clean. Building a phone APK now (C:/bx/mobile, prebuild regenerated for icons/svg).
+  NEXT: user installs APK and checks; open PR feat/mobile-hivis-2 for the user to merge.
+- 2026-11-04 19:40 IST: Redesign APK built (PR #54 branch) and copied to Desktop/BuildX/BuildX-test.apk. Build notes:
+  run gradle in the foreground (the idle-memory reaper kills background builds), skip lint
+  (`-x lintVitalRelease -x lintVitalAnalyzeRelease`) and use -Xmx1536m -XX:MaxMetaspaceSize=640m (384m ran out).
+  Verified: live API URL, new screens and fonts in the bundle, signed with SHA-1 5e8f...f625.
+  NEXT: user installs and checks the redesign on their phone, then merges PR #54.
+- 2026-11-04 21:30 IST: User merged PR #54. OneDrive still showed 4 GB: local OneDrive is 0.43 GB, the rest is the
+  OneDrive online recycle bin (deleted files count for 30 days); told the user to empty it themselves.
+  Fix on branch fix/ai-one-supplier: AI price list pre-selects the supplier covering most items; "Add selected to
+  cart" refuses picks from several suppliers or a cart holding another supplier, with a plain explanation.
+  Typecheck clean (in C:/bx/mobile).
+- 2026-11-04 22:55 IST: User: do everything that is free; DB credentials and a government sign-in method come later;
+  they will buy a domain; asked about separate buyer and seller apps. Decided: one codebase, two apps (Swiggy/Zomato
+  pattern): "BuildX" com.buildx.app (buyers) and "BuildX Partner" com.buildx.partner (suppliers, delivery partners,
+  ops). Branch feat/partner-app:
+  - apps/mobile/app.config.ts picks the variant from APP_VARIANT=partner (name, package, scheme, icon, extra.appVariant).
+    src/lib/appVariant.ts: IS_PARTNER, roleBelongsHere(). AuthGate sends an account opened in the wrong app to
+    (auth)/other-app ("Please use BuildX Partner" + Use a different account). Onboarding shows only this app's roles.
+  - Firebase: registered Android app com.buildx.partner (1:1054722710633:android:2ced70d7255ece14b696f8) with debug
+    SHA-1 5e8f...f625; new google-services.json holds both packages (gitignored; copy in buildx-secrets/firebase/
+    and C:/bx/mobile). iOS partner build would need its own GoogleService-Info.plist (not done, no iOS builds yet).
+  - Push: Android 13 notification permission requested; notifications that arrive while the app is open now show an
+    in-app banner (src/components/AlertBanner.tsx), they were silently dropped before; taps open the order screen.
+  - API push texts: emojis and em dash removed.
+  - .github/workflows/keep-api-awake.yml pings /health every 10 min (free; Render gives 750 h/month).
+  - Partner icons: ink background, sand mark, lime bar (assets/partner, make-icons.cjs needs sharp).
+  Build: in C:/bx/mobile run `APP_VARIANT=partner npx expo prebuild -p android --clean --no-install` then gradle.
+- 2026-11-04 23:05 IST: Built and verified both APKs from C:/bx/mobile (includes PR #55 and #56 changes):
+  C:/dev/BuildX/BuildX.apk (com.buildx.app) and C:/dev/BuildX/BuildX-Partner.apk (com.buildx.partner), both live API,
+  SHA-1 5e8f...f625, partner has POST_NOTIFICATIONS. Old BuildX-test.apk removed. The user's Google account is a
+  seller, so it now belongs in BuildX Partner (BuildX shows the "use BuildX Partner" screen).
+  Domains (RDAP check): buildx.in, buildx.co.in, buildx.com, buildx.store are taken; free: buildxapp.in, getbuildx.in,
+  getbuildx.com, buildxapp.com, usebuildx.com, buildxhq.com/.in. Waiting for the user to buy one (money).
+  Waiting on user: MongoDB credentials (they will send), government sign-in method later (likely DigiLocker /
+  Aadhaar based: decide when they give details), support email/phone/legal name for the websites.
+- 2026-11-04 23:40 IST: User looked for a new company name (Sthambha, Mestrikart, Plinthkart etc. were free) and
+  chose getbuildx.com (brand stays BuildX). Not bought yet. Code needs no change (all URLs come from env). Added the
+  four getbuildx.com hosts to Firebase authorized domains. Plan in "DOMAIN PLAN" above.
+- 2026-11-05 01:55 IST: BRAND RENAMED BuildX -> Sthiva (user decision). Name research: buildx.in/.com taken, BuildX
+  Technologies Pvt Ltd (Gujarat, 2026) and BuildX.Homes (Bangalore construction) make "BuildX Pvt Ltd" unlikely at MCA.
+  Sthiva: sthiva.com/.in free, no company or trademark found; similar: Sthira Technovations (Dharwad), Sthir-X Systems
+  (Bangalore). User to register "Sthiva Private Limited" (backup Setuzo/Udvora) and buy sthiva.com.
+  Branch feat/sthiva (includes feat/partner-app #56 and the domain-plan log #57):
+  - Every user-facing BuildX -> Sthiva; packages @buildx/* -> @sthiva/*; BuildXLogo/BuildXMark -> SthivaLogo/SthivaMark;
+    storage keys sthiva.*; apps "Sthiva" com.sthiva.app and "Sthiva Partner" com.sthiva.partner (registered in Firebase
+    with SHA-1 5e8f...; google-services.json now holds 4 packages). Firebase project display name "Sthiva".
+  - KEPT on purpose (live services/data): MongoDB dbName 'buildx', Cloudinary cloud/folder buildx, buildx-15494 Firebase
+    project id, buildx-api.onrender.com, buildx-vgud/48kc/ops Vercel URLs, GitHub repo name buildx, logger service name.
+  - New logo: S of two solid blocks with a lime beam (packages/web-core/src/brand/SthivaLogo.tsx; mobile ui.tsx;
+    favicons apps/*/app/icon.svg; app icons via apps/mobile/scripts/make-icons.cjs). Wordmark "sthiva" in the display font,
+    tagline "SOLID MATERIALS, STEADY SUPPLY".
+  - Checks: API tsc + 288 tests + build, web-core 81 tests, buyer/seller typecheck, mobile tsc all pass.
+  - GitHub contributors: only Harishrs2006 and Shubb07; no Claude trailers on any remote branch. Old LOCAL backup
+    branches (backup/local-main-old, backup/stash-main-lockfile, feat/pincode-lookup, feat/rn-mongodb-rewrite) contain
+    Claude trailers but were never pushed; do not push them.
+- 2026-11-05 02:20 IST: User merged #58. Vercel (3 sites) and Render redeployed; all show Sthiva, CI green, API healthy.
+  Checked the live home page in Chrome: new S mark and "sthiva" wordmark render correctly. First Sthiva-Partner build
+  still said BuildX (copy to C:/bx failed silently); fixed copy, re-typechecked, rebuilt: bundle now has "Sthiva Partner".
+- 2026-11-05 IST: User supplied the real Sthiva logo (yellow rounded tile, S of two halves: top ink, bottom white).
+  Saved to docs/brand/sthiva-logo-original.png (+ user-brief/images). Vectorised exactly (two arcs r270/r90, centres
+  588,588 and 948,948 on the 1536 canvas; 180 px edge difference vs the PNG). Replaced my S mark everywhere:
+  web-core SthivaLogo/SthivaMark (tile + "sthiva" wordmark), favicons, OG image, mobile SthivaMark, app icons
+  (buyer: yellow bg, ink/white S, adaptive bg #F3B806; partner: ink bg, yellow/white S). Brand accent lime -> logo
+  yellow #F3B806 (deep #D49E00, soft #FDF0C4) in all tailwind configs, globals.css, mobile colors, design doc.
+- 2026-11-05 02:45 IST: User merged #59 and #60. Vercel production deploys of #60 failed: daily deployment limit on the
+  free plan (too many branch pushes today). APKs rebuilt with the owner's logo and verified: C:/dev/BuildX/Sthiva.apk
+  (com.sthiva.app) and Sthiva-Partner.apk (com.sthiva.partner); bundles contain Sthiva and #F3B806.
 - 2026-11-04 IST (launch prep, branch feat/launch-ready in worktree C:\Users\Harish\buildx-launch, outside OneDrive):
   User asked to get everything ready for a real launch BEFORE paying for anything. Done so far:
   SECURITY: Firebase test number +917019282019 no longer uses the public code 123456 (it was in this public log).
-  New private code is ONLY in Desktop/BuildX/buildx-secrets/TEST_SIGNIN.txt (outside the repo). Admin test number
+  New private code is ONLY in C:/dev/BuildX/buildx-secrets/TEST_SIGNIN.txt (outside the repo). Admin test number
   untouched. STOREFRONT: real page titles for product, category and material pages (server layouts with
   generateMetadata; product title fetched from the API with a 4 s timeout, generic title if the API is asleep);
   sitemap now lists 10 categories, every material guide and every live product, drops /signin; search fixes typos
@@ -296,3 +427,11 @@ Times are IST.
   Play Store steps incl. SHA fingerprints, google-services.json for EAS, data safety answers). PR opened for
   feat/launch-ready. NEXT: user merges; then the paid switches in LAUNCH.md section 2 when the user says yes;
   demo supplier removal needs the user's OK; delete-account button still missing in seller-web and mobile app.
+- 2026-11-05 03:00 IST: Revived PR #51 (launch prep + account deletion + LAUNCH.md + eas.json) on branch
+  feat/launch-ready-sthiva: merged main, resolved 4 conflicts (imports, footer: kept main + "Delete your account"
+  link), applied the Sthiva rename and yellow colour to its files. API 295 tests, web-core 87 tests, buyer and seller
+  typecheck pass. Log merge had duplicated the whole file (CRLF vs LF): restored main's log and re-added #51's entries.
+  Same branch: delete-account added to the seller portal (Business page) and both mobile apps (profile footer, buyers
+  and suppliers only; mobile api errors now keep the HTTP status). apps/*/vercel.json ignoreCommand: websites rebuild
+  only when their folder, packages/web-core or the root package files change (Vercel project roots are apps/<name>,
+  "skip unchanged" was already on). LAUNCH.md updated for the Sthiva name decision.

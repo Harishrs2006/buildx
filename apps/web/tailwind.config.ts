@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-// BuildX "Hi-Vis" design system (2026-10). Source of truth: docs/DESIGN_SYSTEM.md, shared with
+// Sthiva "Hi-Vis" design system (2026-10). Source of truth: docs/DESIGN_SYSTEM.md, shared with
 // apps/mobile. Ink + sand surfaces with a single signal-lime accent (the colour of a site safety
 // vest) and cobalt for information. The Material-style token names below are kept so existing
 // pages inherit the new palette; new work should prefer the short brand names (ink, sand, lime...).
@@ -17,7 +17,7 @@ const config: Config = {
         // Brand primitives
         ink: { DEFAULT: '#0B0C0A', 2: '#141512', 3: '#1D1F1A', 4: '#2A2C26' },
         sand: { DEFAULT: '#F2EFE7', 2: '#FAF8F3', 3: '#E8E4D9', 4: '#DCD7C9' },
-        lime: { DEFAULT: '#C8FF3D', deep: '#A6E01C', soft: '#EEFFC2' },
+        lime: { DEFAULT: '#F3B806', deep: '#D49E00', soft: '#FDF0C4' },
         cobalt: { DEFAULT: '#2457FF', soft: '#E3EAFF' },
         stone: { DEFAULT: '#5E5B52', light: '#A3A197' },
         signal: { red: '#E5484D' },
@@ -39,8 +39,8 @@ const config: Config = {
         outline: '#6F6C62',
         'outline-variant': '#C9C4B5',
         primary: '#0B0C0A',
-        'on-primary': '#C8FF3D',
-        'primary-container': '#C8FF3D',
+        'on-primary': '#F3B806',
+        'primary-container': '#F3B806',
         'on-primary-container': '#0B0C0A',
         secondary: '#2457FF',
         'on-secondary': '#FFFFFF',
@@ -55,9 +55,9 @@ const config: Config = {
         'inverse-surface': '#0B0C0A',
         'inverse-on-surface': '#F2EFE7',
 
-        // shadcn-style names used by @buildx/web-core components (LocationSelector)
+        // shadcn-style names used by @sthiva/web-core components (LocationSelector)
         foreground: '#0B0C0A',
-        'primary-foreground': '#C8FF3D',
+        'primary-foreground': '#F3B806',
         'muted-foreground': '#5E5B52',
         muted: '#E8E4D9',
         border: '#DCD7C9',

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { AppError } from '../../shared/errors/AppError';
 import { PINCODE_RE, PostalLookupUnavailable, summarisePincodes } from '../locations/postal-directory.service';
@@ -49,7 +49,7 @@ async function describe(pincodes: string[]) {
 
 function coverageNote(profile: { verificationStatus: string; isActive: boolean }) {
   if (!profile.isActive) return 'Your supplier account is inactive, so buyers cannot order from you.';
-  if (profile.verificationStatus !== 'VERIFIED') return 'Buyers can order once BuildX verifies your business.';
+  if (profile.verificationStatus !== 'VERIFIED') return 'Buyers can order once Sthiva verifies your business.';
   return undefined;
 }
 

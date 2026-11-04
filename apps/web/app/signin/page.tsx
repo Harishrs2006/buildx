@@ -78,11 +78,11 @@ export default function SignInPage() {
   return (
     <AuthShell step="Step 1 of 2">
       <h1 className="font-display text-[clamp(2.25rem,5vw,3rem)] font-bold leading-[0.95] tracking-tightest">Operations sign in</h1>
-      <p className="mt-4 text-[16px] text-stone">For the BuildX operations team. Use the mobile number your account was set up with. We will text you a 6-digit code.</p>
+      <p className="mt-4 text-[16px] text-stone">For the Sthiva operations team. Use the mobile number your account was set up with. We will text you a 6-digit code.</p>
       <form onSubmit={handleSendOtp} className="mt-8 flex flex-col gap-5">
         <label className="flex flex-col gap-2">
           <span className="text-[14px] font-semibold">Mobile number</span>
-          <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+          <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
             <span className="flex items-center gap-2 border-r border-sand-4 pr-3 font-mono text-[15px]">
               <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] font-semibold text-lime">IN</span>+91
             </span>

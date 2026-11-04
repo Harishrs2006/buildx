@@ -10,7 +10,7 @@ COPY apps/web/package.json ./apps/web/
 COPY packages ./packages
 RUN npm ci --workspace=apps/api --workspace=packages/shared --ignore-scripts
 COPY apps/api ./apps/api
-# Builds @buildx/shared first (prebuild), then the API to apps/api/dist/server.js
+# Builds @sthiva/shared first (prebuild), then the API to apps/api/dist/server.js
 RUN npm run build --workspace=apps/api
 
 # ─── Production stage ────────────────────────────────

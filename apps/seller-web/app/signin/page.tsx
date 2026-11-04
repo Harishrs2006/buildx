@@ -97,7 +97,7 @@ export default function SignInPage() {
     );
   }
 
-  // While Firebase finishes signing in and BuildX loads the account, keep the button busy
+  // While Firebase finishes signing in and Sthiva loads the account, keep the button busy
   const signingIn = googleBusy || status === 'loading';
 
   return (
@@ -109,7 +109,7 @@ export default function SignInPage() {
           type="button"
           onClick={handleGoogle}
           disabled={signingIn}
-          className="flex h-14 w-full items-center justify-center gap-3 rounded-xl border border-sand-4 bg-white text-[16px] font-semibold text-ink transition-[border-color,box-shadow] hover:border-ink focus-visible:shadow-[0_0_0_4px_rgba(200,255,61,0.55)] focus-visible:outline-none disabled:opacity-60"
+          className="flex h-14 w-full items-center justify-center gap-3 rounded-xl border border-sand-4 bg-white text-[16px] font-semibold text-ink transition-[border-color,box-shadow] hover:border-ink focus-visible:shadow-[0_0_0_4px_rgba(243,184,6,0.55)] focus-visible:outline-none disabled:opacity-60"
         >
           <GoogleMark />
           {signingIn ? 'Signing in' : 'Continue with Google'}
@@ -125,7 +125,7 @@ export default function SignInPage() {
           <form onSubmit={handleSendOtp} className="flex flex-col gap-5">
             <label className="flex flex-col gap-2">
               <span className="text-[14px] font-semibold">Mobile number</span>
-              <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+              <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
                 <span className="flex items-center gap-2 border-r border-sand-4 pr-3 font-mono text-[15px]">
                   <span className="rounded bg-ink px-1.5 py-0.5 text-[10px] font-semibold text-lime">IN</span>+91
                 </span>

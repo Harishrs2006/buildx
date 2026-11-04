@@ -1,6 +1,6 @@
-"""Generates the BuildX material illustrations in public/illustrations/*.svg.
+"""Generates the Sthiva material illustrations in public/illustrations/*.svg.
 
-Original artwork (owned by BuildX, no licence restrictions), drawn in the Hi-Vis style: isometric
+Original artwork (owned by Sthiva, no licence restrictions), drawn in the Hi-Vis style: isometric
 forms on a sand stage. Shown on product cards when a supplier has not uploaded a photo, always
 labelled as an illustration. Re-run after editing:  python scripts/generate-illustrations.py
 """
@@ -9,7 +9,7 @@ import os
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'illustrations')
 W, H = 480, 360
-INK, SAND, LIME, COBALT = '#0B0C0A', '#F2EFE7', '#C8FF3D', '#2457FF'
+INK, SAND, LIME, COBALT = '#0B0C0A', '#F2EFE7', '#F3B806', '#2457FF'
 
 
 def shade(hex_color, f):

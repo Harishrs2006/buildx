@@ -1,4 +1,4 @@
-// @buildx/web-core — shared code for the BuildX web apps (buyer and seller sites).
+// @sthiva/web-core — shared code for the Sthiva web apps (buyer and seller sites).
 // Not used by the React Native apps.
 
 export { createApiClient, ApiClientError, isAbortError } from './api/client';
@@ -39,5 +39,5 @@ export type { CatalogSearch } from './catalog/search';
 export type { CatalogItem, CatalogCategory, Calculator, ListingUnit, Spec, VariantGroup, SoldAs } from './catalog/types';
 export * as units from './catalog/units';
 
-// Brand: the BuildX logo (vector) and its roof-and-X symbol
-export { BuildXLogo, BuildXMark } from './brand/BuildXLogo';
+// Brand: the Sthiva logo (vector) and its roof-and-X symbol
+export { SthivaLogo, SthivaMark } from './brand/SthivaLogo';

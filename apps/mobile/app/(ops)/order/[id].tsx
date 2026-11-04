@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Alert, ActivityIndicator, Linking, Switch,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, Linking, Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../src/constants/colors';
+import { Font } from '../../../src/constants/typography';
 import { ORDER_STATUS_LABELS } from '../../../src/hooks/useOrders';
+import { ConfirmSheet, Icon, Notice, ScreenHeader } from '../../../src/components/ui';
 import {
   useOpsOrder, useOpsDrivers, useOpsCancel, useOpsUnassign, useOpsAssign, useOpsRecordCod, useOpsAddNote,
 } from '../../../src/hooks/useOps';
@@ -24,6 +26,9 @@ export default function OpsOrderDetail() {
   const [codAmount, setCodAmount] = useState('');
   const [restock, setRestock] = useState(true);
   const [pickDriver, setPickDriver] = useState(false);
+  // Result of the last action, shown above the actions instead of a pop-up
+  const [feedback, setFeedback] = useState<{ tone: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [askCancel, setAskCancel] = useState(false);
 
   const cancel = useOpsCancel();
   const unassign = useOpsUnassign();
@@ -49,39 +54,37 @@ export default function OpsOrderDetail() {
   const canRecordCod = status === 'DELIVERED' && (order.paymentStatus === 'PENDING' || order.paymentStatus === 'PARTIAL');
   const needReason = () => {
     if (reason.trim().length < 3) {
-      Alert.alert('Reason needed', 'Type a short reason in the box first — it is saved on the order.');
+      setFeedback({ tone: 'info', text: 'Type a short reason in the box first. It is saved on the order.' });
       return false;
     }
     return true;
   };
   const done = (msg: string) => ({
-    onSuccess: () => { setReason(''); setCodAmount(''); Alert.alert('Done', msg); },
-    onError: (err: Error) => Alert.alert('Failed', err.message),
+    onSuccess: () => { setReason(''); setCodAmount(''); setFeedback({ tone: 'success', text: msg }); },
+    onError: (err: Error) => setFeedback({ tone: 'error', text: err.message }),
   });
 
   function doCancel() {
     if (!needReason()) return;
-    const stockLine = goodsLeftSupplier
-      ? restock ? 'Goods returned — stock will be restored.' : 'Goods NOT returned — stock stays deducted.'
-      : 'Stock will be restored.';
-    Alert.alert('Cancel this order?', `${stockLine}\nThe buyer will be notified.`, [
-      { text: 'Back', style: 'cancel' },
-      {
-        text: 'Cancel order',
-        style: 'destructive',
-        onPress: () => cancel.mutate({ id: order!._id, reason: reason.trim(), restock: goodsLeftSupplier ? restock : undefined }, done('Order cancelled')),
-      },
-    ]);
+    setFeedback(null);
+    setAskCancel(true);
+  }
+
+  function confirmCancel() {
+    cancel.mutate(
+      { id: order!._id, reason: reason.trim(), restock: goodsLeftSupplier ? restock : undefined },
+      { ...done('Order cancelled'), onSettled: () => setAskCancel(false) }
+    );
   }
 
   function doUnassign() {
     if (!needReason()) return;
-    unassign.mutate({ id: order!._id, reason: reason.trim() }, done('Driver removed — order is back in the pickup pool'));
+    unassign.mutate({ id: order!._id, reason: reason.trim() }, done('Driver removed. The order is back in the pickup pool.'));
   }
 
   function doRecordCod() {
     const amount = Number(codAmount);
-    if (!Number.isFinite(amount) || amount <= 0) return Alert.alert('Amount needed', 'Enter the total cash received so far.');
+    if (!Number.isFinite(amount) || amount <= 0) return setFeedback({ tone: 'info', text: 'Enter the total cash received so far.' });
     if (!needReason()) return;
     recordCod.mutate({ id: order!._id, amount, note: reason.trim() }, done(amount === order!.total ? 'Marked fully paid' : 'Recorded as partially paid'));
   }
@@ -97,16 +100,13 @@ export default function OpsOrderDetail() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.back}><Text style={s.backIcon}>←</Text></TouchableOpacity>
-        <Text style={s.headerTitle}>{order.orderNumber}</Text>
-        <Text style={s.status}>{ORDER_STATUS_LABELS[status]}</Text>
-      </View>
+      <ScreenHeader eyebrow={ORDER_STATUS_LABELS[status]} title={order.orderNumber} onBack={() => router.back()} />
 
       <ScrollView contentContainerStyle={s.scroll} keyboardShouldPersistTaps="handled">
+        {feedback ? <Notice tone={feedback.tone} onClose={() => setFeedback(null)}>{feedback.text}</Notice> : null}
         <View style={s.card}>
           <Row label="Total" value={`${rupees(order.total)} COD · ${order.paymentStatus}${order.codAmountCollected ? ` (${rupees(order.codAmountCollected)} received)` : ''}`} />
-          <Row label="Delivery" value={order.deliveryMode === 'SUPPLIER' ? "Supplier's own vehicle" : order.deliveryMode === 'PLATFORM' ? 'BuildX delivery partner' : 'Not dispatched'} />
+          <Row label="Delivery" value={order.deliveryMode === 'SUPPLIER' ? "Supplier's own vehicle" : order.deliveryMode === 'PLATFORM' ? 'Sthiva delivery partner' : 'Not dispatched'} />
           {order.cancellationReason ? <Row label="Cancelled" value={`${order.cancellationReason} (${order.inventoryState})`} /> : null}
         </View>
 
@@ -153,7 +153,7 @@ export default function OpsOrderDetail() {
                     { ...done(`Assigned to ${d.userId!.name}`), onSettled: () => setPickDriver(false) }
                   )}
                 >
-                  <Text style={s.line}>{d.isAvailable ? '🟢' : '⚪'} {d.userId!.name} · {d.vehicleType} {d.vehicleNumber}</Text>
+                  <View style={s.driverName}><View style={[s.dot, d.isAvailable && s.dotOn]} /><Text style={s.line}>{d.userId!.name} · {d.vehicleType} {d.vehicleNumber}</Text></View>
                   <Text style={s.muted}>{d.activeOrders} active</Text>
                 </TouchableOpacity>
               ))
@@ -196,6 +196,17 @@ export default function OpsOrderDetail() {
           ))}
         </View>
       </ScrollView>
+      <ConfirmSheet
+        visible={askCancel}
+        title="Cancel this order?"
+        body={`${goodsLeftSupplier ? (restock ? 'Goods returned: stock will be restored.' : 'Goods not returned: stock stays deducted.') : 'Stock will be restored.'} The buyer will be told.`}
+        confirmLabel="Cancel order"
+        cancelLabel="Keep order"
+        danger
+        loading={cancel.isPending}
+        onConfirm={confirmCancel}
+        onCancel={() => setAskCancel(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -216,7 +227,7 @@ function Party({ label, name, phone }: { label: string; name?: string; phone?: s
       <Text style={s.rowValue}>{name ?? '—'}</Text>
       {phone ? (
         <TouchableOpacity onPress={() => Linking.openURL(`tel:${phone}`)}>
-          <Text style={s.call}>📞 {phone}</Text>
+          <View style={s.callRow}><Icon name="phone-outline" size={14} /><Text style={s.call}>{phone}</Text></View>
         </TouchableOpacity>
       ) : null}
     </View>
@@ -236,34 +247,36 @@ function Btn({ label, onPress, disabled, danger, secondary }: { label: string; o
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  driverName: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.stoneLight },
+  dotOn: { backgroundColor: Colors.success },
+  callRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12,
     borderBottomWidth: 1, borderBottomColor: Colors.border, backgroundColor: Colors.surface,
   },
   back: { padding: 4, marginRight: 8 },
-  backIcon: { fontSize: 20, color: Colors.text },
-  headerTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: Colors.text },
-  status: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
+  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 16, color: Colors.text },
+  status: { fontFamily: Font.bold, fontSize: 12, color: Colors.primary },
   scroll: { padding: 16, gap: 12, paddingBottom: 48 },
   card: { backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.border, gap: 8 },
-  cardTitle: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  cardTitle: { fontFamily: Font.bold, fontSize: 13, color: Colors.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  rowLabel: { fontSize: 12, color: Colors.textMuted, width: 70 },
-  rowValue: { fontSize: 14, color: Colors.text, fontWeight: '600', flexShrink: 1 },
-  call: { fontSize: 13, color: Colors.info, fontWeight: '600' },
-  address: { fontSize: 12, color: Colors.textSecondary, marginLeft: 78 },
-  line: { fontSize: 13, color: Colors.text },
-  muted: { fontSize: 12, color: Colors.textSecondary },
-  input: {
-    borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
-    fontSize: 14, color: Colors.text, backgroundColor: Colors.surfaceAlt,
-  },
+  rowLabel: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, width: 70 },
+  rowValue: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text, flexShrink: 1 },
+  call: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.ink, textDecorationLine: 'underline' },
+  address: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginLeft: 78 },
+  line: { fontFamily: Font.regular, fontSize: 13, color: Colors.text },
+  muted: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary },
+  input: { fontFamily: Font.regular, borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: 14, color: Colors.text, backgroundColor: Colors.surfaceAlt },
   driverRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border },
   toggle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   btn: { backgroundColor: Colors.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   btnDanger: { backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.error },
   btnSecondary: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  btnText: { fontFamily: Font.bold, color: Colors.sand, fontSize: 14 },
 });

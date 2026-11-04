@@ -60,7 +60,7 @@ export function OrderTimeline({ order }: { order: BuyerOrder }) {
       {inProgress && (
         <p className="flex items-start gap-2 rounded-xl bg-sand-3 px-4 py-3 text-[14px] text-stone">
           <span className="material-symbols-outlined text-[18px]" aria-hidden="true">local_shipping</span>
-          {order.deliveryMode === 'SUPPLIER' ? 'This supplier is delivering it themselves.' : 'A BuildX delivery partner will pick this up.'}
+          {order.deliveryMode === 'SUPPLIER' ? 'This supplier is delivering it themselves.' : 'A Sthiva delivery partner will pick this up.'}
         </p>
       )}
     </div>

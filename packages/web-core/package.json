@@ -1,8 +1,8 @@
 {
-  "name": "@buildx/web-core",
+  "name": "@sthiva/web-core",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared code for the BuildX web apps (buyer and seller sites): API client, location selection, discovery hooks.",
+  "description": "Shared code for the Sthiva web apps (buyer and seller sites): API client, location selection, discovery hooks.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "sideEffects": false,

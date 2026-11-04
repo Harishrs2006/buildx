@@ -150,7 +150,7 @@ describe('switching between modes', () => {
     }
   });
 
-  it("supplier can't complete a BuildX driver's in-transit delivery", async () => {
+  it("supplier can't complete a Sthiva driver's in-transit delivery", async () => {
     // IN_TRANSIT exists in both modes — only the delivery mode tells whose step DELIVERED is
     const { id } = await placeOrder();
     await supplierStatus(supplier, id, 'READY_FOR_PICKUP');

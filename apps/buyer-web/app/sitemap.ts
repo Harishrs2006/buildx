@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { CATALOG, CATALOG_CATEGORIES } from '@buildx/web-core';
+import { CATALOG, CATALOG_CATEGORIES } from '@sthiva/web-core';
 import { SITE } from '@/lib/site';
 import { fetchProductIds } from '@/lib/server-api';
 

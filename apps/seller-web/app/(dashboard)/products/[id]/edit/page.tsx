@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { fetchSupplierProduct, type SupplierProduct } from '../../../../../lib/products';
 import { ProductForm } from '../../../../../components/ProductForm';
 import { ErrorNote, PageHead } from '../../../../../components/ui';

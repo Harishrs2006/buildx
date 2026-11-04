@@ -1,6 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../hooks/useOrders';
 import type { OpsOrderSummary } from '../hooks/useOps';
 
@@ -42,9 +43,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', backgroundColor: Colors.surface, borderRadius: 12,
     padding: 12, marginBottom: 8, borderWidth: 1, borderColor: Colors.border,
   },
-  number: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  sub: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  number: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
+  sub: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  age: { fontSize: 11, color: Colors.textMuted },
+  badgeText: { fontFamily: Font.semiBold, fontSize: 11 },
+  age: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted },
 });

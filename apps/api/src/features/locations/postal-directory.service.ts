@@ -41,7 +41,7 @@ function mostCommon(values: string[]): string {
 
 /**
  * Postal validity only: tells you whether India Post knows this PIN and what is there.
- * It says nothing about whether BuildX delivers to it — that is a separate check.
+ * It says nothing about whether Sthiva delivers to it — that is a separate check.
  *
  * @returns the lookup, or null when the PIN is not in the directory
  * @throws PostalLookupUnavailable when no directory is loaded or the DB can't be read

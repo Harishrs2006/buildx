@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { catalogItem } from '@buildx/web-core';
+import { catalogItem } from '@sthiva/web-core';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;

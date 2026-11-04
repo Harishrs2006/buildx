@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { ProductForm } from '../../../../components/ProductForm';
 import { ErrorNote, PageHead } from '../../../../components/ui';
 import { isSetupComplete, useSupplierProfile } from '../../../../lib/setup';

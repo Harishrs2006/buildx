@@ -5,9 +5,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import auth from '@react-native-firebase/auth';
 import { useAuthStore } from '../src/store/auth.store';
-import { useRouter, useSegments } from 'expo-router';
+import { useRouter, useSegments, type Href } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { usePushNotifications } from '../src/hooks/usePushNotifications';
+import { useFonts } from 'expo-font';
+import { fontFiles } from '../src/constants/typography';
+import { roleBelongsHere } from '../src/lib/appVariant';
+import { AlertBanner } from '../src/components/AlertBanner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -40,7 +44,7 @@ function AuthGate() {
     const inOnboarding = segments[0] === '(onboarding)';
 
     if (!user) {
-      if (!inAuth) router.replace('/(auth)/phone');
+      if (!inAuth || (segments as string[])[1] === 'other-app') router.replace('/(auth)/phone');
       return;
     }
 
@@ -49,21 +53,31 @@ function AuthGate() {
       return;
     }
 
-    if (user.role === 'SUPPLIER' && !inAuth && !inOnboarding) {
-      if (segments[0] !== '(supplier)') router.replace('/(supplier)/home');
-    } else if (user.role === 'DELIVERY_PARTNER' && !inAuth && !inOnboarding) {
-      if (segments[0] !== '(driver)') router.replace('/(driver)/available');
-    } else if ((user.role === 'OPERATOR' || user.role === 'ADMIN') && !inAuth && !inOnboarding) {
-      if (segments[0] !== '(ops)') router.replace('/(ops)/attention');
-    } else if (!inAuth && !inOnboarding) {
-      if (segments[0] !== '(buyer)') router.replace('/(buyer)/home');
+    // Buyers use Sthiva, everyone else uses Sthiva Partner: explain instead of opening the wrong screens
+    if (!roleBelongsHere(user.role)) {
+      if ((segments as string[])[1] !== 'other-app') router.replace('/(auth)/other-app' as Href);
+      return;
     }
+
+    // Signed in and set up: send each role to its own area, including straight from the
+    // sign-in screen (Google sign-in and OTP both land here after the API sync)
+    const home =
+      user.role === 'SUPPLIER' ? '/(supplier)/home'
+      : user.role === 'DELIVERY_PARTNER' ? '/(driver)/available'
+      : user.role === 'OPERATOR' || user.role === 'ADMIN' ? '/(ops)/attention'
+      : '/(buyer)/home';
+    if (segments[0] !== home.split('/')[1]) router.replace(home as Href);
   }, [user, loading, segments]);
 
   return null;
 }
 
 export default function RootLayout() {
+  // Brand fonts ship inside the app (assets/fonts): this is a local load, not a download.
+  // If one ever fails, the app still opens with the system font.
+  const [fontsLoaded, fontError] = useFonts(fontFiles);
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>
@@ -76,6 +90,7 @@ export default function RootLayout() {
           <Stack.Screen name="(driver)" />
           <Stack.Screen name="(ops)" />
         </Stack>
+        <AlertBanner />
         <StatusBar style="dark" />
       </QueryClientProvider>
     </GestureHandlerRootView>

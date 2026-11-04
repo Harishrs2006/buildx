@@ -11,10 +11,10 @@ const serif = Instrument_Serif({ subsets: ['latin'], weight: '400', style: ['nor
 
 export const metadata: Metadata = {
   title: {
-    default: 'BuildX for suppliers | Catalogue and orders',
-    template: '%s | BuildX Seller',
+    default: 'Sthiva for suppliers | Catalogue and orders',
+    template: '%s | Sthiva Seller',
   },
-  description: 'Manage your BuildX product catalog, stock and incoming orders.',
+  description: 'Manage your Sthiva product catalog, stock and incoming orders.',
   robots: { index: false, follow: false },
 };
 

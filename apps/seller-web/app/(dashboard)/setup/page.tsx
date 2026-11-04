@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useApiClient, catalogItems } from '@buildx/web-core';
+import { useApiClient, catalogItems, ApiClientError } from '@sthiva/web-core';
+import { z } from 'zod';
+import { useAuth } from '../../../components/auth/AuthProvider';
 import { useCategories } from '../../../lib/categories';
 import {
   BUSINESS_TYPES, addServicePincodes, describePincodeError, rejectedPincodes, removeServicePincode, setupGaps, updateSupplierProfile,
@@ -219,7 +221,7 @@ export default function SetupPage() {
 
           <label className="flex flex-col gap-2">
             <span className="text-[15px] font-semibold">WhatsApp for order updates</span>
-            <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+            <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
               <span className="border-r border-sand-4 pr-3 font-mono text-[15px]">+91</span>
               <input type="tel" inputMode="numeric" maxLength={10} value={whatsapp} onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ''))} className="h-12 w-full bg-transparent pr-4 font-mono text-[16px] outline-none" />
             </span>
@@ -327,6 +329,54 @@ export default function SetupPage() {
           </div>
         </section>
       )}
+
+      <DeleteAccount />
     </div>
+  );
+}
+
+// Account deletion (the app stores require it; the privacy policy promises it). Confirmed in the page, no
+// browser dialog. The API refuses while an order is open and says why.
+function DeleteAccount() {
+  const client = useApiClient();
+  const { signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function confirm() {
+    setBusy(true);
+    setError(null);
+    try {
+      await client.request('/users/me', { method: 'DELETE', auth: true, envelope: true, schema: z.object({ deleted: z.literal(true) }) });
+      await signOut();
+    } catch (err) {
+      setError(err instanceof ApiClientError && err.status === 409 ? err.message : 'Could not delete your account. Please try again.');
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="self-start text-[14px] font-medium text-stone underline-offset-4 hover:text-error hover:underline">
+        Delete my account
+      </button>
+    );
+  }
+  return (
+    <section className="card p-5" aria-labelledby="delete-title">
+      <h2 id="delete-title" className="font-display text-lg font-semibold">Delete your seller account?</h2>
+      <p className="mt-2 text-[14px] leading-relaxed text-stone">
+        Your details are erased, your listings are taken down and you are signed out. Past orders are kept without your
+        contact details, because invoices must be kept by law.
+      </p>
+      {error && <p role="alert" className="mt-3 text-[14px] text-error">{error}</p>}
+      <div className="mt-4 flex gap-2">
+        <button type="button" onClick={confirm} disabled={busy} className="btn-ink flex-1 bg-error">
+          {busy ? 'Deleting...' : 'Delete my account'}
+        </button>
+        <button type="button" onClick={() => setOpen(false)} disabled={busy} className="btn-ghost flex-1">Cancel</button>
+      </div>
+    </section>
   );
 }

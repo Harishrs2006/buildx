@@ -8,7 +8,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const category = product.categoryId?.name;
   return {
     title: product.name,
-    description: product.description?.slice(0, 160) ?? `${product.name}${category ? `, ${category}` : ''} on BuildX.`,
+    description: product.description?.slice(0, 160) ?? `${product.name}${category ? `, ${category}` : ''} on Sthiva.`,
     alternates: { canonical: `/product/${id}` },
   };
 }

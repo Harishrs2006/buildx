@@ -1,5 +1,5 @@
 /**
- * BuildX database seed — run with:
+ * Sthiva database seed — run with:
  *   npx ts-node -r tsconfig-paths/register src/scripts/seed.ts
  *
  * Seeds: 10 categories, 2 supplier profiles + users, 30 products across categories

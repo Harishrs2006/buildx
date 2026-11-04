@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LocationSelector } from '@buildx/web-core';
+import { LocationSelector } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
@@ -65,7 +65,7 @@ export default function HomePage() {
         <HeroSlideshow categories={categories.status === 'success' ? categories.data : null} />
 
         {/* ── Materials marquee ─────────────────────────── */}
-        <div className="relative overflow-hidden border-y border-ink bg-lime py-4 text-ink" aria-label="Materials on BuildX">
+        <div className="relative overflow-hidden border-y border-ink bg-lime py-4 text-ink" aria-label="Materials on Sthiva">
           <div className="flex w-max animate-marquee gap-10 whitespace-nowrap hover:[animation-play-state:paused]">
             {[...MATERIALS, ...MATERIALS].map((m, i) => (
               <span key={i} className="flex items-center gap-10 font-display text-[22px] font-semibold tracking-[-0.02em] sm:text-[26px]" aria-hidden={i >= MATERIALS.length}>
@@ -89,7 +89,7 @@ export default function HomePage() {
                 </h2>
               </div>
               <p className="max-w-sm text-[15px] leading-relaxed text-stone">
-                Categories and listings come live from suppliers on BuildX. Pick one to see products, prices and delivery.
+                Categories and listings come live from suppliers on Sthiva. Pick one to see products, prices and delivery.
               </p>
             </Reveal>
 

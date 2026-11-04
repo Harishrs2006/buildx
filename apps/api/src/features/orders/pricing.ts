@@ -148,7 +148,7 @@ export function priceOrder(lines: { product: PricingProduct; quantity: number }[
     totalPaise: sum((l) => l.totalPaise),
   };
   if (order.totalPaise > MAX_ORDER_TOTAL_PAISE) {
-    throw new PricingError('Order value exceeds the online limit. Please contact BuildX support.', 'TOO_LARGE');
+    throw new PricingError('Order value exceeds the online limit. Please contact Sthiva support.', 'TOO_LARGE');
   }
   return order;
 }

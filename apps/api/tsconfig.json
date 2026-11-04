@@ -16,7 +16,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "paths": {
-      "@buildx/shared": ["../../packages/shared/index.ts"]
+      "@sthiva/shared": ["../../packages/shared/index.ts"]
     }
   },
   "include": ["src/**/*", "../../packages/shared/**/*"],

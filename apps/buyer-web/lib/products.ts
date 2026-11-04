@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { useApiClient, type ApiClient } from '@buildx/web-core';
+import { useApiClient, type ApiClient } from '@sthiva/web-core';
 
 // GET /products/:id — bare JSON (no envelope), like GET /products.
 const imageSchema = z.object({ url: z.string(), isPrimary: z.boolean().optional() }).passthrough();

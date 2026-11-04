@@ -1,32 +1,34 @@
 {
   "expo": {
-    "name": "BuildX",
-    "slug": "buildx",
+    "name": "Sthiva",
+    "slug": "sthiva",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "buildx",
+    "scheme": "sthiva",
     "userInterfaceStyle": "light",
     "splash": {
       "backgroundColor": "#0B0C0A"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.buildx.app",
+      "bundleIdentifier": "com.sthiva.app",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#0B0C0A"
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png",
+        "backgroundColor": "#F3B806"
       },
-      "package": "com.buildx.app",
+      "package": "com.sthiva.app",
       "googleServicesFile": "./google-services.json"
     },
     "plugins": [
       "expo-router",
       "@react-native-firebase/app",
-      "@react-native-firebase/auth"
+      "@react-native-firebase/auth",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true

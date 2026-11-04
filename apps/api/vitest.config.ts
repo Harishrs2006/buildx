@@ -5,7 +5,7 @@ export default defineConfig({
   // Inline (empty) PostCSS config stops Vite walking up to the BOM-prefixed root package.json
   css: { postcss: {} },
   // Tests run against the shared package's source, so no build is needed first
-  resolve: { alias: { '@buildx/shared': path.resolve(__dirname, '../../packages/shared/index.ts') } },
+  resolve: { alias: { '@sthiva/shared': path.resolve(__dirname, '../../packages/shared/index.ts') } },
   test: {
     environment: 'node',
     include: ['test/**/*.test.ts'],
