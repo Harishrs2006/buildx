@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
 import { useOpsSuppliers, useOpsVerifySupplier, type OpsSupplier } from '../../src/hooks/useOps';
+import { ConfirmSheet, EmptyState, Icon, Notice, type } from '../../src/components/ui';
 
 const TABS = [
-  { key: 'PENDING', label: 'Pending' },
+  { key: 'PENDING', label: 'Waiting' },
   { key: 'VERIFIED', label: 'Verified' },
   { key: 'REJECTED', label: 'Rejected' },
 ];
@@ -15,84 +16,104 @@ export default function OpsSuppliersScreen() {
   const [tab, setTab] = useState('PENDING');
   const { data, isLoading, refetch, isRefetching } = useOpsSuppliers(tab);
   const verify = useOpsVerifySupplier();
+  const [deciding, setDeciding] = useState<{ supplier: OpsSupplier; status: 'VERIFIED' | 'REJECTED' } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  function decide(supplier: OpsSupplier, status: 'VERIFIED' | 'REJECTED') {
-    const verb = status === 'VERIFIED' ? 'Verify' : 'Reject';
-    Alert.alert(`${verb} ${supplier.businessName}?`, status === 'VERIFIED'
-      ? 'Buyers will see the Verified badge on their products.'
-      : 'The supplier will be told to contact BuildX support.', [
-      { text: 'Back', style: 'cancel' },
-      {
-        text: verb,
-        style: status === 'REJECTED' ? 'destructive' : 'default',
-        onPress: () => verify.mutate({ id: supplier._id, status }, { onError: (e) => Alert.alert('Failed', e.message) }),
-      },
-    ]);
+  function confirm() {
+    if (!deciding) return;
+    const { supplier, status } = deciding;
+    setError(null);
+    verify.mutate({ id: supplier._id, status }, {
+      onSuccess: () => setDeciding(null),
+      onError: (e) => { setDeciding(null); setError(`${supplier.businessName}: ${e.message}`); },
+    });
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Suppliers</Text>
-        <View style={styles.tabs}>
-          {TABS.map((t) => (
-            <TouchableOpacity key={t.key} style={[styles.chip, tab === t.key && styles.chipActive]} onPress={() => setTab(t.key)}>
-              <Text style={[styles.chipText, tab === t.key && styles.chipTextActive]}>{t.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        {isLoading ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 48 }} />
-        ) : (
-          <FlatList
-            data={data?.data ?? []}
-            keyExtractor={(sp) => sp._id}
-            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
-            ListEmptyComponent={<Text style={styles.empty}>No {tab.toLowerCase()} suppliers</Text>}
-            renderItem={({ item }) => (
-              <View style={styles.card}>
-                <Text style={styles.name}>{item.businessName}</Text>
-                <Text style={styles.sub}>{item.userId?.name} · {item.serviceAreas.join(', ') || 'No service areas'}</Text>
-                <TouchableOpacity onPress={() => Linking.openURL(`tel:${item.whatsappNumber}`)}>
-                  <Text style={styles.call}>📞 {item.whatsappNumber}</Text>
-                </TouchableOpacity>
-                {item.verificationStatus !== 'VERIFIED' && (
-                  <View style={styles.actions}>
-                    <TouchableOpacity style={styles.btn} onPress={() => decide(item, 'VERIFIED')} disabled={verify.isPending}>
-                      <Text style={styles.btnText}>Verify</Text>
-                    </TouchableOpacity>
-                    {item.verificationStatus === 'PENDING' && (
-                      <TouchableOpacity style={[styles.btn, styles.btnDanger]} onPress={() => decide(item, 'REJECTED')} disabled={verify.isPending}>
-                        <Text style={[styles.btnText, { color: Colors.error }]}>Reject</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                )}
-              </View>
-            )}
-          />
-        )}
+    <SafeAreaView edges={['top']} style={styles.safe}>
+      <Text style={[type.title, styles.title]}>Suppliers</Text>
+      <View style={styles.tabs}>
+        {TABS.map((t) => {
+          const on = tab === t.key;
+          return (
+            <Pressable key={t.key} style={[styles.tab, on && styles.tabOn]} onPress={() => setTab(t.key)} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+              <Text style={[styles.tabText, on && styles.tabTextOn]}>{t.label}</Text>
+            </Pressable>
+          );
+        })}
       </View>
+      {error ? <Notice tone="error" onClose={() => setError(null)} style={styles.notice}>{error}</Notice> : null}
+
+      {isLoading ? (
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
+      ) : (
+        <FlatList
+          data={data?.data ?? []}
+          keyExtractor={(sp) => sp._id}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
+          ListEmptyComponent={<EmptyState icon="storefront-outline" title="Nobody here" body={`No ${TABS.find((t) => t.key === tab)?.label.toLowerCase()} suppliers.`} />}
+          renderItem={({ item }) => (
+            <View style={styles.card}>
+              <Text style={styles.name}>{item.businessName}</Text>
+              <Text style={styles.sub}>{item.userId?.name} · {item.serviceAreas.join(', ') || 'No service areas yet'}</Text>
+              {item.whatsappNumber ? (
+                <Pressable style={styles.call} onPress={() => Linking.openURL(`tel:${item.whatsappNumber}`)} accessibilityRole="button">
+                  <Icon name="phone-outline" size={16} />
+                  <Text style={styles.callText}>{item.whatsappNumber}</Text>
+                </Pressable>
+              ) : null}
+              {item.verificationStatus !== 'VERIFIED' ? (
+                <View style={styles.actions}>
+                  <Pressable style={[styles.btn, styles.btnOk]} onPress={() => setDeciding({ supplier: item, status: 'VERIFIED' })} accessibilityRole="button">
+                    <Text style={styles.btnText}>Verify</Text>
+                  </Pressable>
+                  {item.verificationStatus === 'PENDING' ? (
+                    <Pressable style={[styles.btn, styles.btnNo]} onPress={() => setDeciding({ supplier: item, status: 'REJECTED' })} accessibilityRole="button">
+                      <Text style={[styles.btnText, styles.btnNoText]}>Reject</Text>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
+            </View>
+          )}
+        />
+      )}
+
+      <ConfirmSheet
+        visible={!!deciding}
+        title={deciding ? `${deciding.status === 'VERIFIED' ? 'Verify' : 'Reject'} ${deciding.supplier.businessName}?` : ''}
+        body={deciding?.status === 'VERIFIED' ? 'Buyers will see the Verified badge on their products.' : 'The supplier will be told to contact BuildX support.'}
+        confirmLabel={deciding?.status === 'VERIFIED' ? 'Verify' : 'Reject'}
+        danger={deciding?.status === 'REJECTED'}
+        loading={verify.isPending}
+        onConfirm={confirm}
+        onCancel={() => setDeciding(null)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text, marginBottom: 12 },
-  tabs: { flexDirection: 'row', gap: 6, marginBottom: 12 },
-  chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
-  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.textSecondary },
-  chipTextActive: { color: '#fff' },
-  card: { backgroundColor: Colors.surface, borderRadius: 12, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: Colors.border, gap: 4 },
-  name: { fontFamily: Font.bold, fontSize: 15, color: Colors.text },
-  sub: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary },
-  call: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.info },
-  actions: { flexDirection: 'row', gap: 8, marginTop: 8 },
-  btn: { flex: 1, backgroundColor: Colors.primary, borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  btnDanger: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.error },
-  btnText: { fontFamily: Font.bold, color: '#fff' },
-  empty: { textAlign: 'center', color: Colors.textSecondary, marginTop: 48 },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  title: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12 },
+  tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 20, marginBottom: 12 },
+  tab: { height: 38, paddingHorizontal: 16, borderRadius: 19, borderWidth: 1, borderColor: Colors.sand4, backgroundColor: Colors.sand2, justifyContent: 'center' },
+  tabOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  tabText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink },
+  tabTextOn: { color: Colors.sand },
+  notice: { marginHorizontal: 20, marginBottom: 10 },
+  loading: { marginTop: 48 },
+  list: { paddingHorizontal: 20, paddingBottom: 32, gap: 10 },
+  card: { padding: 16, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  name: { fontFamily: Font.bold, fontSize: 16, color: Colors.ink },
+  sub: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 4 },
+  call: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8, alignSelf: 'flex-start' },
+  callText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink, textDecorationLine: 'underline' },
+  actions: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  btn: { flex: 1, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  btnOk: { backgroundColor: Colors.lime },
+  btnNo: { backgroundColor: Colors.errorLight },
+  btnText: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  btnNoText: { color: Colors.error },
 });

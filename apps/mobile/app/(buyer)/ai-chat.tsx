@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   priceItemName: { fontFamily: Font.bold, fontSize: 14, color: Colors.text, flex: 1 },
   priceItemQty: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, marginLeft: 8 },
-  notFound: { fontFamily: Font.serifItalic, fontSize: 13, color: Colors.textMuted },
+  notFound: { fontFamily: Font.regular, fontSize: 13, color: Colors.textMuted },
 
   optionRow: {
     flexDirection: 'row',

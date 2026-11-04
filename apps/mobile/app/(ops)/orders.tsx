@@ -69,6 +69,6 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
   chipText: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.textSecondary },
-  chipTextActive: { color: '#fff' },
+  chipTextActive: { color: Colors.sand },
   empty: { textAlign: 'center', color: Colors.textSecondary, marginTop: 48 },
 });

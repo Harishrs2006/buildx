@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator }
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { Icon } from '../../src/components/ui';
 import { useOpsSummary, type OpsSummary } from '../../src/hooks/useOps';
 import { OpsOrderRow } from '../../src/components/OpsOrderRow';
 
@@ -46,7 +47,7 @@ export default function AttentionScreen() {
                   </Text>
                   <Text style={styles.hint}>{q.hint(summary.thresholds)}</Text>
                   {orders.length === 0 ? (
-                    <Text style={styles.clear}>✓ All clear</Text>
+                    <View style={styles.clearRow}><Icon name="check-circle-outline" size={16} color={Colors.success} /><Text style={styles.clear}>All clear</Text></View>
                   ) : (
                     orders.map((o) => <OpsOrderRow key={o._id} order={o} />)
                   )}
@@ -70,6 +71,7 @@ function Stat({ label, value }: { label: string; value: number }) {
 }
 
 const styles = StyleSheet.create({
+  clearRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
   container: { padding: 20, paddingBottom: 40 },
   title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text, marginBottom: 16 },

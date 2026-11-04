@@ -1,31 +1,45 @@
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, ScrollView, TextInput } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
 import { api } from '../../src/lib/api';
 import { useAuthStore } from '../../src/store/auth.store';
+import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { VEHICLE_ICONS, VEHICLE_LABELS } from '../../src/hooks/useDelivery';
+import { BuildXMark, Button, Eyebrow, Icon, Notice, type IconName } from '../../src/components/ui';
 
 type Role = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER';
 
+const ROLES: { r: Role; icon: IconName; title: string; desc: string }[] = [
+  { r: 'BUYER', icon: 'hard-hat', title: 'I buy materials', desc: 'Contractors, builders and site owners' },
+  { r: 'SUPPLIER', icon: 'storefront-outline', title: 'I sell materials', desc: 'Dealers, traders and equipment owners' },
+  { r: 'DELIVERY_PARTNER', icon: 'truck-outline', title: 'I deliver orders', desc: 'Drivers with their own vehicle' },
+];
+const VEHICLES = ['BIKE', 'AUTO', 'MINI_TRUCK', 'TEMPO', 'TRUCK', 'TRACTOR'];
+
 export default function RoleScreen() {
-  const router = useRouter();
-  const { syncWithBackend } = useAuthStore();
+  const { syncWithBackend, user, clear } = useAuthStore();
   const [role, setRole] = useState<Role | null>(null);
-  const [name, setName] = useState('');
+  const [name, setName] = useState(user?.name ?? '');
   const [businessName, setBusinessName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [vehicleType, setVehicleType] = useState('TEMPO');
   const [vehicleNumber, setVehicleNumber] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const whatsappOk = /^[6-9]\d{9}$/.test(whatsapp.replace(/\s/g, ''));
+  const canContinue = !!role && !!name.trim() && (
+    role === 'BUYER' ||
+    (role === 'SUPPLIER' && !!businessName.trim() && whatsappOk) ||
+    (role === 'DELIVERY_PARTNER' && !!vehicleType && !!vehicleNumber.trim() && !!licenseNumber.trim())
+  );
 
   async function handleContinue() {
-    if (!role || !name.trim()) return;
-    if (role === 'SUPPLIER' && (!businessName.trim() || !whatsapp.trim())) return;
-    if (role === 'DELIVERY_PARTNER' && (!vehicleType || !vehicleNumber.trim() || !licenseNumber.trim())) return;
-
+    if (!role || !canContinue) return;
+    setError(null);
     setLoading(true);
     try {
       await api.post('/auth/onboard', {
@@ -42,183 +56,139 @@ export default function RoleScreen() {
         }),
       });
       await syncWithBackend();
-      // AuthGate in _layout.tsx will redirect to correct home
+      // AuthGate in _layout.tsx sends the account to its home screen
     } catch (err: any) {
-      Alert.alert('Error', err.message);
+      setError(err?.message ?? 'We could not save your details. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  const canContinue = role && name.trim() && (
-    role === 'BUYER' ||
-    (role === 'SUPPLIER' && businessName.trim() && /^[6-9]\d{9}$/.test(whatsapp.replace(/\s/g, ''))) ||
-    (role === 'DELIVERY_PARTNER' && vehicleType && vehicleNumber.trim() && licenseNumber.trim())
-  );
-
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Text style={styles.heading}>Who are you on BuildX?</Text>
-        <Text style={styles.sub}>This helps us personalise your experience.</Text>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <BuildXMark size={40} />
+          <Eyebrow>Last step</Eyebrow>
+          <Text style={styles.heading}>
+            How will you use{'\n'}
+            <Text style={styles.accent}>BuildX?</Text>
+          </Text>
 
-        {/* Role cards */}
-        <View style={styles.cards}>
-          {([
-            { r: 'BUYER', emoji: '🏗️', title: 'Contractor / Buyer', desc: 'I buy construction materials for projects' },
-            { r: 'SUPPLIER', emoji: '🏭', title: 'Supplier / Dealer', desc: 'I sell construction materials or equipment' },
-            { r: 'DELIVERY_PARTNER', emoji: '🚚', title: 'Delivery Partner', desc: 'I deliver orders from suppliers to buyers' },
-          ] as { r: Role; emoji: string; title: string; desc: string }[]).map(({ r, emoji, title, desc }) => (
-            <TouchableOpacity
-              key={r}
-              style={[styles.card, role === r && styles.cardSelected]}
-              onPress={() => setRole(r)}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.cardEmoji}>{emoji}</Text>
-              <Text style={[styles.cardTitle, role === r && styles.cardTitleSelected]}>{title}</Text>
-              <Text style={styles.cardDesc}>{desc}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Common fields */}
-        <Text style={styles.label}>Your name *</Text>
-        <TextInput
-          style={styles.input}
-          value={name}
-          onChangeText={setName}
-          placeholder="e.g. Rajan Gowda"
-          placeholderTextColor={Colors.textMuted}
-          autoCapitalize="words"
-        />
-
-        {/* Supplier-specific fields */}
-        {role === 'SUPPLIER' && (
-          <>
-            <Text style={styles.label}>Business name *</Text>
-            <TextInput
-              style={styles.input}
-              value={businessName}
-              onChangeText={setBusinessName}
-              placeholder="e.g. Ramappa Sand & Aggregates"
-              placeholderTextColor={Colors.textMuted}
-              autoCapitalize="words"
-            />
-
-            <Text style={styles.label}>WhatsApp number *</Text>
-            <View style={styles.inputRow}>
-              <Text style={styles.prefix}>+91</Text>
-              <TextInput
-                style={[styles.input, styles.inputFlex]}
-                value={whatsapp}
-                onChangeText={setWhatsapp}
-                placeholder="98765 43210"
-                placeholderTextColor={Colors.textMuted}
-                keyboardType="phone-pad"
-                maxLength={10}
-              />
-            </View>
-            <Text style={styles.hint}>Customers will contact you on this number for orders.</Text>
-          </>
-        )}
-
-        {/* Delivery Partner fields */}
-        {role === 'DELIVERY_PARTNER' && (
-          <>
-            <Text style={styles.label}>Vehicle type *</Text>
-            <View style={styles.vehicleGrid}>
-              {[
-                { key: 'BIKE', label: 'Bike', icon: '🏍️' },
-                { key: 'AUTO', label: 'Auto', icon: '🛺' },
-                { key: 'MINI_TRUCK', label: 'Mini Truck', icon: '🚐' },
-                { key: 'TEMPO', label: 'Tempo', icon: '🚚' },
-                { key: 'TRUCK', label: 'Truck', icon: '🚛' },
-                { key: 'TRACTOR', label: 'Tractor', icon: '🚜' },
-              ].map((v) => (
-                <TouchableOpacity
-                  key={v.key}
-                  style={[styles.vehicleChip, vehicleType === v.key && styles.vehicleChipActive]}
-                  onPress={() => setVehicleType(v.key)}
+          <View style={styles.cards}>
+            {ROLES.map(({ r, icon, title, desc }) => {
+              const on = role === r;
+              return (
+                <Pressable
+                  key={r}
+                  style={[styles.card, on && styles.cardOn]}
+                  onPress={() => setRole(r)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: on }}
                 >
-                  <Text style={styles.vehicleIcon}>{v.icon}</Text>
-                  <Text style={[styles.vehicleLabel, vehicleType === v.key && styles.vehicleLabelActive]}>{v.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  <View style={[styles.cardIcon, on && styles.cardIconOn]}><Icon name={icon} size={24} color={on ? Colors.ink : Colors.ink} /></View>
+                  <View style={styles.flex}>
+                    <Text style={[styles.cardTitle, on && styles.cardTitleOn]}>{title}</Text>
+                    <Text style={[styles.cardDesc, on && styles.cardDescOn]}>{desc}</Text>
+                  </View>
+                  <Icon name={on ? 'radiobox-marked' : 'radiobox-blank'} size={22} color={on ? Colors.lime : Colors.stoneLight} />
+                </Pressable>
+              );
+            })}
+          </View>
 
-            <Text style={styles.label}>Vehicle number *</Text>
-            <TextInput
-              style={styles.input}
-              value={vehicleNumber}
-              onChangeText={setVehicleNumber}
-              placeholder="e.g. KA 06 AB 1234"
-              placeholderTextColor={Colors.textMuted}
-              autoCapitalize="characters"
-            />
+          {role ? (
+            <>
+              <Text style={styles.label}>Your name</Text>
+              <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="e.g. Rajan Gowda" placeholderTextColor={Colors.stoneLight} autoCapitalize="words" />
+            </>
+          ) : null}
 
-            <Text style={styles.label}>Driving license number *</Text>
-            <TextInput
-              style={styles.input}
-              value={licenseNumber}
-              onChangeText={setLicenseNumber}
-              placeholder="e.g. KA0620200012345"
-              placeholderTextColor={Colors.textMuted}
-              autoCapitalize="characters"
-            />
-          </>
-        )}
+          {role === 'SUPPLIER' ? (
+            <>
+              <Text style={styles.label}>Business name</Text>
+              <TextInput style={styles.input} value={businessName} onChangeText={setBusinessName} placeholder="e.g. Ramappa Sand and Aggregates" placeholderTextColor={Colors.stoneLight} autoCapitalize="words" />
 
-        <TouchableOpacity
-          style={[styles.btn, !canContinue && styles.btnDisabled]}
-          onPress={handleContinue}
-          disabled={!canContinue || loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.btnText}>Get Started</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
+              <Text style={styles.label}>WhatsApp number</Text>
+              <View style={styles.phoneRow}>
+                <Text style={styles.prefix}>+91</Text>
+                <TextInput
+                  style={styles.phoneInput}
+                  value={whatsapp}
+                  onChangeText={(t) => setWhatsapp(t.replace(/\D/g, ''))}
+                  placeholder="98765 43210"
+                  placeholderTextColor={Colors.stoneLight}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+              </View>
+              <Text style={styles.hint}>Buyers and BuildX contact you on this number about orders.</Text>
+            </>
+          ) : null}
+
+          {role === 'DELIVERY_PARTNER' ? (
+            <>
+              <Text style={styles.label}>Vehicle</Text>
+              <View style={styles.vehicles}>
+                {VEHICLES.map((v) => {
+                  const on = vehicleType === v;
+                  return (
+                    <Pressable key={v} style={[styles.vehicle, on && styles.vehicleOn]} onPress={() => setVehicleType(v)} accessibilityRole="radio" accessibilityState={{ selected: on }}>
+                      <Icon name={VEHICLE_ICONS[v]} size={22} color={on ? Colors.sand : Colors.ink} />
+                      <Text style={[styles.vehicleLabel, on && styles.vehicleLabelOn]}>{VEHICLE_LABELS[v]}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <Text style={styles.label}>Vehicle number</Text>
+              <TextInput style={styles.input} value={vehicleNumber} onChangeText={setVehicleNumber} placeholder="e.g. KA 06 AB 1234" placeholderTextColor={Colors.stoneLight} autoCapitalize="characters" />
+
+              <Text style={styles.label}>Driving licence number</Text>
+              <TextInput style={styles.input} value={licenseNumber} onChangeText={setLicenseNumber} placeholder="e.g. KA0620200012345" placeholderTextColor={Colors.stoneLight} autoCapitalize="characters" />
+            </>
+          ) : null}
+
+          {error ? <Notice tone="error" style={styles.notice}>{error}</Notice> : null}
+
+          <Button title="Continue" variant="lime" onPress={handleContinue} disabled={!canContinue} loading={loading} style={styles.cta} />
+          <Pressable onPress={async () => { await signOutEverywhere(); clear(); }} style={styles.switch} accessibilityRole="button">
+            <Text style={styles.switchText}>Use a different account</Text>
+          </Pressable>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  container: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 40 },
-  heading: { fontFamily: Font.displayBold, fontSize: 26, color: Colors.text, marginBottom: 8 },
-  sub: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, marginBottom: 28 },
-  cards: { flexDirection: 'row', gap: 12, marginBottom: 28 },
-  card: {
-    flex: 1, padding: 16, borderRadius: 14, borderWidth: 1.5,
-    borderColor: Colors.border, backgroundColor: Colors.surfaceAlt,
-  },
-  cardSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  cardEmoji: { fontFamily: Font.regular, fontSize: 28, marginBottom: 8 },
-  cardTitle: { fontFamily: Font.bold, fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
-  cardTitleSelected: { color: Colors.primary },
-  cardDesc: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, lineHeight: 16 },
-  label: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text, marginBottom: 6 },
-  input: { fontFamily: Font.regular, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 14, fontSize: 15,
-    color: Colors.text, backgroundColor: Colors.surface, marginBottom: 16 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  inputFlex: { flex: 1 },
-  prefix: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.text, marginBottom: 16 },
-  hint: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: -10, marginBottom: 20 },
-  btn: {
-    backgroundColor: Colors.primary, borderRadius: 12,
-    paddingVertical: 16, alignItems: 'center', marginTop: 8,
-  },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { fontFamily: Font.bold, color: '#fff', fontSize: 16 },
-  vehicleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
-  vehicleChip: { width: '30%', alignItems: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
-  vehicleChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  vehicleIcon: { fontFamily: Font.regular, fontSize: 24, marginBottom: 4 },
-  vehicleLabel: { fontFamily: Font.semiBold, fontSize: 11, color: Colors.textSecondary },
-  vehicleLabelActive: { color: Colors.primary },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  flex: { flex: 1 },
+  container: { padding: 24, paddingBottom: 40 },
+  heading: { fontFamily: Font.display, fontSize: 36, lineHeight: 38, letterSpacing: -1.2, color: Colors.ink, marginTop: 8 },
+  accent: { fontFamily: Font.serifItalic, color: Colors.ink },
+  cards: { gap: 10, marginTop: 24 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 14, padding: 16, borderRadius: 20, backgroundColor: Colors.sand2, borderWidth: 1.5, borderColor: Colors.sand4 },
+  cardOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  cardIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: Colors.sand, alignItems: 'center', justifyContent: 'center' },
+  cardIconOn: { backgroundColor: Colors.lime },
+  cardTitle: { fontFamily: Font.bold, fontSize: 17, color: Colors.ink },
+  cardTitleOn: { color: Colors.sand },
+  cardDesc: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 2 },
+  cardDescOn: { color: 'rgba(242,239,231,0.7)' },
+  label: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink, marginTop: 20, marginBottom: 8 },
+  input: { fontFamily: Font.regular, borderWidth: 1.5, borderColor: Colors.sand4, borderRadius: 16, backgroundColor: Colors.sand2, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: Colors.ink },
+  phoneRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.sand4, borderRadius: 16, backgroundColor: Colors.sand2 },
+  prefix: { fontFamily: Font.semiBold, fontSize: 16, color: Colors.ink, paddingHorizontal: 14, borderRightWidth: 1, borderRightColor: Colors.sand4 },
+  phoneInput: { fontFamily: Font.regular, flex: 1, paddingHorizontal: 14, paddingVertical: 14, fontSize: 16, color: Colors.ink },
+  hint: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 6 },
+  vehicles: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  vehicle: { width: '31%', flexGrow: 1, alignItems: 'center', gap: 4, paddingVertical: 12, borderRadius: 16, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  vehicleOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  vehicleLabel: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.ink },
+  vehicleLabelOn: { color: Colors.sand },
+  notice: { marginTop: 16 },
+  cta: { marginTop: 28 },
+  switch: { alignSelf: 'center', marginTop: 16, padding: 8 },
+  switchText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.stone, textDecorationLine: 'underline' },
 });

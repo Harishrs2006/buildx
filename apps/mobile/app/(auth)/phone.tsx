@@ -6,22 +6,8 @@ import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
-import { Button, Eyebrow, type } from '../../src/components/ui';
+import { BuildXMark, Button, Eyebrow, type } from '../../src/components/ui';
 import { signInWithGoogle, signOutEverywhere } from '../../src/lib/googleAuth';
-
-// The BuildX mark: two crossing beams, the lime one on top
-export function LogoMark({ size = 40 }: { size?: number }) {
-  return (
-    <View style={[logo.box, { width: size, height: size, borderRadius: size * 0.25 }]}>
-      <Text style={[logo.x, { fontSize: size * 0.62, lineHeight: size * 0.78 }]}>X</Text>
-    </View>
-  );
-}
-
-const logo = StyleSheet.create({
-  box: { backgroundColor: Colors.ink3, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(242,239,231,0.12)' },
-  x: { fontFamily: Font.bold, color: Colors.lime },
-});
 
 export default function PhoneScreen() {
   const router = useRouter();
@@ -92,7 +78,7 @@ export default function PhoneScreen() {
     <View style={styles.root}>
       <SafeAreaView edges={['top']} style={styles.hero}>
         <View style={styles.brandRow}>
-          <LogoMark size={36} />
+          <BuildXMark size={40} tile />
           <Text style={styles.brand}>BuildX</Text>
         </View>
         <Text style={styles.heroTitle}>
