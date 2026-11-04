@@ -277,3 +277,10 @@ Times are IST.
   5ibngc...), sign-in screen: Continue with Google first, "Use mobile number instead" second (billing-not-enabled
   mapped to a clear message), sign-out also signs out of Google, profiles show email when no phone, checkout
   requires a contact phone. Needs a native rebuild (expo run:android). Claude in Chrome was not connected.
+- 2026-11-04 IST: Native Android build NOT verified yet. Code typechecks. Problems hit: emulator Pixel_8 first stuck
+  "offline" (fixed by cold boot -no-snapshot); Gradle could not delete build folders inside node_modules because the
+  repo lives in OneDrive (cleared 22 stale Gradle build dirs, only folders next to a build.gradle). Then Claude Code
+  stopped both the emulator and the clean Gradle build because the laptop ran low on memory. NEXT: when the user says
+  so, run the build alone (no emulator), e.g. `cd apps/mobile/android && ./gradlew assembleDebug`, then boot the
+  emulator and install; test Google sign-in + phone test number. If OneDrive locks continue, pause OneDrive sync or
+  build from a copy outside OneDrive. Then open the PR.
