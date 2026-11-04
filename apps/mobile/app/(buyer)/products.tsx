@@ -1,115 +1,72 @@
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, Image, ScrollView, RefreshControl, Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator, ScrollView, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useProducts, getProductImageUrl, type Product } from '../../src/hooks/useProducts';
 import { useCartStore } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { Button, EmptyState, Icon, ScreenHeader } from '../../src/components/ui';
+import { CartButton } from '../../src/components/CartButton';
+import { useAddToCart } from '../../src/components/useAddToCart';
 
 type SortOption = 'popular' | 'price_asc' | 'price_desc' | 'newest';
 
 const SORT_OPTIONS: { label: string; value: SortOption }[] = [
   { label: 'Popular', value: 'popular' },
-  { label: 'Price ↑', value: 'price_asc' },
-  { label: 'Price ↓', value: 'price_desc' },
+  { label: 'Lowest price', value: 'price_asc' },
+  { label: 'Highest price', value: 'price_desc' },
   { label: 'Newest', value: 'newest' },
 ];
 
-function ProductCard({ item }: { item: Product }) {
+function ProductCard({ item, onAdd }: { item: Product; onAdd: (p: Product) => void }) {
   const router = useRouter();
-  const addItem = useCartStore((s) => s.addItem);
   const inCart = useCartStore((s) => s.items.some((i) => i.productId === item._id));
-  const hasConflict = useCartStore((s) => s.hasConflict(item.supplierId?._id ?? ''));
-
   const thumbUrl = getProductImageUrl(item.images);
-
-  function handleAdd() {
-    if (hasConflict) {
-      Alert.alert(
-        'Different supplier',
-        'Your cart has items from another supplier. Add anyway to create a separate order?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Add anyway',
-            onPress: () => addItem({
-              productId: item._id,
-              name: item.name,
-              image: thumbUrl,
-              unit: item.unit,
-              basePrice: item.basePrice,
-              gstRate: item.gstRate,
-              isGstInclusive: item.isGstInclusive,
-              bulkPricing: item.bulkPricing,
-              supplierId: item.supplierId?._id ?? '',
-              supplierName: item.supplierId?.businessName ?? '',
-            }),
-          },
-        ]
-      );
-      return;
-    }
-    addItem({
-      productId: item._id,
-      name: item.name,
-      image: thumbUrl,
-      unit: item.unit,
-      basePrice: item.basePrice,
-      gstRate: item.gstRate,
-      isGstInclusive: item.isGstInclusive,
-      bulkPricing: item.bulkPricing,
-      supplierId: item.supplierId?._id ?? '',
-      supplierName: item.supplierId?.businessName ?? '',
-    });
-  }
+  const outOfStock = item.stockQuantity <= 0;
 
   return (
-    <TouchableOpacity
-      style={styles.card}
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={() => router.push({ pathname: '/(buyer)/product/[id]', params: { id: item._id } })}
-      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={item.name}
     >
       <View style={styles.cardImg}>
         {thumbUrl ? (
-          <Image source={{ uri: thumbUrl }} style={styles.thumb} resizeMode="cover" />
+          <Image source={{ uri: thumbUrl }} style={styles.thumb} contentFit="cover" transition={150} />
         ) : (
-          <View style={styles.thumbPlaceholder}>
-            <Text style={{ fontSize: 32 }}>🏗️</Text>
-          </View>
+          <View style={[styles.thumb, styles.thumbEmpty]}><Icon name="package-variant-closed" size={32} color={Colors.stone} /></View>
         )}
-        {item.isFeatured && (
-          <View style={styles.featuredBadge}><Text style={styles.featuredText}>Featured</Text></View>
-        )}
+        {item.isFeatured ? <View style={styles.featured}><Text style={styles.featuredText}>FEATURED</Text></View> : null}
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.supplierName} numberOfLines={1}>{item.supplierId?.businessName}</Text>
-        <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
-
+        <Text style={styles.supplier} numberOfLines={1}>{item.supplierId?.businessName}</Text>
+        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
         <View style={styles.priceRow}>
-          <View>
+          <View style={styles.flex}>
             <Text style={styles.price}>₹{item.basePrice.toLocaleString('en-IN')}</Text>
-            <Text style={styles.priceUnit}>per {item.unit} + {item.gstRate}% GST</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.addBtn, inCart && styles.addBtnActive]}
-            onPress={handleAdd}
-          >
-            <Text style={[styles.addBtnText, inCart && styles.addBtnTextActive]}>
-              {inCart ? '✓' : '+'}
+            <Text style={styles.unit} numberOfLines={1}>
+              per {item.unit} · {item.isGstInclusive ? 'incl.' : `+${item.gstRate}%`} GST
             </Text>
-          </TouchableOpacity>
+          </View>
+          {outOfStock ? null : (
+            <Pressable
+              style={[styles.addBtn, inCart && styles.addBtnOn]}
+              onPress={() => onAdd(item)}
+              hitSlop={6}
+              accessibilityRole="button"
+              accessibilityLabel={inCart ? `Add another ${item.name}` : `Add ${item.name} to cart`}
+            >
+              <Icon name={inCart ? 'check' : 'plus'} size={20} color={inCart ? Colors.ink : Colors.sand} />
+            </Pressable>
+          )}
         </View>
-
-        {(item.supplierId?.avgRating ?? 0) > 0 && (
-          <Text style={styles.rating}>⭐ {item.supplierId.avgRating.toFixed(1)}</Text>
-        )}
+        {outOfStock ? <Text style={styles.oos}>Out of stock</Text> : null}
       </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
@@ -117,132 +74,98 @@ export default function ProductsScreen() {
   const { categorySlug, categoryName } = useLocalSearchParams<{ categorySlug: string; categoryName: string }>();
   const router = useRouter();
   const [sort, setSort] = useState<SortOption>('popular');
+  const { add, sheet } = useAddToCart();
 
-  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
+  const { data, isLoading, isError, isFetchingNextPage, hasNextPage, fetchNextPage, refetch, isRefetching } =
     useProducts({ category: categorySlug, sort });
 
-  const cartCount = useCartStore((s) => s.itemCount());
-
-  // Flatten all pages into a single product list
   const products = data?.pages.flatMap((p) => p.products) ?? [];
   const total = data?.pages[0]?.pagination.total ?? 0;
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{categoryName ?? 'Products'}</Text>
-        <TouchableOpacity style={styles.cartBtn} onPress={() => router.push('/(buyer)/cart' as never)}>
-          <Text style={styles.cartIcon}>🛒</Text>
-          {cartCount > 0 && (
-            <View style={styles.cartBadge}><Text style={styles.cartBadgeText}>{cartCount}</Text></View>
-          )}
-        </TouchableOpacity>
+      <ScreenHeader
+        eyebrow={total > 0 ? `${total} product${total === 1 ? '' : 's'}` : 'Category'}
+        title={categoryName ?? 'Products'}
+        onBack={() => router.back()}
+        right={<CartButton />}
+      />
+
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {SORT_OPTIONS.map((opt) => {
+            const on = sort === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                style={[styles.chip, on && styles.chipOn]}
+                onPress={() => setSort(opt.value)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: on }}
+              >
+                <Text style={[styles.chipText, on && styles.chipTextOn]}>{opt.label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* Sort chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {SORT_OPTIONS.map((opt) => (
-          <TouchableOpacity
-            key={opt.value}
-            style={[styles.chip, sort === opt.value && styles.chipActive]}
-            onPress={() => setSort(opt.value)}
-          >
-            <Text style={[styles.chipText, sort === opt.value && styles.chipTextActive]}>
-              {opt.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
+      ) : isError ? (
+        <EmptyState
+          icon="wifi-off"
+          title="We could not load products"
+          body="Check your connection and try again."
+          action={<Button title="Try again" variant="ghost" onPress={() => refetch()} />}
+        />
       ) : products.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={{ fontSize: 40, marginBottom: 12 }}>📦</Text>
-          <Text style={styles.emptyTitle}>No products yet</Text>
-          <Text style={styles.emptySub}>Suppliers are being onboarded for this category.</Text>
-        </View>
+        <EmptyState icon="package-variant" title="Nothing listed here yet" body="No supplier has listed a product in this category yet." />
       ) : (
         <FlatList
           data={products}
           keyExtractor={(item) => item._id}
-          renderItem={({ item }) => <ProductCard item={item} />}
+          renderItem={({ item }) => <ProductCard item={item} onAdd={add} />}
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />
-          }
-          ListHeaderComponent={
-            total > 0 ? (
-              <Text style={styles.totalCount}>{total} products</Text>
-            ) : null
-          }
-          ListFooterComponent={
-            hasNextPage ? (
-              <TouchableOpacity
-                style={styles.loadMore}
-                onPress={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-              >
-                {isFetchingNextPage ? (
-                  <ActivityIndicator color={Colors.primary} />
-                ) : (
-                  <Text style={styles.loadMoreText}>Load more</Text>
-                )}
-              </TouchableOpacity>
-            ) : null
-          }
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
+          onEndReached={() => hasNextPage && !isFetchingNextPage && fetchNextPage()}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={isFetchingNextPage ? <ActivityIndicator color={Colors.ink} style={styles.more} /> : null}
         />
       )}
+      {sheet}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  backBtn: { padding: 4, marginRight: 8 },
-  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
-  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 17, color: Colors.text },
-  cartBtn: { position: 'relative', padding: 4 },
-  cartIcon: { fontFamily: Font.regular, fontSize: 22 },
-  cartBadge: { position: 'absolute', top: 0, right: 0, backgroundColor: Colors.primary, borderRadius: 8, minWidth: 16, height: 16, alignItems: 'center', justifyContent: 'center' },
-  cartBadgeText: { fontFamily: Font.bold, fontSize: 10, color: '#fff' },
-  chips: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
-  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { fontFamily: Font.medium, fontSize: 13, color: Colors.textSecondary },
-  chipTextActive: { fontFamily: Font.bold, color: '#fff' },
-  list: { paddingHorizontal: 12, paddingBottom: 24 },
-  row: { justifyContent: 'space-between', marginBottom: 12 },
-  totalCount: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, paddingHorizontal: 4, paddingVertical: 8 },
-  card: { width: '48.5%', backgroundColor: Colors.surface, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, overflow: 'hidden' },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  flex: { flex: 1 },
+  loading: { marginTop: 40 },
+  chips: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
+  chip: { height: 38, paddingHorizontal: 14, borderRadius: 19, borderWidth: 1, borderColor: Colors.sand4, backgroundColor: Colors.sand2, justifyContent: 'center' },
+  chipOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  chipText: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.ink },
+  chipTextOn: { color: Colors.sand },
+  list: { paddingHorizontal: 20, paddingBottom: 24 },
+  row: { gap: 12, marginBottom: 12 },
+  card: { flex: 1, borderRadius: 18, overflow: 'hidden', backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  cardPressed: { borderColor: Colors.ink, transform: [{ scale: 0.98 }] },
   cardImg: { position: 'relative' },
-  thumb: { width: '100%', height: 130 },
-  thumbPlaceholder: { width: '100%', height: 130, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-  featuredBadge: { position: 'absolute', top: 8, left: 8, backgroundColor: Colors.primary, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  featuredText: { fontFamily: Font.bold, fontSize: 10, color: '#fff' },
-  cardBody: { padding: 10 },
-  supplierName: { fontFamily: Font.regular, fontSize: 10, color: Colors.textMuted, marginBottom: 2 },
-  productName: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text, lineHeight: 18, marginBottom: 8 },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' },
-  price: { fontFamily: Font.bold, fontSize: 15, color: Colors.text },
-  priceUnit: { fontFamily: Font.regular, fontSize: 10, color: Colors.textMuted, marginTop: 1 },
-  addBtn: { width: 30, height: 30, borderRadius: 15, borderWidth: 1.5, borderColor: Colors.primary, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.surface },
-  addBtnActive: { backgroundColor: Colors.primary },
-  addBtnText: { fontFamily: Font.bold, fontSize: 16, color: Colors.primary, lineHeight: 20 },
-  addBtnTextActive: { color: '#fff' },
-  rating: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, marginTop: 6 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  emptyTitle: { fontFamily: Font.bold, fontSize: 16, color: Colors.text, marginBottom: 8 },
-  emptySub: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, textAlign: 'center', lineHeight: 20 },
-  loadMore: { marginHorizontal: 16, marginVertical: 16, paddingVertical: 14, borderRadius: 12, borderWidth: 1, borderColor: Colors.primary, alignItems: 'center' },
-  loadMoreText: { fontFamily: Font.bold, color: Colors.primary, fontSize: 14 },
+  thumb: { width: '100%', aspectRatio: 1, backgroundColor: Colors.sand3 },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  featured: { position: 'absolute', top: 8, left: 8, backgroundColor: Colors.lime, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 3 },
+  featuredText: { fontFamily: Font.monoBold, fontSize: 9, letterSpacing: 1, color: Colors.ink },
+  cardBody: { padding: 12 },
+  supplier: { fontFamily: Font.mono, fontSize: 10, letterSpacing: 0.5, color: Colors.stone, textTransform: 'uppercase' },
+  name: { fontFamily: Font.semiBold, fontSize: 14, lineHeight: 19, color: Colors.ink, marginTop: 4, minHeight: 38 },
+  priceRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 8 },
+  price: { fontFamily: Font.display, fontSize: 18, color: Colors.ink },
+  unit: { fontFamily: Font.regular, fontSize: 11, color: Colors.stone, marginTop: 1 },
+  addBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
+  addBtnOn: { backgroundColor: Colors.lime },
+  oos: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.error, marginTop: 6 },
+  more: { marginVertical: 16 },
 });
