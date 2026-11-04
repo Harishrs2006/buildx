@@ -299,3 +299,8 @@ Times are IST.
   10.0.2.2:4000 = emulator-local API, so the env var override matters). Verified: bundle has the live API URL and new
   sign-in screen, signed with SHA-1 5e8f...f625 (registered in Firebase). Copied to Desktop/BuildX/BuildX-test.apk
   (not in git). Waiting for the user to install it on their Android phone and try Continue with Google.
+- 2026-11-04 18:12 IST: User: Google sign-in "not happening" on their phone. Firebase showed their Google account signed in
+  at 18:06, so Google worked; the API /auth/sync failed (Render free host asleep, app timeout 15s) and the app stayed on
+  the sign-in screen silently. Fix (pushed to PR #52): sync waits 60s and retries once, sign-in screen shows a
+  "Try again" / "Use a different account" box (auth.store syncError). New APK at Desktop/BuildX/BuildX-test.apk.
+  NEXT: user installs it and confirms; then user merges PR #52.
