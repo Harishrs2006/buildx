@@ -235,7 +235,54 @@ const sheet = StyleSheet.create({
   body: { marginTop: 8 },
   confirm: { marginTop: 22 },
   cancel: { marginTop: 10 },
+  options: { marginTop: 18, gap: 8 },
+  option: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  optionDanger: { backgroundColor: Colors.errorLight, borderColor: Colors.errorLight },
+  optionPressed: { borderColor: Colors.ink },
+  optionText: { flex: 1 },
+  optionLabel: { fontFamily: Font.bold, fontSize: 16, color: Colors.ink },
+  optionLabelDanger: { color: Colors.error },
+  optionHint: { fontFamily: Font.regular, fontSize: 13, lineHeight: 18, color: Colors.stone, marginTop: 2 },
 });
+
+// Bottom sheet with several choices (replaces multi-button system alerts)
+export function ChoiceSheet({ visible, title, body, options, cancelLabel = 'Go back', onCancel }: {
+  visible: boolean;
+  title: string;
+  body?: string;
+  options: { label: string; hint?: string; icon?: IconName; danger?: boolean; onPress: () => void }[];
+  cancelLabel?: string;
+  onCancel: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel} statusBarTranslucent>
+      <Pressable style={sheet.scrim} onPress={onCancel} accessibilityLabel="Close" />
+      <SafeAreaView edges={['bottom']} style={sheet.panel}>
+        <View style={sheet.grabber} />
+        <Text style={sheet.title}>{title}</Text>
+        {body ? <Text style={[type.body, sheet.body]}>{body}</Text> : null}
+        <View style={sheet.options}>
+          {options.map((o) => (
+            <Pressable
+              key={o.label}
+              style={({ pressed }) => [sheet.option, o.danger && sheet.optionDanger, pressed && sheet.optionPressed]}
+              onPress={o.onPress}
+              accessibilityRole="button"
+            >
+              {o.icon ? <Icon name={o.icon} size={22} color={o.danger ? Colors.error : Colors.ink} /> : null}
+              <View style={sheet.optionText}>
+                <Text style={[sheet.optionLabel, o.danger && sheet.optionLabelDanger]}>{o.label}</Text>
+                {o.hint ? <Text style={sheet.optionHint}>{o.hint}</Text> : null}
+              </View>
+              <Icon name="chevron-right" size={20} color={Colors.stone} />
+            </Pressable>
+          ))}
+        </View>
+        <Button title={cancelLabel} variant="ghost" onPress={onCancel} style={sheet.cancel} />
+      </SafeAreaView>
+    </Modal>
+  );
+}
 
 // Empty lists and first-time screens
 export function EmptyState({ icon, title, body, action, style }: {
