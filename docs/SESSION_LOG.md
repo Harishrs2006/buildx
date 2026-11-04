@@ -300,3 +300,11 @@ Times are IST.
   Alerts), EmptyState, ScreenHeader, TabItem icons. Codemod: 419 StyleSheet text styles -> Font.* (fontWeight
   dropped; Android ignores custom fonts with fontWeight). npm installs need --legacy-peer-deps (old react-dom peer clash).
   Next: per-role screens (emoji -> Icon, Alert -> Notice/ConfirmSheet), then a phone test APK.
+- 2026-11-04 IST: Mobile pass 2, buyer side done on feat/mobile-hivis-2: cart, checkout, orders, order detail,
+  order placed, products, product detail, search, review, AI chat, buyer profile; shared Profile pieces for all 4
+  roles. Fixed along the way: hard-coded "Delivery FREE" (now the server's deliveryCharge), timeline missing
+  IN_TRANSIT, product min order qty ignored, "+GST" shown for GST-inclusive prices, description never shown,
+  "Add anyway" for a second supplier (API refuses mixed carts: now asks to start a new cart; cart warns and blocks
+  checkout when the AI assistant mixed suppliers), dead profile buttons removed, "Popular searches" -> "Try searching for".
+  Next: driver (available, deliveries, order), supplier (home, orders, products, add/edit, analytics), ops
+  (attention, orders, order, suppliers), onboarding role, OTP screen; then build a phone APK for the user.

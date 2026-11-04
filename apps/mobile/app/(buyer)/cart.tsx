@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { useCartStore, type CartItem } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
-import { Button, ConfirmSheet, EmptyState, Eyebrow, Icon, ScreenHeader } from '../../src/components/ui';
+import { Button, ConfirmSheet, EmptyState, Eyebrow, Icon, Notice, ScreenHeader } from '../../src/components/ui';
 
 const rupees = (n: number, digits = 0) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: digits })}`;
 
@@ -69,6 +69,8 @@ export default function CartScreen() {
 
   const [removing, setRemoving] = useState<CartItem | null>(null);
   const [clearing, setClearing] = useState(false);
+  // One order comes from one supplier (the API refuses mixed carts); the AI assistant can mix them
+  const supplierCount = new Set(items.map((i) => i.supplierId)).size;
 
   if (items.length === 0) {
     return (
@@ -103,6 +105,13 @@ export default function CartScreen() {
         keyExtractor={(item) => item.productId}
         renderItem={({ item }) => <CartRow item={item} onRemove={setRemoving} />}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={
+          supplierCount > 1 ? (
+            <Notice tone="warning" title={`Items from ${supplierCount} suppliers`} style={styles.mixed}>
+              One order comes from one supplier. Remove items until only one supplier is left, then check out.
+            </Notice>
+          ) : null
+        }
         ListFooterComponent={
           <View style={styles.summary}>
             <Eyebrow>Summary</Eyebrow>
@@ -131,7 +140,7 @@ export default function CartScreen() {
           <Text style={styles.stickyLabel}>Incl. GST</Text>
           <Text style={styles.stickyTotal}>{rupees(grandTotal)}</Text>
         </View>
-        <Button title="Checkout" variant="lime" onPress={() => router.push('/(buyer)/checkout' as never)} style={styles.checkoutBtn} />
+        <Button title="Checkout" variant="lime" onPress={() => router.push('/(buyer)/checkout' as never)} disabled={supplierCount > 1} style={styles.checkoutBtn} />
       </SafeAreaView>
 
       <ConfirmSheet
@@ -167,6 +176,7 @@ const styles = StyleSheet.create({
   emptyBox: { flex: 1, justifyContent: 'center' },
   clearAll: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.error },
   list: { paddingHorizontal: 20, paddingBottom: 24 },
+  mixed: { marginBottom: 10 },
   row: { flexDirection: 'row', gap: 12, padding: 12, marginBottom: 10, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
   thumb: { width: 76, height: 76, borderRadius: 12, backgroundColor: Colors.sand3 },
   thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
