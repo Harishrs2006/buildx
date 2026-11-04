@@ -91,8 +91,8 @@ export function Header({ tone = 'light', darkUntilId }: { tone?: 'light' | 'dark
               placeholder="Search cement, TMT, bricks..."
               className={`h-11 w-full rounded-full pl-11 pr-4 text-[14px] outline-none transition-[background-color,box-shadow] duration-200 ${
                 dark
-                  ? 'bg-white/[0.07] text-sand placeholder:text-sand/40 focus:bg-white/[0.12] focus:shadow-[0_0_0_3px_rgba(200,255,61,0.45)]'
-                  : 'bg-ink/[0.05] text-ink placeholder:text-stone focus:bg-sand-2 focus:shadow-[0_0_0_3px_rgba(200,255,61,0.6)]'
+                  ? 'bg-white/[0.07] text-sand placeholder:text-sand/40 focus:bg-white/[0.12] focus:shadow-[0_0_0_3px_rgba(243,184,6,0.45)]'
+                  : 'bg-ink/[0.05] text-ink placeholder:text-stone focus:bg-sand-2 focus:shadow-[0_0_0_3px_rgba(243,184,6,0.6)]'
               }`}
             />
           </label>

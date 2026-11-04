@@ -145,7 +145,7 @@ function CheckoutForm() {
         <Step n={2} title="Contact on site">
           <label className="flex flex-col gap-2">
             <span className="text-[14px] font-medium text-stone">Mobile number to call on delivery</span>
-            <div className="flex items-center gap-2 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+            <div className="flex items-center gap-2 rounded-xl border border-sand-4 bg-sand-2 pl-4 transition-[border-color,box-shadow] focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
               <span className="font-mono text-[15px] text-stone">+91</span>
               <input
                 required

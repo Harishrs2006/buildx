@@ -17,8 +17,8 @@ the page, and **signal lime appears only where the user should act**.
 | sand | `#F2EFE7` | Page background (light) |
 | sand-2 | `#FAF8F3` | Cards, inputs |
 | sand-3 / sand-4 | `#E8E4D9` `#DCD7C9` | Muted fills, borders |
-| lime | `#C8FF3D` | THE action colour: CTAs on dark, focus glow, active tab, badges |
-| lime-deep | `#A6E01C` | Lime hover |
+| lime | `#F3B806` | THE action colour: CTAs on dark, focus glow, active tab, badges |
+| lime-deep | `#D49E00` | Lime hover |
 | cobalt | `#2457FF` | Links, info, focus outline on light, supplier section |
 | stone | `#5E5B52` | Secondary text on sand (contrast 6.1:1) |
 | error | `#C8282E` | Errors |

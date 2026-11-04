@@ -5,7 +5,7 @@
 
 const ink = '#0B0C0A';
 const sand = '#F2EFE7';
-const lime = '#C8FF3D';
+const lime = '#F3B806';
 
 export const Colors = {
   // brand primitives
@@ -17,8 +17,8 @@ export const Colors = {
   sand3: '#E8E4D9',
   sand4: '#DCD7C9',
   lime,
-  limeDeep: '#A6E01C',
-  limeSoft: '#EEFFC2',
+  limeDeep: '#D49E00',
+  limeSoft: '#FDF0C4',
   cobalt: '#2457FF',
   cobaltSoft: '#E3EAFF',
   stone: '#5E5B52',
@@ -27,7 +27,7 @@ export const Colors = {
   // semantic (used across existing screens)
   primary: ink, // primary actions on light: ink fill, light text
   primaryDark: '#000000',
-  primaryLight: '#EEFFC2', // soft lime tint behind selected chips and highlights
+  primaryLight: '#FDF0C4', // soft lime tint behind selected chips and highlights
 
   surface: '#FAF8F3', // cards and screens
   surfaceAlt: sand, // page background, grouped sections

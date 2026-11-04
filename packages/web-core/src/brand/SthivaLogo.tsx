@@ -1,32 +1,28 @@
-// The Sthiva logo. The mark is an S built from two solid blocks with a lime beam through the
-// middle: "sthira", steady and solid. The wordmark uses the display font (Bricolage Grotesque).
-// Ink parts switch to sand on dark backgrounds; the beam is lime on dark and a deeper lime on light.
+// The Sthiva logo, drawn as vectors from the owner's artwork (docs/brand/sthiva-logo-original.png):
+// a yellow rounded tile with an S made of two interlocking halves, the top in ink and the bottom in white.
+// The wordmark "sthiva" sits next to the tile in the display font (Bricolage Grotesque).
 
-const INK = '#0B0C0A';
-const SAND = '#F2EFE7';
-const LIME = '#C8FF3D';
-const LIME_ON_LIGHT = '#9BCB1F';
-const GREY = '#8A8A82';
+export const STHIVA_COLORS = { yellow: '#F3B806', ink: '#1B1B19', white: '#FBFAF6' } as const;
 
-/** The S mark on a 48 x 48 grid (exported so icons and OG images draw the same shape). */
-export const STHIVA_MARK_PATHS = {
-  top: 'M14 7 H37 V14 H17 V20.5 H11 V10 Q11 7 14 7 Z',
-  bottom: 'M31 27.5 H37 V38 Q37 41 34 41 H11 V34 H31 Z',
-  beam: { x: 11, y: 20.5, width: 26, height: 7, rx: 1.5 },
-};
+/** The artwork on its original 1536 x 1536 canvas (exported so icons and OG images draw the same shape). */
+export const STHIVA_MARK = {
+  viewBox: '0 0 1536 1536',
+  tileRadius: 340,
+  top: 'M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z',
+  bottom: 'M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z',
+} as const;
 
-function MarkShapes({ ink, beam }: { ink: string; beam: string }) {
-  const b = STHIVA_MARK_PATHS.beam;
+function Tile({ x = 0, y = 0, size }: { x?: number; y?: number; size: number }) {
   return (
-    <>
-      <path d={STHIVA_MARK_PATHS.top} fill={ink} />
-      <path d={STHIVA_MARK_PATHS.bottom} fill={ink} />
-      <rect x={b.x} y={b.y} width={b.width} height={b.height} rx={b.rx} fill={beam} />
-    </>
+    <svg x={x} y={y} width={size} height={size} viewBox={STHIVA_MARK.viewBox}>
+      <rect width="1536" height="1536" rx={STHIVA_MARK.tileRadius} fill={STHIVA_COLORS.yellow} />
+      <path d={STHIVA_MARK.top} fill={STHIVA_COLORS.ink} />
+      <path d={STHIVA_MARK.bottom} fill={STHIVA_COLORS.white} />
+    </svg>
   );
 }
 
-/** Full logo: S mark plus the "sthiva" wordmark and (optionally) a tagline. `height` in px; width follows. */
+/** Full logo: the tile plus the "sthiva" wordmark and (optionally) a tagline. `height` in px; width follows. */
 export function SthivaLogo({
   height = 36,
   onDark = false,
@@ -38,31 +34,31 @@ export function SthivaLogo({
   tagline?: boolean;
   className?: string;
 }) {
-  const ink = onDark ? SAND : INK;
+  const text = onDark ? '#F2EFE7' : '#0B0C0A';
   const vbH = tagline ? 64 : 48;
   const vbW = 184;
   return (
     <svg viewBox={`0 0 ${vbW} ${vbH}`} height={height} width={(height * vbW) / vbH} role="img" aria-label="Sthiva" className={className}>
-      <MarkShapes ink={ink} beam={onDark ? LIME : LIME_ON_LIGHT} />
+      <Tile size={48} />
       <text
-        x="52"
-        y="38"
-        fill={ink}
+        x="56"
+        y="37"
+        fill={text}
         style={{ fontFamily: 'var(--font-display), "Bricolage Grotesque", system-ui, sans-serif', fontWeight: 800 }}
         fontSize="40"
-        textLength="128"
+        textLength="124"
         lengthAdjust="spacingAndGlyphs"
       >
         sthiva
       </text>
       {tagline && (
         <text
-          x="12"
-          y="60"
-          fill={GREY}
+          x="2"
+          y="61"
+          fill="#8A8A82"
           style={{ fontFamily: 'var(--font-mono), ui-monospace, monospace' }}
           fontSize="9"
-          textLength="168"
+          textLength="178"
           lengthAdjust="spacingAndGlyphs"
         >
           SOLID MATERIALS, STEADY SUPPLY
@@ -72,25 +68,20 @@ export function SthivaLogo({
   );
 }
 
-/** The S mark alone, square, for small places (icons, avatars). */
+/** The tile alone, square, for small places (icons, avatars). It reads on light and dark backgrounds alike. */
 export function SthivaMark({
   size = 32,
-  onDark = false,
-  tile = false,
   className,
 }: {
   size?: number;
+  /** Kept for older callers: the tile looks the same on any background */
   onDark?: boolean;
-  /** Draw it on a rounded sand square, like an app icon */
   tile?: boolean;
   className?: string;
 }) {
-  const ink = onDark && !tile ? SAND : INK;
-  const beam = onDark && !tile ? LIME : LIME_ON_LIGHT;
   return (
     <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden="true" className={className}>
-      {tile && <rect width="48" height="48" rx="12" fill={SAND} />}
-      <MarkShapes ink={ink} beam={beam} />
+      <Tile size={48} />
     </svg>
   );
 }
