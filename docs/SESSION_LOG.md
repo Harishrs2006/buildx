@@ -20,6 +20,18 @@ Times are IST.
 4. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
 5. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping (ask user).
 
+## DOMAIN PLAN: getbuildx.com (user chose 2026-11-04; brand stays BuildX)
+Not bought yet at 23:40 IST (RDAP 404). Once the user buys it:
+1. Vercel (Claude in Chrome): getbuildx.com + www.getbuildx.com -> buyer project (buildx-vgud),
+   seller.getbuildx.com -> seller project (buildx-48kc), ops.getbuildx.com -> ops project (buildx-ops).
+2. Render: custom domain api.getbuildx.com on the API service (free plan allows it).
+3. DNS at the user's registrar: records Vercel and Render show (A/CNAME). Keep the old *.vercel.app URLs working.
+4. Env: buyer NEXT_PUBLIC_SITE_URL=https://getbuildx.com, NEXT_PUBLIC_SELLER_PORTAL_URL=https://seller.getbuildx.com,
+   NEXT_PUBLIC_ALLOW_INDEXING=true; all web apps NEXT_PUBLIC_API_URL=https://api.getbuildx.com; API FRONTEND_URL add
+   the three new origins (keep old ones). Mobile: EXPO_PUBLIC_API_URL / EXPO_PUBLIC_WEB_URL in the next APK.
+   keep-api-awake.yml can keep pinging onrender.com.
+5. DONE already: Firebase Auth authorized domains include getbuildx.com, www., seller., ops. (23:40 IST).
+
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
 - No em dashes in UI copy. No fabricated data (PRD).
@@ -325,3 +337,6 @@ Times are IST.
   Fix on branch fix/ai-one-supplier: AI price list pre-selects the supplier covering most items; "Add selected to
   cart" refuses picks from several suppliers or a cart holding another supplier, with a plain explanation.
   Typecheck clean (in C:/bx/mobile).
+- 2026-11-04 23:40 IST: User looked for a new company name (Sthambha, Mestrikart, Plinthkart etc. were free) and
+  chose getbuildx.com (brand stays BuildX). Not bought yet. Code needs no change (all URLs come from env). Added the
+  four getbuildx.com hosts to Firebase authorized domains. Plan in "DOMAIN PLAN" above.
