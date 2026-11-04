@@ -9,7 +9,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 const partner = process.env.APP_VARIANT === 'partner';
 
 /**
- * Over-the-air updates (EAS Update, Expo account hatish_r_s). Screen and logic changes reach installed apps
+ * Over-the-air updates (EAS Update, Expo organisation sthiva). Screen and logic changes reach installed apps
  * without the Play Store: the app downloads the new code in the background and uses it on the next start.
  * Each app has its own channel, so a buyer update never reaches the partner app. Publish with
  * `npm run update:buyer -- "note"` or `npm run update:partner -- "note"`.
@@ -42,7 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       : config.android?.adaptiveIcon,
     permissions: [...(config.android?.permissions ?? []), 'android.permission.POST_NOTIFICATIONS'],
   },
-  owner: 'hatish_r_s',
+  owner: 'sthiva',
   runtimeVersion: { policy: 'appVersion' },
   ...(EAS_PROJECT_ID
     ? {

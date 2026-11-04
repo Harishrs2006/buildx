@@ -453,3 +453,5 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   gradle builds). Publish: from apps/mobile `npm run update:buyer -- "note"` / `npm run update:partner -- "note"`
   (scripts/publish-update.cjs sets live API URL + variant). UpdateBanner: "A new version is ready. Tap to restart.";
   profile footer shows "update <id>" when running an OTA update.
+  User created the Expo organisation "sthiva" and transferred the project: now @sthiva/sthiva (same id). app.config.ts
+  owner: 'sthiva'. Personal Expo usernames cannot be renamed (the typo account hatish_r_s stays as the login).
