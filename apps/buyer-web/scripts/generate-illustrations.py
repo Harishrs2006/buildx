@@ -9,7 +9,7 @@ import os
 
 OUT = os.path.join(os.path.dirname(__file__), '..', 'public', 'illustrations')
 W, H = 480, 360
-INK, SAND, LIME, COBALT = '#0B0C0A', '#F2EFE7', '#C8FF3D', '#2457FF'
+INK, SAND, LIME, COBALT = '#0B0C0A', '#F2EFE7', '#F3B806', '#2457FF'
 
 
 def shade(hex_color, f):

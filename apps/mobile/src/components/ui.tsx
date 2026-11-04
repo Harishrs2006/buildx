@@ -122,16 +122,15 @@ export function Icon({ name, size = 22, color = Colors.ink }: { name: IconName; 
   return <MaterialCommunityIcons name={name} size={size} color={color} />;
 }
 
-// The Sthiva S mark (two solid blocks, lime beam), same shapes as packages/web-core/src/brand/SthivaLogo.tsx
-export function SthivaMark({ size = 32, onDark = false, tile = false }: { size?: number; onDark?: boolean; tile?: boolean }) {
-  const ink = onDark && !tile ? Colors.sand : Colors.ink;
-  const beam = onDark && !tile ? Colors.lime : '#9BCB1F';
+// The Sthiva logo tile (owner's artwork: yellow tile, ink and white S), same vectors as
+// packages/web-core/src/brand/SthivaLogo.tsx. It reads on light and dark backgrounds, so onDark/tile are kept only
+// for older callers.
+export function SthivaMark({ size = 32 }: { size?: number; onDark?: boolean; tile?: boolean }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityElementsHidden importantForAccessibility="no">
-      {tile ? <Rect width={48} height={48} rx={12} fill={Colors.sand} /> : null}
-      <Path d="M14 7 H37 V14 H17 V20.5 H11 V10 Q11 7 14 7 Z" fill={ink} />
-      <Path d="M31 27.5 H37 V38 Q37 41 34 41 H11 V34 H31 Z" fill={ink} />
-      <Rect x={11} y={20.5} width={26} height={7} rx={1.5} fill={beam} />
+    <Svg width={size} height={size} viewBox="0 0 1536 1536" accessibilityElementsHidden importantForAccessibility="no">
+      <Rect width={1536} height={1536} rx={340} fill="#F3B806" />
+      <Path d="M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z" fill="#1B1B19" />
+      <Path d="M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z" fill="#FBFAF6" />
     </Svg>
   );
 }

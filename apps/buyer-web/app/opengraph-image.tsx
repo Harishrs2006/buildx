@@ -24,22 +24,22 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <svg width="64" height="64" viewBox="0 0 48 48">
-            <rect width="48" height="48" rx="12" fill="#1D1F1A" />
-            <path d="M13 11h7.5l15 26H28z" fill="#F2EFE7" />
-            <path d="M35 11h-7.5l-15 26H20z" fill="#C8FF3D" />
+          <svg width="64" height="64" viewBox="0 0 1536 1536">
+            <rect width="1536" height="1536" rx="340" fill="#F3B806" />
+            <path d="M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z" fill="#1B1B19" />
+            <path d="M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z" fill="#FBFAF6" />
           </svg>
           <span style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2 }}>Sthiva</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 104, fontWeight: 800, lineHeight: 0.95, letterSpacing: -5 }}>Build with materials</span>
-          <span style={{ fontSize: 104, fontWeight: 800, lineHeight: 0.95, letterSpacing: -5, color: '#C8FF3D' }}>you can trust.</span>
+          <span style={{ fontSize: 104, fontWeight: 800, lineHeight: 0.95, letterSpacing: -5, color: '#F3B806' }}>you can trust.</span>
         </div>
         <div style={{ display: 'flex', gap: 16, fontSize: 26, color: 'rgba(242,239,231,0.7)' }}>
           <span>Verified suppliers</span>
-          <span style={{ color: '#C8FF3D' }}>/</span>
+          <span style={{ color: '#F3B806' }}>/</span>
           <span>Delivery checked by PIN</span>
-          <span style={{ color: '#C8FF3D' }}>/</span>
+          <span style={{ color: '#F3B806' }}>/</span>
           <span>Cash on delivery</span>
         </div>
       </div>

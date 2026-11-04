@@ -30,7 +30,7 @@
     border-radius: 6px;
   }
   .on-ink :focus-visible {
-    outline-color: #c8ff3d;
+    outline-color: #f3b806;
   }
 }
 
@@ -45,7 +45,7 @@
     @apply relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3.5 text-[15px] font-semibold transition-[transform,background-color,color,box-shadow] duration-300 ease-out-expo active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
   }
   .btn-lime {
-    @apply btn bg-lime text-ink shadow-[0_0_0_0_rgba(200,255,61,0.5)] hover:shadow-[0_10px_40px_-8px_rgba(200,255,61,0.65)];
+    @apply btn bg-lime text-ink shadow-[0_0_0_0_rgba(243,184,6,0.5)] hover:shadow-[0_10px_40px_-8px_rgba(243,184,6,0.65)];
   }
   .btn-ink {
     @apply btn bg-ink text-sand hover:bg-ink-3;
@@ -57,7 +57,7 @@
     @apply btn border border-white/15 bg-white/[0.03] text-sand hover:bg-white/10;
   }
   .field {
-    @apply w-full rounded-xl border border-sand-4 bg-sand-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-stone-light focus:border-ink focus:shadow-[0_0_0_4px_rgba(200,255,61,0.55)];
+    @apply w-full rounded-xl border border-sand-4 bg-sand-2 px-4 py-3.5 text-[15px] text-ink outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-stone-light focus:border-ink focus:shadow-[0_0_0_4px_rgba(243,184,6,0.55)];
   }
   .card {
     @apply rounded-2xl border border-sand-4/70 bg-sand-2;

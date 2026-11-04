@@ -138,7 +138,7 @@ function SignInForm() {
             type="button"
             onClick={handleGoogle}
             disabled={googleBusy || status === 'loading'}
-            className="mt-10 flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-sand-4 bg-white text-[16px] font-semibold text-ink transition-[border-color,box-shadow] duration-200 hover:border-ink focus-visible:shadow-[0_0_0_4px_rgba(200,255,61,0.55)] focus-visible:outline-none disabled:opacity-60"
+            className="mt-10 flex h-14 w-full items-center justify-center gap-3 rounded-2xl border border-sand-4 bg-white text-[16px] font-semibold text-ink transition-[border-color,box-shadow] duration-200 hover:border-ink focus-visible:shadow-[0_0_0_4px_rgba(243,184,6,0.55)] focus-visible:outline-none disabled:opacity-60"
           >
             {googleBusy || status === 'loading' ? <Spinner label="Signing in" /> : <><GoogleMark /> Continue with Google</>}
           </button>
@@ -153,7 +153,7 @@ function SignInForm() {
                 <label htmlFor="phone" className="block text-[13px] font-semibold text-ink">
                   Mobile number
                 </label>
-                <div className="group mt-2 flex h-16 items-center rounded-2xl border border-sand-4 bg-sand-2 transition-[border-color,box-shadow] duration-200 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+                <div className="group mt-2 flex h-16 items-center rounded-2xl border border-sand-4 bg-sand-2 transition-[border-color,box-shadow] duration-200 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
                   <span className="flex h-full items-center gap-2 border-r border-sand-4 pl-5 pr-4 text-[16px] font-medium text-ink">
                     <span aria-hidden="true" className="eyebrow rounded-md bg-ink px-1.5 py-1 text-[10px] text-lime">IN</span>
                     +91

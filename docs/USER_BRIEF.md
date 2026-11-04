@@ -28,7 +28,7 @@
 4.png  Combo 03: Night #000F08 + Imperial #FB3640
 5.png  Combo 04: Cyprus #004643 + Sand #F0EDE5
 6.png  Combo 05: Plum #381932 + Milk #FFF3E6
-7.png  Cobalt #2457FF x Lime #C8FF3D (bold, energetic, digital)   <- chosen basis for Sthiva
+7.png  Cobalt #2457FF x Lime #F3B806 (bold, energetic, digital)   <- chosen basis for Sthiva
 8.png  Plum #542A52 x Peach #FFB39A
 9.png  Charcoal #171717 + Forest #06110C + Crimson #A31C1B ("Built Differently" hero)
 10.png Lemon #FFF21A + Charcoal #171717 + Electric Lavender #A66BFF

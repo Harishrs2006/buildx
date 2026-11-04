@@ -219,7 +219,7 @@ export default function SetupPage() {
 
           <label className="flex flex-col gap-2">
             <span className="text-[15px] font-semibold">WhatsApp for order updates</span>
-            <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(200,255,61,0.55)]">
+            <span className="flex items-center gap-3 rounded-xl border border-sand-4 bg-sand-2 pl-4 focus-within:border-ink focus-within:shadow-[0_0_0_4px_rgba(243,184,6,0.55)]">
               <span className="border-r border-sand-4 pr-3 font-mono text-[15px]">+91</span>
               <input type="tel" inputMode="numeric" maxLength={10} value={whatsapp} onChange={(e) => setWhatsapp(e.target.value.replace(/\D/g, ''))} className="h-12 w-full bg-transparent pr-4 font-mono text-[16px] outline-none" />
             </span>

@@ -388,3 +388,9 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
 - 2026-11-05 02:20 IST: User merged #58. Vercel (3 sites) and Render redeployed; all show Sthiva, CI green, API healthy.
   Checked the live home page in Chrome: new S mark and "sthiva" wordmark render correctly. First Sthiva-Partner build
   still said BuildX (copy to C:/bx failed silently); fixed copy, re-typechecked, rebuilt: bundle now has "Sthiva Partner".
+- 2026-11-05 IST: User supplied the real Sthiva logo (yellow rounded tile, S of two halves: top ink, bottom white).
+  Saved to docs/brand/sthiva-logo-original.png (+ user-brief/images). Vectorised exactly (two arcs r270/r90, centres
+  588,588 and 948,948 on the 1536 canvas; 180 px edge difference vs the PNG). Replaced my S mark everywhere:
+  web-core SthivaLogo/SthivaMark (tile + "sthiva" wordmark), favicons, OG image, mobile SthivaMark, app icons
+  (buyer: yellow bg, ink/white S, adaptive bg #F3B806; partner: ink bg, yellow/white S). Brand accent lime -> logo
+  yellow #F3B806 (deep #D49E00, soft #FDF0C4) in all tailwind configs, globals.css, mobile colors, design doc.

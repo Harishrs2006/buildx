@@ -72,7 +72,7 @@ export function OtpInput({
           maxLength={i === 0 ? length : 1}
           aria-label={`Digit ${i + 1}`}
           aria-invalid={invalid || undefined}
-          className={`h-14 w-full min-w-0 rounded-xl border bg-sand-2 text-center font-mono text-2xl font-medium text-ink outline-none transition-[border-color,box-shadow,transform] duration-200 focus:-translate-y-0.5 focus:border-ink focus:shadow-[0_0_0_4px_rgba(200,255,61,0.55)] disabled:opacity-50 sm:h-16 ${
+          className={`h-14 w-full min-w-0 rounded-xl border bg-sand-2 text-center font-mono text-2xl font-medium text-ink outline-none transition-[border-color,box-shadow,transform] duration-200 focus:-translate-y-0.5 focus:border-ink focus:shadow-[0_0_0_4px_rgba(243,184,6,0.55)] disabled:opacity-50 sm:h-16 ${
             invalid ? 'border-error' : d ? 'border-ink' : 'border-sand-4'
           }`}
         />

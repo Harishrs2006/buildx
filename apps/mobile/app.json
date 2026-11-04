@@ -19,7 +19,7 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "monochromeImage": "./assets/android-icon-monochrome.png",
-        "backgroundColor": "#F2EFE7"
+        "backgroundColor": "#F3B806"
       },
       "package": "com.sthiva.app",
       "googleServicesFile": "./google-services.json"
