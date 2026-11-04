@@ -322,3 +322,10 @@ Times are IST.
   (`-x lintVitalRelease -x lintVitalAnalyzeRelease`) and use -Xmx1536m -XX:MaxMetaspaceSize=640m (384m ran out).
   Verified: live API URL, new screens and fonts in the bundle, signed with SHA-1 5e8f...f625.
   NEXT: user installs and checks the redesign on their phone, then merges PR #54.
+- 2026-11-04 IST: User's OneDrive (5 GB) was full: BuildX was 8 GB, almost all node_modules. User ran a cleanup
+  script: deleted all node_modules, .next and Android/Flutter build output, and the stale buildx-auth-fix copy
+  (its seller-web/.env.local was the ONLY copy: now in buildx/apps/seller-web/.env.local and backed up with the
+  buyer-web one in buildx-secrets/env-backup/). BuildX is now 0.17 GB. Before running anything locally:
+  `npm install` (root) and `cd apps/mobile && npm install --legacy-peer-deps`; that refills OneDrive, so prefer
+  building from C:/bx/mobile (outside OneDrive, still has node_modules). Recommended to the user: move the project
+  out of OneDrive (e.g. C:/dev/BuildX); waiting for their decision.
