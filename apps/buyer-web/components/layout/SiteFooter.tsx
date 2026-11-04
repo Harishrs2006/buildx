@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { BuildXLogo } from '@buildx/web-core';
+import { SthivaLogo } from '@sthiva/web-core';
 import { SITE } from '@/lib/site';
 
 export function SiteFooter() {
@@ -9,7 +9,7 @@ export function SiteFooter() {
       <div className="container-x relative z-10 grid gap-12 py-16 md:grid-cols-12 md:py-20">
         <div className="md:col-span-5">
           <div className="flex items-center gap-3">
-            <BuildXLogo onDark tagline height={64} />
+            <SthivaLogo onDark tagline height={64} />
           </div>
           <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-sand/60">
             The construction materials marketplace. Verified suppliers, honest prices, delivery checked against your PIN code.
@@ -44,7 +44,7 @@ export function SiteFooter() {
           title="Company"
           links={[
             { href: '/#how-it-works', label: 'How it works' },
-            { href: '/#suppliers', label: 'Sell on BuildX' },
+            { href: '/#suppliers', label: 'Sell on Sthiva' },
             { href: '/signin', label: 'Sign in' },
           ]}
         />
@@ -70,7 +70,7 @@ export function SiteFooter() {
         aria-hidden="true"
         className="pointer-events-none absolute -bottom-[0.18em] left-1/2 -translate-x-1/2 select-none whitespace-nowrap font-display text-[26vw] font-extrabold leading-none tracking-[-0.06em] text-white/[0.03]"
       >
-        BuildX
+        Sthiva
       </div>
     </footer>
   );

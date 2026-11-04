@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { useApiClient, type ApiClient } from '@buildx/web-core';
+import { useApiClient, type ApiClient } from '@sthiva/web-core';
 
 // GET /reviews/suppliers/:supplierId — wrapped in { success, data, meta }.
 const reviewSchema = z

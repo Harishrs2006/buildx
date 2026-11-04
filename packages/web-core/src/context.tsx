@@ -18,7 +18,7 @@ export function WebCoreProvider({ client, locationStore, children }: WebCore & {
 
 function useWebCore(): WebCore {
   const ctx = useContext(WebCoreContext);
-  if (!ctx) throw new Error('@buildx/web-core: wrap your app in <WebCoreProvider>');
+  if (!ctx) throw new Error('@sthiva/web-core: wrap your app in <WebCoreProvider>');
   return ctx;
 }
 

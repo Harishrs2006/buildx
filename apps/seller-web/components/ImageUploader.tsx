@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { uploadProductImage } from '../lib/upload';
 
 export type ProductImage = { url: string; publicId: string; isPrimary?: boolean; sortOrder?: number };

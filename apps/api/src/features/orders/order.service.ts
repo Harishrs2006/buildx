@@ -366,10 +366,10 @@ export async function recordCodCollected(params: {
   if (current.paymentMethod !== 'COD') throw AppError.conflict('This order is not cash on delivery');
   if (current.paymentStatus === 'CAPTURED') return { order: current, changed: false };
   if (current.status !== 'DELIVERED') throw AppError.conflict('Mark the order delivered before confirming cash');
-  if (current.paymentStatus !== 'PENDING') throw AppError.conflict('Payment is being handled by BuildX support');
+  if (current.paymentStatus !== 'PENDING') throw AppError.conflict('Payment is being handled by Sthiva support');
   if (toPaise(amount) !== toPaise(current.total)) {
     throw AppError.badRequest(
-      `Collected amount must equal the order total of ₹${current.total}. For a short payment, contact BuildX support.`
+      `Collected amount must equal the order total of ₹${current.total}. For a short payment, contact Sthiva support.`
     );
   }
 

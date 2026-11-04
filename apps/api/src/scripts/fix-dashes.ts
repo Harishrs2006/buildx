@@ -1,6 +1,6 @@
 /**
  * Replace em dashes in catalogue text (product names, descriptions and specs, category text,
- * supplier business names). BuildX copy never uses em dashes; old demo data did.
+ * supplier business names). Sthiva copy never uses em dashes; old demo data did.
  * Text written by people (reviews, order notes) is never touched.
  *
  *   npm run fix-dashes --workspace=apps/api -- --dry-run

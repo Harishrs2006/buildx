@@ -16,7 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
-import { BuildXMark, Icon, Notice } from '../../src/components/ui';
+import { SthivaMark, Icon, Notice } from '../../src/components/ui';
 import { useAiChat, ChatMessage, AnalysedItem, PriceOption } from '../../src/hooks/useAiChat';
 import { useCartStore } from '../../src/store/cart.store';
 
@@ -110,7 +110,7 @@ function PriceListBubble({
   return (
     <View style={styles.priceListContainer}>
       <View style={styles.assistantBadge}>
-        <View style={styles.inlineRow}><BuildXMark size={16} /><Text style={styles.assistantBadgeText}>BuildX assistant</Text></View>
+        <View style={styles.inlineRow}><SthivaMark size={16} /><Text style={styles.assistantBadgeText}>Sthiva assistant</Text></View>
       </View>
       <Text style={styles.priceListSummary}>{msg.summary}</Text>
       {msg.items.map((item, idx) => (
@@ -164,7 +164,7 @@ function MessageBubble({
     <View style={[styles.bubbleRow, isUser && styles.bubbleRowRight]}>
       {!isUser && (
         <View style={styles.avatarDot}>
-          <BuildXMark size={22} tile />
+          <SthivaMark size={22} tile />
         </View>
       )}
       <View style={[styles.bubble, isUser ? styles.userBubble : styles.assistantBubble]}>
@@ -182,7 +182,7 @@ function TypingIndicator() {
   return (
     <View style={styles.bubbleRow}>
       <View style={styles.avatarDot}>
-        <BuildXMark size={22} tile />
+        <SthivaMark size={22} tile />
       </View>
       <View style={[styles.bubble, styles.assistantBubble, styles.typingBubble]}>
         <ActivityIndicator size="small" color={Colors.textMuted} />

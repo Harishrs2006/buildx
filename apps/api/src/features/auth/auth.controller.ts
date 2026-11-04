@@ -3,7 +3,7 @@ import { User } from '../../infrastructure/database/models/User.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import type { OnboardInput } from './auth.routes';
 
 export class AuthController {
@@ -46,7 +46,7 @@ export class AuthController {
           AppError.conflict(
             req.firebase!.phone
               ? 'This phone number is already linked to another account. Contact support.'
-              : 'This Google account is already linked to another BuildX account. Contact support.'
+              : 'This Google account is already linked to another Sthiva account. Contact support.'
           )
         );
       }

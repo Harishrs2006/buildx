@@ -1,4 +1,4 @@
-// Picks a BuildX material illustration (public/illustrations/*.svg) for a product that has no
+// Picks a Sthiva material illustration (public/illustrations/*.svg) for a product that has no
 // supplier photo. Matched on the product name first, then its category; always shown with an
 // "Illustration" label so it is never mistaken for a photo of the actual item.
 const RULES: [RegExp, string][] = [

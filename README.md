@@ -1,4 +1,4 @@
-# BuildX — Construction Materials Marketplace
+# Sthiva — Construction Materials Marketplace
 
 > B2B platform connecting contractors and construction companies with verified local suppliers — built for tier-2/3 India (starting Tumakuru, Karnataka)
 
@@ -8,9 +8,9 @@
 
 ---
 
-## What is BuildX?
+## What is Sthiva?
 
-BuildX is a B2B marketplace mobile app where contractors and builders browse, compare, and order construction materials (cement, sand, bricks, steel, equipment rentals) directly from verified local suppliers — with real-time stock, per-item GST calculation, and Cash on Delivery.
+Sthiva is a B2B marketplace mobile app where contractors and builders browse, compare, and order construction materials (cement, sand, bricks, steel, equipment rentals) directly from verified local suppliers — with real-time stock, per-item GST calculation, and Cash on Delivery.
 
 ## Tech Stack
 

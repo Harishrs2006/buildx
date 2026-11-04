@@ -8,7 +8,7 @@ import {
   signOut as firebaseSignOut,
   type ConfirmationResult,
 } from 'firebase/auth';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { getFirebaseAuth } from '../../lib/firebase';
 import { syncAuth, type SyncedUser } from '../../lib/auth';
 
@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Ops accounts are created with `npm run grant-role` (apps/api); nobody can sign up here
         setStatus(synced.role === 'OPERATOR' || synced.role === 'ADMIN' ? 'signed-in' : 'wrong-role');
       } catch {
-        setError('Could not reach BuildX. Check your connection and try again.');
+        setError('Could not reach Sthiva. Check your connection and try again.');
         setStatus('signed-out');
       }
     });

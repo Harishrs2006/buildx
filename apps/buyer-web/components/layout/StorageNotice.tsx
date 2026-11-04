@@ -4,9 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const KEY = 'buildx.storageNotice';
+const KEY = 'sthiva.storageNotice';
 
-// BuildX stores only essential data (session, cart, PIN), so this is a notice, not a consent
+// Sthiva stores only essential data (session, cart, PIN), so this is a notice, not a consent
 // gate: there is nothing optional to accept or reject. Shown once, then remembered.
 export function StorageNotice() {
   const [show, setShow] = useState(false);

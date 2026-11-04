@@ -8,7 +8,7 @@ import { AppError } from '../../shared/errors/AppError';
 import { Category } from '../../infrastructure/database/models/Category.model';
 import { bulkPricingProblem } from './product-rules';
 import { ORDER_STATUSES } from '../ops/ops.schemas';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
 import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
@@ -147,7 +147,7 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
 }
 
 // PATCH /suppliers/me/orders/:id/status
-//   READY_FOR_PICKUP — dispatch via a BuildX delivery partner (PLATFORM mode)
+//   READY_FOR_PICKUP — dispatch via a Sthiva delivery partner (PLATFORM mode)
 //   IN_TRANSIT       — dispatch with the supplier's own vehicle (SUPPLIER mode); also takes over
 //                      a READY_FOR_PICKUP order no driver has accepted yet
 //   DELIVERED        — only for orders the supplier is delivering themselves
@@ -183,8 +183,8 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
         const driverUserIds = drivers.map((d) => d.userId.toString());
         return notifyUsers(driverUserIds, {
-          title: '📦 Order Ready for Pickup',
-          body: `Order ${order.orderNumber} is ready · ₹${order.total.toLocaleString('en-IN')} COD`,
+          title: 'Order ready for pickup',
+          body: `Order ${order.orderNumber} is ready. ₹${order.total.toLocaleString('en-IN')}, cash on delivery.`,
           data: { screen: 'driver_available', orderId: order._id.toString() },
         });
       }).catch((err) => {
@@ -192,19 +192,19 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       });
     } else if (status === 'IN_TRANSIT') {
       notifyUser(order.buyerId.toString(), {
-        title: '🚚 On the way',
+        title: 'On the way',
         body: `${profile.businessName} is delivering your order ${order.orderNumber}.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     } else if (status === 'DELIVERED') {
       notifyUser(order.buyerId.toString(), {
-        title: '✅ Delivered!',
+        title: 'Order delivered',
         body: `Order ${order.orderNumber} delivered. Please pay ₹${order.total.toLocaleString('en-IN')} cash to ${profile.businessName}.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     } else if (status === 'CANCELLED') {
       notifyUser(order.buyerId.toString(), {
-        title: '❌ Order Cancelled',
+        title: 'Order cancelled',
         body: `Your order ${order.orderNumber} has been cancelled by the supplier.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });

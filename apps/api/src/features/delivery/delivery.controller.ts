@@ -3,7 +3,7 @@ import { isValidObjectId } from 'mongoose';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { notifyUser } from '../../shared/services/notification.service';
 import { transitionOrder, recordCodCollected } from '../orders/order.service';
 import { allowedSources, modeFilter } from '../orders/order-state';
@@ -61,7 +61,7 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
 
     // Notify buyer that a driver has been assigned
     notifyUser(order.buyerId.toString(), {
-      title: '🚚 Driver Assigned',
+      title: 'Driver assigned',
       body: `A driver is on the way to pick up your order ${order.orderNumber}.`,
       data: { screen: 'buyer_orders', orderId: order._id.toString() },
     });
@@ -122,13 +122,13 @@ export async function updateDeliveryStatus(req: Request, res: Response, next: Ne
 
     if (changed && status === 'PICKED_UP') {
       notifyUser(order.buyerId.toString(), {
-        title: '📦 Order Picked Up',
-        body: `Your order ${order.orderNumber} has been picked up and is on the way!`,
+        title: 'Order picked up',
+        body: `Your order ${order.orderNumber} has been picked up and is on the way.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     } else if (changed && status === 'DELIVERED') {
       notifyUser(order.buyerId.toString(), {
-        title: '✅ Delivered!',
+        title: 'Order delivered',
         body: `Order ${order.orderNumber} delivered. Please pay ₹${order.total.toLocaleString('en-IN')} cash to the driver.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });

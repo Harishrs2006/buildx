@@ -106,7 +106,7 @@ export default function OpsOrderDetail() {
         {feedback ? <Notice tone={feedback.tone} onClose={() => setFeedback(null)}>{feedback.text}</Notice> : null}
         <View style={s.card}>
           <Row label="Total" value={`${rupees(order.total)} COD · ${order.paymentStatus}${order.codAmountCollected ? ` (${rupees(order.codAmountCollected)} received)` : ''}`} />
-          <Row label="Delivery" value={order.deliveryMode === 'SUPPLIER' ? "Supplier's own vehicle" : order.deliveryMode === 'PLATFORM' ? 'BuildX delivery partner' : 'Not dispatched'} />
+          <Row label="Delivery" value={order.deliveryMode === 'SUPPLIER' ? "Supplier's own vehicle" : order.deliveryMode === 'PLATFORM' ? 'Sthiva delivery partner' : 'Not dispatched'} />
           {order.cancellationReason ? <Row label="Cancelled" value={`${order.cancellationReason} (${order.inventoryState})`} /> : null}
         </View>
 

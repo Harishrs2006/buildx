@@ -1,13 +1,13 @@
 version: '3.9'
 
-# Local development services for BuildX
+# Local development services for Sthiva
 # MongoDB: use MongoDB Atlas (cloud) — no local container needed
 # Redis: local cache for rate limiting
 
 services:
   redis:
     image: redis:7-alpine
-    container_name: buildx_redis
+    container_name: sthiva_redis
     restart: unless-stopped
     command: redis-server --appendonly yes
     ports:
@@ -25,4 +25,4 @@ volumes:
 
 networks:
   default:
-    name: buildx_network
+    name: sthiva_network

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ApiClient, PaginationMeta } from '@buildx/web-core';
+import type { ApiClient, PaginationMeta } from '@sthiva/web-core';
 
 const quoteLineSchema = z.object({
   productId: z.string(),

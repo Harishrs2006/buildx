@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { ErrorNote, ORDER_STATUS, Pill, UNIT, rupees, shortDate } from '../../../../components/ui';
 import { errorText, opsApi, populated, useLoad, type OrderDetail } from '../../../../lib/ops';
 
@@ -153,7 +153,7 @@ function Actions({ order, reload }: { order: OrderDetail; reload: () => void }) 
           <Action
             label="Cancel order"
             danger
-            hint="The buyer is told BuildX support cancelled it. This cannot be undone."
+            hint="The buyer is told Sthiva support cancelled it. This cannot be undone."
             placeholder="Reason, kept on the order"
             extra={goodsOut && (
               <fieldset className="flex flex-col gap-2">
@@ -205,7 +205,7 @@ export default function OrderPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Pill tone={status.tone}>{status.label}</Pill>
           <span className="text-[14px] text-sand/70">{o.paymentMethod ?? 'Payment'} · {PAYMENT[o.paymentStatus] ?? o.paymentStatus}</span>
-          {o.deliveryMode && <span className="text-[14px] text-sand/70">· {o.deliveryMode === 'SUPPLIER' ? 'Supplier vehicle' : 'BuildX driver'}</span>}
+          {o.deliveryMode && <span className="text-[14px] text-sand/70">· {o.deliveryMode === 'SUPPLIER' ? 'Supplier vehicle' : 'Sthiva driver'}</span>}
         </div>
         <h1 className="mt-3 font-mono text-[clamp(1.75rem,5vw,2.75rem)] font-medium tracking-tight">{o.orderNumber}</h1>
         <p className="mt-2 font-display text-2xl font-bold tabular-nums text-lime">{rupees.format(o.total)}</p>

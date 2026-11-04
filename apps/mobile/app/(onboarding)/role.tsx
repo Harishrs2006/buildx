@@ -7,20 +7,23 @@ import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
 import { VEHICLE_ICONS, VEHICLE_LABELS } from '../../src/hooks/useDelivery';
-import { BuildXMark, Button, Eyebrow, Icon, Notice, type IconName } from '../../src/components/ui';
+import { IS_PARTNER } from '../../src/lib/appVariant';
+import { SthivaMark, Button, Eyebrow, Icon, Notice, type IconName } from '../../src/components/ui';
 
 type Role = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER';
 
-const ROLES: { r: Role; icon: IconName; title: string; desc: string }[] = [
+const ALL_ROLES: { r: Role; icon: IconName; title: string; desc: string }[] = [
   { r: 'BUYER', icon: 'hard-hat', title: 'I buy materials', desc: 'Contractors, builders and site owners' },
   { r: 'SUPPLIER', icon: 'storefront-outline', title: 'I sell materials', desc: 'Dealers, traders and equipment owners' },
   { r: 'DELIVERY_PARTNER', icon: 'truck-outline', title: 'I deliver orders', desc: 'Drivers with their own vehicle' },
 ];
+// Sthiva (buyer app) creates buyer accounts; Sthiva Partner creates supplier and delivery partner accounts
+const ROLES = ALL_ROLES.filter(({ r }) => (IS_PARTNER ? r !== 'BUYER' : r === 'BUYER'));
 const VEHICLES = ['BIKE', 'AUTO', 'MINI_TRUCK', 'TEMPO', 'TRUCK', 'TRACTOR'];
 
 export default function RoleScreen() {
   const { syncWithBackend, user, clear } = useAuthStore();
-  const [role, setRole] = useState<Role | null>(null);
+  const [role, setRole] = useState<Role | null>(ROLES.length === 1 ? ROLES[0].r : null);
   const [name, setName] = useState(user?.name ?? '');
   const [businessName, setBusinessName] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -68,14 +71,14 @@ export default function RoleScreen() {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <BuildXMark size={40} />
+          <SthivaMark size={40} />
           <Eyebrow>Last step</Eyebrow>
           <Text style={styles.heading}>
-            How will you use{'\n'}
-            <Text style={styles.accent}>BuildX?</Text>
+            {IS_PARTNER ? 'How will you work with' : 'Welcome to'}{'\n'}
+            <Text style={styles.accent}>{IS_PARTNER ? 'Sthiva?' : 'Sthiva.'}</Text>
           </Text>
 
-          <View style={styles.cards}>
+          {ROLES.length > 1 ? <View style={styles.cards}>
             {ROLES.map(({ r, icon, title, desc }) => {
               const on = role === r;
               return (
@@ -86,7 +89,7 @@ export default function RoleScreen() {
                   accessibilityRole="radio"
                   accessibilityState={{ selected: on }}
                 >
-                  <View style={[styles.cardIcon, on && styles.cardIconOn]}><Icon name={icon} size={24} color={on ? Colors.ink : Colors.ink} /></View>
+                  <View style={[styles.cardIcon, on && styles.cardIconOn]}><Icon name={icon} size={24} color={Colors.ink} /></View>
                   <View style={styles.flex}>
                     <Text style={[styles.cardTitle, on && styles.cardTitleOn]}>{title}</Text>
                     <Text style={[styles.cardDesc, on && styles.cardDescOn]}>{desc}</Text>
@@ -95,7 +98,7 @@ export default function RoleScreen() {
                 </Pressable>
               );
             })}
-          </View>
+          </View> : null}
 
           {role ? (
             <>
@@ -122,7 +125,7 @@ export default function RoleScreen() {
                   maxLength={10}
                 />
               </View>
-              <Text style={styles.hint}>Buyers and BuildX contact you on this number about orders.</Text>
+              <Text style={styles.hint}>Buyers and Sthiva contact you on this number about orders.</Text>
             </>
           ) : null}
 

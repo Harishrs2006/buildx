@@ -1,4 +1,4 @@
-# BuildX: rules for Claude sessions
+# Sthiva: rules for Claude sessions
 
 ## Start of every session
 Read `docs/SESSION_LOG.md` and continue from NEXT STEPS. Update it after every meaningful step

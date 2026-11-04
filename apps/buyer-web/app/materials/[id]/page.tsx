@@ -4,7 +4,7 @@ import { use, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { useProductsForLocation, useSelectedLocation } from '@buildx/web-core';
+import { useProductsForLocation, useSelectedLocation } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
@@ -13,7 +13,7 @@ import { DeliveryCheck } from '@/components/catalog/DeliveryCheck';
 import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { useCategories } from '@/lib/categories';
-import { catalogCategory, catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@buildx/web-core';
+import { catalogCategory, catalogItem, catalogItems, matchCatalogItem, offerQuery } from '@sthiva/web-core';
 
 function OptionChips({ label, options, value, onChange }: { label: string; options: string[]; value: string | null; onChange: (v: string | null) => void }) {
   return (

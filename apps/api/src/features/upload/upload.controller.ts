@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { AppError } from '../../shared/errors/AppError';
 import { StorageService, type UploadFolder } from '../../infrastructure/storage/cloudinary.client';
 

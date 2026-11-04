@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { requireAuth } from '../../shared/middleware/auth.middleware';
 import { validate } from '../../shared/middleware/validate.middleware';
 import { User } from '../../infrastructure/database/models/User.model';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 
 const router = Router();
 

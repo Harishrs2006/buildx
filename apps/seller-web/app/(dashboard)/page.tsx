@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import { useSupplierStats } from '../../lib/stats';
 import { useSupplierOrders } from '../../lib/orders';
 import { fetchSupplierProfile, type SupplierProfile } from '../../lib/auth';
@@ -84,7 +84,7 @@ export default function DashboardPage() {
           <span className="material-symbols-outlined mt-0.5" aria-hidden="true">hourglass_top</span>
           <div>
             <p className="font-semibold">Your account is being verified</p>
-            <p className="mt-0.5 text-[15px]">{setupDone ? 'You can list products now. Buyers can order them as soon as BuildX approves your account.' : 'Meanwhile, finish your business setup and list your products. Buyers can order once BuildX approves your account.'}</p>
+            <p className="mt-0.5 text-[15px]">{setupDone ? 'You can list products now. Buyers can order them as soon as Sthiva approves your account.' : 'Meanwhile, finish your business setup and list your products. Buyers can order once Sthiva approves your account.'}</p>
           </div>
         </div>
       )}
@@ -93,7 +93,7 @@ export default function DashboardPage() {
           <span className="material-symbols-outlined mt-0.5" aria-hidden="true">error</span>
           <div>
             <p className="font-semibold">Verification was not approved</p>
-            <p className="mt-0.5 text-[15px]">Contact BuildX support to find out what is needed.</p>
+            <p className="mt-0.5 text-[15px]">Contact Sthiva support to find out what is needed.</p>
           </div>
         </div>
       )}

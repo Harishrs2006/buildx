@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { CATALOG, CATALOG_CATEGORIES, catalogItem, catalogItems, matchCatalogItem, suggestedListingName, suggestedListingUnit } from '@buildx/web-core';
-import { units } from '@buildx/web-core';
+import { CATALOG, CATALOG_CATEGORIES, catalogItem, catalogItems, matchCatalogItem, suggestedListingName, suggestedListingUnit } from '@sthiva/web-core';
+import { units } from '@sthiva/web-core';
 const {
   bagsForKg, brassToCft, bulkFromBrass, bulkFromTonnes, coilsForMetres, cftToBrass, cftToM3, m3ToCft, tmtBarsForKg, tmtKgPerBar, tmtKgPerMetre,
 } = units;

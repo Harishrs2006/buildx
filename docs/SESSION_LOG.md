@@ -10,7 +10,8 @@ Times are IST.
   API https://buildx-api.onrender.com (Render free: sleeps when idle, ~1 min to wake).
 - Mobile app: Google sign-in (#52, #53) and full Hi-Vis redesign (#54) are merged to main.
 - Mobile builds: from C:/bx/mobile/android, foreground, see 2026-11-04 19:40 entry for the exact gradle command.
-- Open PR: fix/ai-one-supplier (AI assistant no longer fills a cart from several suppliers). Needs the user to merge.
+- Open PRs: fix/ai-one-supplier (#55, AI assistant keeps a cart to one supplier) and feat/partner-app (two apps,
+  in-app alerts, API keep-alive). Both need the user to merge.
 
 ## NEXT STEPS
 1. User merges fix/ai-one-supplier. Mobile only, goes out with the next APK.
@@ -19,6 +20,18 @@ Times are IST.
 3. Launch prep: NEXT_PUBLIC_SUPPORT_EMAIL / SUPPORT_PHONE / LEGAL_NAME (need the user's details), NEXT_PUBLIC_ALLOW_INDEXING=true.
 4. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
 5. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping (ask user).
+
+## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
+Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
+1. Vercel (Claude in Chrome): sthiva.com + www.sthiva.com -> buyer project (buildx-vgud),
+   seller.sthiva.com -> seller project (buildx-48kc), ops.sthiva.com -> ops project (buildx-ops).
+2. Render: custom domain api.sthiva.com on the API service (free plan allows it).
+3. DNS at the user's registrar: records Vercel and Render show (A/CNAME). Keep the old *.vercel.app URLs working.
+4. Env: buyer NEXT_PUBLIC_SITE_URL=https://sthiva.com, NEXT_PUBLIC_SELLER_PORTAL_URL=https://seller.sthiva.com,
+   NEXT_PUBLIC_ALLOW_INDEXING=true; all web apps NEXT_PUBLIC_API_URL=https://api.sthiva.com; API FRONTEND_URL add
+   the three new origins (keep old ones). Mobile: EXPO_PUBLIC_API_URL / EXPO_PUBLIC_WEB_URL in the next APK.
+   keep-api-awake.yml can keep pinging onrender.com.
+5. DONE already: Firebase Auth authorized domains include sthiva.com, www., seller., ops. (2026-11-05).
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -325,3 +338,47 @@ Times are IST.
   Fix on branch fix/ai-one-supplier: AI price list pre-selects the supplier covering most items; "Add selected to
   cart" refuses picks from several suppliers or a cart holding another supplier, with a plain explanation.
   Typecheck clean (in C:/bx/mobile).
+- 2026-11-04 22:55 IST: User: do everything that is free; DB credentials and a government sign-in method come later;
+  they will buy a domain; asked about separate buyer and seller apps. Decided: one codebase, two apps (Swiggy/Zomato
+  pattern): "BuildX" com.buildx.app (buyers) and "BuildX Partner" com.buildx.partner (suppliers, delivery partners,
+  ops). Branch feat/partner-app:
+  - apps/mobile/app.config.ts picks the variant from APP_VARIANT=partner (name, package, scheme, icon, extra.appVariant).
+    src/lib/appVariant.ts: IS_PARTNER, roleBelongsHere(). AuthGate sends an account opened in the wrong app to
+    (auth)/other-app ("Please use BuildX Partner" + Use a different account). Onboarding shows only this app's roles.
+  - Firebase: registered Android app com.buildx.partner (1:1054722710633:android:2ced70d7255ece14b696f8) with debug
+    SHA-1 5e8f...f625; new google-services.json holds both packages (gitignored; copy in buildx-secrets/firebase/
+    and C:/bx/mobile). iOS partner build would need its own GoogleService-Info.plist (not done, no iOS builds yet).
+  - Push: Android 13 notification permission requested; notifications that arrive while the app is open now show an
+    in-app banner (src/components/AlertBanner.tsx), they were silently dropped before; taps open the order screen.
+  - API push texts: emojis and em dash removed.
+  - .github/workflows/keep-api-awake.yml pings /health every 10 min (free; Render gives 750 h/month).
+  - Partner icons: ink background, sand mark, lime bar (assets/partner, make-icons.cjs needs sharp).
+  Build: in C:/bx/mobile run `APP_VARIANT=partner npx expo prebuild -p android --clean --no-install` then gradle.
+- 2026-11-04 23:05 IST: Built and verified both APKs from C:/bx/mobile (includes PR #55 and #56 changes):
+  C:/dev/BuildX/BuildX.apk (com.buildx.app) and C:/dev/BuildX/BuildX-Partner.apk (com.buildx.partner), both live API,
+  SHA-1 5e8f...f625, partner has POST_NOTIFICATIONS. Old BuildX-test.apk removed. The user's Google account is a
+  seller, so it now belongs in BuildX Partner (BuildX shows the "use BuildX Partner" screen).
+  Domains (RDAP check): buildx.in, buildx.co.in, buildx.com, buildx.store are taken; free: buildxapp.in, getbuildx.in,
+  getbuildx.com, buildxapp.com, usebuildx.com, buildxhq.com/.in. Waiting for the user to buy one (money).
+  Waiting on user: MongoDB credentials (they will send), government sign-in method later (likely DigiLocker /
+  Aadhaar based: decide when they give details), support email/phone/legal name for the websites.
+- 2026-11-04 23:40 IST: User looked for a new company name (Sthambha, Mestrikart, Plinthkart etc. were free) and
+  chose getbuildx.com (brand stays BuildX). Not bought yet. Code needs no change (all URLs come from env). Added the
+  four getbuildx.com hosts to Firebase authorized domains. Plan in "DOMAIN PLAN" above.
+- 2026-11-05 01:55 IST: BRAND RENAMED BuildX -> Sthiva (user decision). Name research: buildx.in/.com taken, BuildX
+  Technologies Pvt Ltd (Gujarat, 2026) and BuildX.Homes (Bangalore construction) make "BuildX Pvt Ltd" unlikely at MCA.
+  Sthiva: sthiva.com/.in free, no company or trademark found; similar: Sthira Technovations (Dharwad), Sthir-X Systems
+  (Bangalore). User to register "Sthiva Private Limited" (backup Setuzo/Udvora) and buy sthiva.com.
+  Branch feat/sthiva (includes feat/partner-app #56 and the domain-plan log #57):
+  - Every user-facing BuildX -> Sthiva; packages @buildx/* -> @sthiva/*; BuildXLogo/BuildXMark -> SthivaLogo/SthivaMark;
+    storage keys sthiva.*; apps "Sthiva" com.sthiva.app and "Sthiva Partner" com.sthiva.partner (registered in Firebase
+    with SHA-1 5e8f...; google-services.json now holds 4 packages). Firebase project display name "Sthiva".
+  - KEPT on purpose (live services/data): MongoDB dbName 'buildx', Cloudinary cloud/folder buildx, buildx-15494 Firebase
+    project id, buildx-api.onrender.com, buildx-vgud/48kc/ops Vercel URLs, GitHub repo name buildx, logger service name.
+  - New logo: S of two solid blocks with a lime beam (packages/web-core/src/brand/SthivaLogo.tsx; mobile ui.tsx;
+    favicons apps/*/app/icon.svg; app icons via apps/mobile/scripts/make-icons.cjs). Wordmark "sthiva" in the display font,
+    tagline "SOLID MATERIALS, STEADY SUPPLY".
+  - Checks: API tsc + 288 tests + build, web-core 81 tests, buyer/seller typecheck, mobile tsc all pass.
+  - GitHub contributors: only Harishrs2006 and Shubb07; no Claude trailers on any remote branch. Old LOCAL backup
+    branches (backup/local-main-old, backup/stash-main-lockfile, feat/pincode-lookup, feat/rn-mongodb-rewrite) contain
+    Claude trailers but were never pushed; do not push them.

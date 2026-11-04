@@ -83,7 +83,7 @@ export default function OpsSuppliersScreen() {
       <ConfirmSheet
         visible={!!deciding}
         title={deciding ? `${deciding.status === 'VERIFIED' ? 'Verify' : 'Reject'} ${deciding.supplier.businessName}?` : ''}
-        body={deciding?.status === 'VERIFIED' ? 'Buyers will see the Verified badge on their products.' : 'The supplier will be told to contact BuildX support.'}
+        body={deciding?.status === 'VERIFIED' ? 'Buyers will see the Verified badge on their products.' : 'The supplier will be told to contact Sthiva support.'}
         confirmLabel={deciding?.status === 'VERIFIED' ? 'Verify' : 'Reject'}
         danger={deciding?.status === 'REJECTED'}
         loading={verify.isPending}

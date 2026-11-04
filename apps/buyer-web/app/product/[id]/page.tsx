@@ -2,7 +2,7 @@
 
 import { use, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useSelectedLocation } from '@buildx/web-core';
+import { useSelectedLocation } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
@@ -12,7 +12,7 @@ import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { useProduct } from '@/lib/products';
 import { useSupplierReviews } from '@/lib/reviews';
 import { addToCart } from '@/lib/cart';
-import { matchCatalogItem } from '@buildx/web-core';
+import { matchCatalogItem } from '@sthiva/web-core';
 import { rupees } from '@/lib/format';
 
 const relativeDate = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });

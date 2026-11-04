@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { WebCoreProvider, createApiClient, createLocationStore } from '@buildx/web-core';
+import { WebCoreProvider, createApiClient, createLocationStore } from '@sthiva/web-core';
 import { getFirebaseAuth } from '../lib/firebase';
 import { AuthProvider } from '../components/auth/AuthProvider';
 import { StorageNotice } from '../components/layout/StorageNotice';

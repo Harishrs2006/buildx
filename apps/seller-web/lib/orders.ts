@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
-import { useApiClient, type ApiClient, type PaginationMeta } from '@buildx/web-core';
+import { useApiClient, type ApiClient, type PaginationMeta } from '@sthiva/web-core';
 
 const orderItemSchema = z.object({
   name: z.string(),

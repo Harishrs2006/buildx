@@ -11,7 +11,7 @@ import {
   signOut as firebaseSignOut,
   type ConfirmationResult,
 } from 'firebase/auth';
-import { ApiClientError, useApiClient } from '@buildx/web-core';
+import { ApiClientError, useApiClient } from '@sthiva/web-core';
 import { getFirebaseAuth } from '../../lib/firebase';
 import { syncAuth, onboardSupplier, type SyncedUser } from '../../lib/auth';
 
@@ -67,7 +67,7 @@ function describeAuthError(err: unknown): string {
     case 'auth/network-request-failed':
       return 'No internet connection. Check your connection and try again.';
     case 'auth/account-exists-with-different-credential':
-      return 'This email is already used with another sign-in method. Contact BuildX support.';
+      return 'This email is already used with another sign-in method. Contact Sthiva support.';
     case 'auth/code-expired':
       return 'That code expired. Request a new one.';
     // Project-side SMS problems (Firebase billing off, daily SMS quota used up): not the user's fault
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setStatus((s) => (s === 'otp-sent' ? s : 'signed-out'));
         return;
       }
-      // Signed in to Firebase; keep screens busy until BuildX has loaded the account
+      // Signed in to Firebase; keep screens busy until Sthiva has loaded the account
       setStatus('loading');
       try {
         const synced = await syncAuth(client);
@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (err) {
         // 401/403/409 carry a message meant for the user (suspended, already linked); otherwise it was the network
         const known = err instanceof ApiClientError && (err.status === 401 || err.status === 403 || err.status === 409);
-        setError(known ? err.message : 'Could not reach BuildX. Check your connection and try again.');
+        setError(known ? err.message : 'Could not reach Sthiva. Check your connection and try again.');
         if (known) await firebaseSignOut(getFirebaseAuth()).catch(() => undefined);
         setStatus('signed-out');
       }

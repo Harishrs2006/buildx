@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og';
 
-export const alt = 'BuildX: construction materials, delivered to your site';
+export const alt = 'Sthiva: construction materials, delivered to your site';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -29,7 +29,7 @@ export default function OpengraphImage() {
             <path d="M13 11h7.5l15 26H28z" fill="#F2EFE7" />
             <path d="M35 11h-7.5l-15 26H20z" fill="#C8FF3D" />
           </svg>
-          <span style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2 }}>BuildX</span>
+          <span style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2 }}>Sthiva</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 104, fontWeight: 800, lineHeight: 0.95, letterSpacing: -5 }}>Build with materials</span>

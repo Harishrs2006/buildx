@@ -1,4 +1,4 @@
-import type { ProductSummary } from '@buildx/web-core';
+import type { ProductSummary } from '@sthiva/web-core';
 
 // productSummarySchema only guarantees _id/name/unit/basePrice (.passthrough()) — the API
 // returns more (images, category, supplier), but it's optional here, not validated.

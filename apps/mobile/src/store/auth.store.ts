@@ -51,7 +51,7 @@ export const useAuthStore = create<AuthState>((set) => ({
           set({
             loading: false,
             syncError: err?.message?.includes('timeout') || err?.message === 'Network Error'
-              ? 'Signed in, but we could not reach BuildX. Check your internet and try again.'
+              ? 'Signed in, but we could not reach Sthiva. Check your internet and try again.'
               : err?.message || 'Signed in, but we could not open your account. Please try again.',
           });
         }

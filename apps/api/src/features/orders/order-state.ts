@@ -2,7 +2,7 @@
 //
 // The supplier picks a delivery mode when dispatching a CONFIRMED order:
 //
-// PLATFORM — a BuildX delivery partner delivers
+// PLATFORM — a Sthiva delivery partner delivers
 //   CONFIRMED ──supplier──▶ READY_FOR_PICKUP ──driver/ops──▶ ASSIGNED ──driver──▶ PICKED_UP
 //                                ▲                              │                  │
 //                                └────────ops unassigns─────────┘    driver ▼       │ driver

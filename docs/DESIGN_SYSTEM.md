@@ -1,11 +1,11 @@
-# BuildX design system: "Hi-Vis"
+# Sthiva design system: "Hi-Vis"
 
 One visual language for the buyer website, seller portal, admin and the Expo mobile app.
 Reference implementation: `apps/buyer-web` (tailwind.config.ts, app/globals.css, components/).
 
 ## Idea
 Construction sites run on high-visibility gear: near-black machinery, sand and cement, and one
-fluorescent colour that means "look here". BuildX uses exactly that. Dark ink and warm sand carry
+fluorescent colour that means "look here". Sthiva uses exactly that. Dark ink and warm sand carry
 the page, and **signal lime appears only where the user should act**.
 
 ## Colour

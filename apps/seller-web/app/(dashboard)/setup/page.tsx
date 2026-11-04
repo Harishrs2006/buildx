@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useApiClient, catalogItems } from '@buildx/web-core';
+import { useApiClient, catalogItems } from '@sthiva/web-core';
 import { useCategories } from '../../../lib/categories';
 import {
   BUSINESS_TYPES, addServicePincodes, describePincodeError, rejectedPincodes, removeServicePincode, setupGaps, updateSupplierProfile,

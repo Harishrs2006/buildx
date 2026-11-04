@@ -27,7 +27,7 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col items-center gap-2 px-6 py-24 text-center">
         <p className="font-headline text-lg font-bold text-on-surface">This account isn't a buyer account</p>
         <p className="max-w-sm font-body text-sm text-on-surface-variant">
-          It is already registered on BuildX with a different role, such as a supplier. Sign out, then
+          It is already registered on Sthiva with a different role, such as a supplier. Sign out, then
           sign in with another account to shop here.
         </p>
         <button type="button" onClick={() => void signOut()} className="btn-ink mt-4">Sign out</button>

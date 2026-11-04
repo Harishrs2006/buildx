@@ -1,18 +1,18 @@
 {
   "expo": {
-    "name": "BuildX",
-    "slug": "buildx",
+    "name": "Sthiva",
+    "slug": "sthiva",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "scheme": "buildx",
+    "scheme": "sthiva",
     "userInterfaceStyle": "light",
     "splash": {
       "backgroundColor": "#0B0C0A"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.buildx.app",
+      "bundleIdentifier": "com.sthiva.app",
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
@@ -21,7 +21,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png",
         "backgroundColor": "#F2EFE7"
       },
-      "package": "com.buildx.app",
+      "package": "com.sthiva.app",
       "googleServicesFile": "./google-services.json"
     },
     "plugins": [

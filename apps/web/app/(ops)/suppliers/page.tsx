@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useApiClient, catalogCategory } from '@buildx/web-core';
+import { useApiClient, catalogCategory } from '@sthiva/web-core';
 import { Chip, ChipRow, EmptyState, ErrorNote, PageHead, Pill, type Tone } from '../../../components/ui';
 import { ago, errorText, opsApi, populated, useLoad, type OpsSupplier, type Verification } from '../../../lib/ops';
 

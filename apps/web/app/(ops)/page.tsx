@@ -28,7 +28,7 @@ export default function TodayPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHead eyebrow="Operations" title={<>Today at <span className="font-serif font-normal italic">BuildX</span></>} />
+      <PageHead eyebrow="Operations" title={<>Today at <span className="font-serif font-normal italic">Sthiva</span></>} />
 
       {pending.state.status === 'success' && pending.state.data.length > 0 && (
         <Link href="/suppliers" className="group flex flex-col gap-4 rounded-2xl bg-lime p-5 text-ink sm:flex-row sm:items-center">

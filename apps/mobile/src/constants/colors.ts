@@ -1,4 +1,4 @@
-// BuildX "Hi-Vis" design system, shared with the websites (docs/DESIGN_SYSTEM.md).
+// Sthiva "Hi-Vis" design system, shared with the websites (docs/DESIGN_SYSTEM.md).
 // Ink and sand carry the screen; signal lime marks the one thing to act on; cobalt is for info.
 // The older semantic names (primary, surface, text...) are kept so every screen picks up the
 // new palette; new code can use the brand names (ink, sand, lime, cobalt, stone) directly.

@@ -51,7 +51,7 @@ function OnboardForm() {
           </span>
         </span>
         <h1 className="font-display text-[clamp(2.4rem,6vw,3.25rem)] font-bold leading-[0.95] tracking-tightest">
-          Welcome to BuildX
+          Welcome to Sthiva
         </h1>
         <p className="mt-4 text-[16px] leading-relaxed text-stone">
           {user?.phone ? (

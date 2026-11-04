@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useApiClient } from '@buildx/web-core';
+import { useApiClient } from '@sthiva/web-core';
 import {
   useSupplierProducts, discontinueSupplierProduct, updateSupplierProduct, productErrorText, type SupplierProduct,
 } from '../../../lib/products';

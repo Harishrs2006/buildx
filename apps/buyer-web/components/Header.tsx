@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useSelectedLocation } from '@buildx/web-core';
+import { useSelectedLocation } from '@sthiva/web-core';
 import { useCart } from '../lib/cart';
 import { useAuth } from './auth/AuthProvider';
 import { Logo } from './brand/Logo';

@@ -69,7 +69,7 @@ export function useAiChat() {
       id: uid(),
       role: 'assistant',
       type: 'text',
-      content: "Hi! I'm BuildX Assistant. I can help you find materials, compare prices, and place orders.\n\nYou can also **upload a photo** of your materials list and I'll calculate prices instantly across brands.",
+      content: "Hi! I'm Sthiva Assistant. I can help you find materials, compare prices, and place orders.\n\nYou can also **upload a photo** of your materials list and I'll calculate prices instantly across brands.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -188,7 +188,7 @@ export function useAiChat() {
         id: uid(),
         role: 'assistant',
         type: 'text',
-        content: "Hi! I'm BuildX Assistant. Upload a photo of your materials list or ask me anything.",
+        content: "Hi! I'm Sthiva Assistant. Upload a photo of your materials list or ask me anything.",
       },
     ]);
   }, []);

@@ -26,7 +26,7 @@ function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind:
   const buyer = order.buyerId as any;
   const selfDelivery = order.deliveryMode === 'SUPPLIER';
 
-  // Delivery progress on BuildX-driver orders is updated by the assigned delivery partner
+  // Delivery progress on Sthiva-driver orders is updated by the assigned delivery partner
   const actions: { label: string; kind: SheetKind; tone: 'primary' | 'plain' | 'danger' }[] = [];
   if (order.status === 'CONFIRMED') actions.push({ label: 'Dispatch', kind: 'dispatch', tone: 'primary' });
   if (order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Deliver myself', kind: 'takeover', tone: 'plain' });
@@ -55,7 +55,7 @@ function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind:
       {order.deliveryMode ? (
         <View style={styles.meta}>
           <Icon name={selfDelivery ? 'truck-outline' : 'moped-outline'} size={16} color={Colors.stone} />
-          <Text style={styles.metaText}>{selfDelivery ? 'Your vehicle' : 'BuildX delivery partner'}</Text>
+          <Text style={styles.metaText}>{selfDelivery ? 'Your vehicle' : 'Sthiva delivery partner'}</Text>
         </View>
       ) : null}
 
@@ -172,7 +172,7 @@ export default function SupplierOrdersScreen() {
         title="Who delivers this order?"
         body="Choose who takes the material to the buyer."
         options={[
-          { label: 'BuildX delivery partner', hint: 'A BuildX driver picks it up from you.', icon: 'moped-outline', onPress: () => setStatus('READY_FOR_PICKUP', undefined, true) },
+          { label: 'Sthiva delivery partner', hint: 'A Sthiva driver picks it up from you.', icon: 'moped-outline', onPress: () => setStatus('READY_FOR_PICKUP', undefined, true) },
           { label: 'My own vehicle', hint: 'You deliver and collect the cash.', icon: 'truck-outline', onPress: () => setStatus('IN_TRANSIT', undefined, true) },
         ]}
         onCancel={close}

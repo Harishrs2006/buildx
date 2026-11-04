@@ -1,4 +1,4 @@
-// BuildX material catalogue: what exists in the Indian market, how it is specified and how it is
+// Sthiva material catalogue: what exists in the Indian market, how it is specified and how it is
 // sold. It never carries prices or stock: those only ever come from supplier listings (the API).
 
 // Units a supplier listing can use (apps/api Product.model.ts)

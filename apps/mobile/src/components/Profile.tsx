@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/auth.store';
 import { signOutEverywhere } from '../lib/googleAuth';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
-import { BuildXMark, ConfirmSheet, Eyebrow, Icon, type IconName } from './ui';
+import { SthivaMark, ConfirmSheet, Eyebrow, Icon, type IconName } from './ui';
 
 // Shared building blocks for the four role profile screens
 
@@ -84,8 +84,8 @@ export function SignOutFooter() {
         <Text style={styles.signOutText}>Sign out</Text>
       </Pressable>
       <View style={styles.brand}>
-        <BuildXMark size={28} />
-        <Text style={styles.version}>BuildX {Constants.expoConfig?.version ?? ''}</Text>
+        <SthivaMark size={28} />
+        <Text style={styles.version}>Sthiva {Constants.expoConfig?.version ?? ''}</Text>
       </View>
       <ConfirmSheet
         visible={asking}

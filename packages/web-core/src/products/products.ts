@@ -31,7 +31,7 @@ export async function fetchProducts(
     signal,
   });
   if (pincode && list.location?.pincode !== pincode) {
-    throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', 200);
+    throw new ApiClientError('Unexpected response from Sthiva', 'INVALID_RESPONSE', 200);
   }
   return list;
 }

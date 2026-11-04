@@ -3,7 +3,7 @@ import { LegalPage, Section } from '@/components/layout/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Privacy policy',
-  description: 'What personal data BuildX collects, why, who it is shared with, and how to access or delete it.',
+  description: 'What personal data Sthiva collects, why, who it is shared with, and how to access or delete it.',
   alternates: { canonical: '/privacy' },
 };
 
@@ -77,7 +77,7 @@ export default function PrivacyPage() {
 
       <Section title="Children">
         <p>
-          BuildX is for people aged 18 and over. We do not knowingly collect data from children. If you believe a child has
+          Sthiva is for people aged 18 and over. We do not knowingly collect data from children. If you believe a child has
           created an account, contact us and we will delete it.
         </p>
       </Section>
@@ -85,7 +85,7 @@ export default function PrivacyPage() {
       <Section title="Security">
         <p>
           Data is sent over encrypted HTTPS connections. Sign-in uses one-time codes, so there are no passwords to steal. Access
-          to personal data inside BuildX is limited to staff who need it for their work.
+          to personal data inside Sthiva is limited to staff who need it for their work.
         </p>
       </Section>
 
