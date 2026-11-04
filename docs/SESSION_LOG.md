@@ -329,3 +329,8 @@ Times are IST.
   `npm install` (root) and `cd apps/mobile && npm install --legacy-peer-deps`; that refills OneDrive, so prefer
   building from C:/bx/mobile (outside OneDrive, still has node_modules). Recommended to the user: move the project
   out of OneDrive (e.g. C:/dev/BuildX); waiting for their decision.
+- 2026-11-04 20:45 IST: User said "move it": whole BuildX folder copied to C:/dev/BuildX (4040 files, verified equal
+  to the original), git worktrees repaired (readme-update, C:/Users/Harish/buildx-launch now point here), memory
+  notes updated. Work from C:/dev/BuildX from now on (start Claude there: `cd C:\dev\BuildX` then `claude`).
+  The old OneDrive copy is deleted by the user once the new session is confirmed. Libraries are not installed in
+  the new copy yet: `npm install` (root) and `cd apps/mobile && npm install --legacy-peer-deps` when needed.
