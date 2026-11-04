@@ -12,6 +12,7 @@ import { useFonts } from 'expo-font';
 import { fontFiles } from '../src/constants/typography';
 import { roleBelongsHere } from '../src/lib/appVariant';
 import { AlertBanner } from '../src/components/AlertBanner';
+import { UpdateBanner } from '../src/components/UpdateBanner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +92,7 @@ export default function RootLayout() {
           <Stack.Screen name="(ops)" />
         </Stack>
         <AlertBanner />
+        <UpdateBanner />
         <StatusBar style="dark" />
       </QueryClientProvider>
     </GestureHandlerRootView>

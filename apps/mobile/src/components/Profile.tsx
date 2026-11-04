@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Constants from 'expo-constants';
+import * as Updates from 'expo-updates';
 import { useAuthStore } from '../store/auth.store';
 import { signOutEverywhere } from '../lib/googleAuth';
 import { api } from '../lib/api';
@@ -111,7 +112,10 @@ export function SignOutFooter() {
       ) : null}
       <View style={styles.brand}>
         <SthivaMark size={28} />
-        <Text style={styles.version}>Sthiva {Constants.expoConfig?.version ?? ''}</Text>
+        <Text style={styles.version}>
+          {Constants.expoConfig?.name ?? 'Sthiva'} {Constants.expoConfig?.version ?? ''}
+          {Updates.isEnabled && !Updates.isEmbeddedLaunch && Updates.updateId ? ` · update ${Updates.updateId.slice(0, 8)}` : ''}
+        </Text>
       </View>
       <ConfirmSheet
         visible={asking}

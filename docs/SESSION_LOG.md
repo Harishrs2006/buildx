@@ -446,3 +446,10 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   SthivaLogo (partner prop, SVG mask with useId), seller portal uses the partner lockup + partner favicon, OG image
   uses an SVG data URI, mobile src/constants/brand.ts copy + SthivaMark (react-native-svg Mask; tile follows the app
   variant), app icons via apps/mobile/scripts/make-icons.cjs. Checked the real component on a local dev server.
+- 2026-11-05 IST: OVER-THE-AIR UPDATES (EAS Update). Expo account is "hatish_r_s" (with a t; user typed harish_r_s).
+  User logged in eas-cli on this laptop themselves. Project @hatish_r_s/sthiva, id 26067cb1-d12d-4279-9bda-bb3fc6f6eca3
+  (app.config.ts EAS_PROJECT_ID). expo-updates ~56.0.28; runtimeVersion policy appVersion (bump app.json version for
+  native changes); channels buyer-production / partner-production via updates.requestHeaders (works with our local
+  gradle builds). Publish: from apps/mobile `npm run update:buyer -- "note"` / `npm run update:partner -- "note"`
+  (scripts/publish-update.cjs sets live API URL + variant). UpdateBanner: "A new version is ready. Tap to restart.";
+  profile footer shows "update <id>" when running an OTA update.
