@@ -1,6 +1,6 @@
 import type { Config } from 'tailwindcss';
 
-// BuildX "Hi-Vis" design system (2026-10). Source of truth: docs/DESIGN_SYSTEM.md, shared with
+// Sthiva "Hi-Vis" design system (2026-10). Source of truth: docs/DESIGN_SYSTEM.md, shared with
 // apps/mobile. Ink + sand surfaces with a single signal-lime accent (the colour of a site safety
 // vest) and cobalt for information. The Material-style token names below are kept so existing
 // pages inherit the new palette; new work should prefer the short brand names (ink, sand, lime...).
@@ -55,7 +55,7 @@ const config: Config = {
         'inverse-surface': '#0B0C0A',
         'inverse-on-surface': '#F2EFE7',
 
-        // shadcn-style names used by @buildx/web-core components (LocationSelector)
+        // shadcn-style names used by @sthiva/web-core components (LocationSelector)
         foreground: '#0B0C0A',
         'primary-foreground': '#C8FF3D',
         'muted-foreground': '#5E5B52',

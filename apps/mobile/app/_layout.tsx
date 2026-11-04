@@ -53,7 +53,7 @@ function AuthGate() {
       return;
     }
 
-    // Buyers use BuildX, everyone else uses BuildX Partner: explain instead of opening the wrong screens
+    // Buyers use Sthiva, everyone else uses Sthiva Partner: explain instead of opening the wrong screens
     if (!roleBelongsHere(user.role)) {
       if ((segments as string[])[1] !== 'other-app') router.replace('/(auth)/other-app' as Href);
       return;

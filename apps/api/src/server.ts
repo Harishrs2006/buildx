@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
   await connectRedis();
 
   const server = app.listen(env.API_PORT, () => {
-    logger.info(`BuildX API running on port ${env.API_PORT} [${env.NODE_ENV}]`);
+    logger.info(`Sthiva API running on port ${env.API_PORT} [${env.NODE_ENV}]`);
   });
 
   const shutdown = async (signal: string) => {

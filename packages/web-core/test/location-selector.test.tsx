@@ -15,14 +15,14 @@ const savedLocation = (pincode: string) =>
 afterEach(() => vi.unstubAllGlobals());
 
 describe('LocationSelector — manual PIN entry', () => {
-  it('valid PIN with delivery: saves it and says BuildX delivers there', async () => {
+  it('valid PIN with delivery: saves it and says Sthiva delivers there', async () => {
     const onChange = vi.fn();
     const t = setup(mockApi(locationRoutes({ '572103': 2 })));
     t.render(<LocationSelector onLocationChange={onChange} />);
 
     await t.user.type(pinInput(), '572103{Enter}');
 
-    expect(await screen.findByText(/BuildX delivers here · 2 suppliers/)).toBeTruthy();
+    expect(await screen.findByText(/Sthiva delivers here · 2 suppliers/)).toBeTruthy();
     expect(screen.getByText('572103')).toBeTruthy();
     expect(t.store.get()).toMatchObject({ pincode: '572103', source: 'manual', label: 'Kuvempunagar S.O, TUMAKURU, KARNATAKA' });
     expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ pincode: '572103' }));
@@ -34,7 +34,7 @@ describe('LocationSelector — manual PIN entry', () => {
     const t = setup(mockApi(locationRoutes({ '110001': 0 })));
     t.render(<LocationSelector />);
     await t.user.type(pinInput(), '110001{Enter}');
-    expect(await screen.findByText("BuildX doesn't deliver to 110001 yet.")).toBeTruthy();
+    expect(await screen.findByText("Sthiva doesn't deliver to 110001 yet.")).toBeTruthy();
     expect(screen.queryByText(/delivers here/)).toBeNull();
     expect(t.store.get()?.pincode).toBe('110001');
   });
@@ -89,13 +89,13 @@ describe('LocationSelector — manual PIN entry', () => {
     // Service recovers → a re-check (not a cached answer) is what turns it positive
     svcUp = true;
     await t.user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(await screen.findByText(/BuildX delivers here · 1 supplier$/)).toBeTruthy();
+    expect(await screen.findByText(/Sthiva delivers here · 1 supplier$/)).toBeTruthy();
   });
 
   it('change location: Change opens the form with focus; Escape cancels; a new PIN replaces the old', async () => {
     const t = setup(mockApi(locationRoutes({ '572103': 2, '560001': 3 })), memoryStorage({ [LOCATION_STORAGE_KEY]: savedLocation('572103') }));
     t.render(<LocationSelector />);
-    await screen.findByText(/BuildX delivers here · 2 suppliers/);
+    await screen.findByText(/Sthiva delivers here · 2 suppliers/);
 
     await t.user.click(screen.getByRole('button', { name: /Change delivery location \(currently 572103\)/ }));
     expect(document.activeElement).toBe(pinInput());
@@ -105,7 +105,7 @@ describe('LocationSelector — manual PIN entry', () => {
 
     await t.user.click(screen.getByRole('button', { name: /Change delivery location/ }));
     await t.user.type(pinInput(), '560001{Enter}');
-    expect(await screen.findByText(/BuildX delivers here · 3 suppliers/)).toBeTruthy();
+    expect(await screen.findByText(/Sthiva delivers here · 3 suppliers/)).toBeTruthy();
     expect(t.store.get()?.pincode).toBe('560001');
   });
 });
@@ -124,7 +124,7 @@ describe('LocationSelector — stored location', () => {
   it('re-checks a previously chosen PIN instead of trusting the past', async () => {
     const t = setup(mockApi(locationRoutes({ '572103': 0 })), memoryStorage({ [LOCATION_STORAGE_KEY]: savedLocation('572103') }));
     t.render(<LocationSelector />);
-    expect(await screen.findByText("BuildX doesn't deliver to 572103 yet.")).toBeTruthy();
+    expect(await screen.findByText("Sthiva doesn't deliver to 572103 yet.")).toBeTruthy();
   });
 });
 
@@ -162,7 +162,7 @@ describe('LocationSelector — GPS', () => {
     expect(JSON.parse((init as RequestInit).body as string)).toEqual({ lat: 13.339, lng: 77.114 });
 
     await t.user.click(yes);
-    expect(await screen.findByText(/BuildX delivers here · 2 suppliers/)).toBeTruthy();
+    expect(await screen.findByText(/Sthiva delivers here · 2 suppliers/)).toBeTruthy();
     expect(t.store.get()).toMatchObject({ pincode: '572103', source: 'gps' });
     expect(JSON.stringify(t.storage.raw.get(LOCATION_STORAGE_KEY))).not.toMatch(/13\.33|77\.11/);
   });
@@ -183,7 +183,7 @@ describe('LocationSelector — GPS', () => {
     expect(await screen.findByText(/Location permission was denied/)).toBeTruthy();
 
     await t.user.type(pinInput(), '560001{Enter}');
-    expect(await screen.findByText(/BuildX delivers here · 1 supplier/)).toBeTruthy();
+    expect(await screen.findByText(/Sthiva delivers here · 1 supplier/)).toBeTruthy();
   });
 
   it.each([

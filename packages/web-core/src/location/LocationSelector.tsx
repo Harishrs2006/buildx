@@ -5,7 +5,7 @@ import { useDeliveryServiceability, useLocationSelector, useSelectedLocation, ty
 import type { PlaceInfo } from './lookup';
 import type { SelectedLocation } from './store';
 
-// Reusable delivery-location picker for the BuildX web apps.
+// Reusable delivery-location picker for the Sthiva web apps.
 // Styling uses the apps' Tailwind theme tokens (primary, muted, destructive, border); add
 // this package to the consuming app's Tailwind `content` globs.
 //
@@ -103,9 +103,9 @@ export function LocationSelector({ onLocationChange, allowGps = true, title = 'D
             <p role="status" aria-live="polite" className="mt-1 text-sm">
               {delivery.status === 'checking' && <span className="text-muted-foreground">Checking delivery…</span>}
               {delivery.status === 'serviceable' && (
-                <span>BuildX delivers here · {delivery.supplierCount} supplier{delivery.supplierCount === 1 ? '' : 's'}</span>
+                <span>Sthiva delivers here · {delivery.supplierCount} supplier{delivery.supplierCount === 1 ? '' : 's'}</span>
               )}
-              {delivery.status === 'not-serviceable' && <span>BuildX doesn't deliver to {delivery.pincode} yet.</span>}
+              {delivery.status === 'not-serviceable' && <span>Sthiva doesn't deliver to {delivery.pincode} yet.</span>}
               {delivery.status === 'unavailable' && (
                 <span>
                   {delivery.message}.{' '}

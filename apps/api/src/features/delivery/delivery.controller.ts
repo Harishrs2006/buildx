@@ -3,7 +3,7 @@ import { isValidObjectId } from 'mongoose';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { notifyUser } from '../../shared/services/notification.service';
 import { transitionOrder, recordCodCollected } from '../orders/order.service';
 import { allowedSources, modeFilter } from '../orders/order-state';

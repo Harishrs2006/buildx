@@ -6,21 +6,21 @@ import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
 import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { IS_PARTNER } from '../../src/lib/appVariant';
-import { BuildXMark, Button, Eyebrow, Icon } from '../../src/components/ui';
+import { SthivaMark, Button, Eyebrow, Icon } from '../../src/components/ui';
 
 const ROLE_NAMES: Record<string, string> = {
   BUYER: 'a buyer',
   SUPPLIER: 'a supplier',
   DELIVERY_PARTNER: 'a delivery partner',
-  OPERATOR: 'a BuildX operations',
-  ADMIN: 'a BuildX admin',
+  OPERATOR: 'a Sthiva operations',
+  ADMIN: 'a Sthiva admin',
 };
 
 /** Shown when an account opens the app meant for the other side of the marketplace. */
 export default function OtherAppScreen() {
   const { user, clear } = useAuthStore();
   const [leaving, setLeaving] = useState(false);
-  const otherApp = IS_PARTNER ? 'BuildX' : 'BuildX Partner';
+  const otherApp = IS_PARTNER ? 'Sthiva' : 'Sthiva Partner';
   const who = ROLE_NAMES[user?.role ?? ''] ?? 'another kind of';
 
   async function switchAccount() {
@@ -32,7 +32,7 @@ export default function OtherAppScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.body}>
-        <BuildXMark size={44} />
+        <SthivaMark size={44} />
         <Eyebrow>Wrong app for this account</Eyebrow>
         <Text style={styles.heading}>
           Please use{'\n'}
@@ -40,8 +40,8 @@ export default function OtherAppScreen() {
         </Text>
         <Text style={styles.text}>
           You are signed in with {who} account. {IS_PARTNER
-            ? 'This app is for suppliers and delivery partners. Buying materials happens in the BuildX app.'
-            : 'This app is for buying materials. Suppliers and delivery partners manage their orders in the BuildX Partner app.'}
+            ? 'This app is for suppliers and delivery partners. Buying materials happens in the Sthiva app.'
+            : 'This app is for buying materials. Suppliers and delivery partners manage their orders in the Sthiva Partner app.'}
         </Text>
         <View style={styles.tip}>
           <Icon name="information-outline" size={20} color={Colors.ink} />

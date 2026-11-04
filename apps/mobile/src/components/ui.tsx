@@ -1,7 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import Svg, { G, Path, Rect } from 'react-native-svg';
+import Svg, { Path, Rect } from 'react-native-svg';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
@@ -122,24 +122,16 @@ export function Icon({ name, size = 22, color = Colors.ink }: { name: IconName; 
   return <MaterialCommunityIcons name={name} size={size} color={color} />;
 }
 
-// The BuildX roof-and-X mark, same vectors as packages/web-core/src/brand/BuildXLogo.tsx
-export function BuildXMark({ size = 32, onDark = false, tile = false }: { size?: number; onDark?: boolean; tile?: boolean }) {
-  const dark = onDark && !tile ? Colors.sand : Colors.ink;
-  const grey = '#9E9E9E';
+// The Sthiva S mark (two solid blocks, lime beam), same shapes as packages/web-core/src/brand/SthivaLogo.tsx
+export function SthivaMark({ size = 32, onDark = false, tile = false }: { size?: number; onDark?: boolean; tile?: boolean }) {
+  const ink = onDark && !tile ? Colors.sand : Colors.ink;
+  const beam = onDark && !tile ? Colors.lime : '#9BCB1F';
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityElementsHidden importantForAccessibility="no">
       {tile ? <Rect width={48} height={48} rx={12} fill={Colors.sand} /> : null}
-      <Svg x={3} y={3} width={42} height={42} viewBox="135 12 1200 1200">
-        <G fill={dark}>
-          <Path d="M140 650 L420 405 L850 370 L570 650 Z" />
-          <Path d="M850 370 L860 370 L1328 866 L1314 866 Z" />
-        </G>
-        <G fill={grey}>
-          <Path d="M828 418 L856 400 L1294 866 L1256 866 Z" />
-          <Path d="M1228 686 H1306 L1086 930 H1008 Z" />
-          <Path d="M782 527h46v46h-46zM836 527h46v46h-46zM782 581h46v46h-46zM836 581h46v46h-46z" />
-        </G>
-      </Svg>
+      <Path d="M14 7 H37 V14 H17 V20.5 H11 V10 Q11 7 14 7 Z" fill={ink} />
+      <Path d="M31 27.5 H37 V38 Q37 41 34 41 H11 V34 H31 Z" fill={ink} />
+      <Rect x={11} y={20.5} width={26} height={7} rx={1.5} fill={beam} />
     </Svg>
   );
 }

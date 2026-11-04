@@ -3,7 +3,7 @@ import { LegalPage, Section } from '@/components/layout/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Cookie policy',
-  description: 'BuildX uses only essential browser storage. No advertising or analytics cookies.',
+  description: 'Sthiva uses only essential browser storage. No advertising or analytics cookies.',
   alternates: { canonical: '/cookies' },
 };
 
@@ -12,7 +12,7 @@ export default function CookiesPage() {
     <LegalPage
       path="/cookies"
       title="Cookie policy"
-      intro="BuildX does not use advertising or analytics cookies. We only store what the site needs to work."
+      intro="Sthiva does not use advertising or analytics cookies. We only store what the site needs to work."
     >
       <Section title="What we store in your browser">
         <ul>
@@ -20,14 +20,14 @@ export default function CookiesPage() {
             <strong>Sign-in session</strong> (Firebase Authentication), so you stay signed in.
           </li>
           <li>
-            <strong>Cart</strong> (<code>buildx.cart</code>), so your cart survives a page refresh.
+            <strong>Cart</strong> (<code>sthiva.cart</code>), so your cart survives a page refresh.
           </li>
           <li>
-            <strong>Delivery PIN</strong> (<code>buildx.deliveryLocation</code>): your PIN code and area name, forgotten after 90
+            <strong>Delivery PIN</strong> (<code>sthiva.deliveryLocation</code>): your PIN code and area name, forgotten after 90
             days. No coordinates are stored.
           </li>
           <li>
-            <strong>Notice preference</strong> (<code>buildx.storageNotice</code>), remembering that you dismissed our storage
+            <strong>Notice preference</strong> (<code>sthiva.storageNotice</code>), remembering that you dismissed our storage
             notice.
           </li>
         </ul>

@@ -23,23 +23,23 @@ const serif = Instrument_Serif({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
   title: {
-    default: 'BuildX | Construction materials, delivered to your site',
-    template: '%s | BuildX',
+    default: 'Sthiva | Construction materials, delivered to your site',
+    template: '%s | Sthiva',
   },
   description: SITE.description,
-  applicationName: 'BuildX',
+  applicationName: 'Sthiva',
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    siteName: 'BuildX',
-    title: 'BuildX | Construction materials, delivered to your site',
+    siteName: 'Sthiva',
+    title: 'Sthiva | Construction materials, delivered to your site',
     description: SITE.description,
     url: '/',
     locale: 'en_IN',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'BuildX | Construction materials, delivered to your site',
+    title: 'Sthiva | Construction materials, delivered to your site',
     description: SITE.description,
   },
   // Pre-launch: stays out of search results until NEXT_PUBLIC_ALLOW_INDEXING=true is set.
@@ -74,7 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             __html: JSON.stringify({
               '@context': 'https://schema.org',
               '@type': 'Organization',
-              name: 'BuildX',
+              name: 'Sthiva',
               url: SITE.url,
               logo: `${SITE.url}/icon.svg`,
               description: SITE.description,

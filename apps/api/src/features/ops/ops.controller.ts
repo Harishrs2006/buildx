@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { isValidObjectId, Types } from 'mongoose';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { User } from '../../infrastructure/database/models/User.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
@@ -151,7 +151,7 @@ export async function cancel(req: Request, res: Response, next: NextFunction) {
       await withOpsNote(id, req, `Cancelled (${restock ?? true ? 'restocked' : 'not restocked'}): ${reason}`);
       notifyUser(order.buyerId.toString(), {
         title: 'Order cancelled',
-        body: `Your order ${order.orderNumber} was cancelled by BuildX support.`,
+        body: `Your order ${order.orderNumber} was cancelled by Sthiva support.`,
         data: { screen: 'buyer_orders', orderId: id },
       });
     }
@@ -180,7 +180,7 @@ export async function unassign(req: Request, res: Response, next: NextFunction) 
       if (before?.driverId) {
         notifyUser(before.driverId.toString(), {
           title: 'Order reassigned',
-          body: `Order ${order.orderNumber} has been removed from your deliveries by BuildX support.`,
+          body: `Order ${order.orderNumber} has been removed from your deliveries by Sthiva support.`,
           data: { screen: 'driver_available', orderId: id },
         });
       }
@@ -226,7 +226,7 @@ export async function assign(req: Request, res: Response, next: NextFunction) {
       await withOpsNote(id, req, `Assigned to driver ${driverUserId}${note ? `: ${note}` : ''}`);
       notifyUser(driverUserId, {
         title: 'New delivery assigned',
-        body: `BuildX support assigned order ${order.orderNumber} to you.`,
+        body: `Sthiva support assigned order ${order.orderNumber} to you.`,
         data: { screen: 'driver_available', orderId: id },
       });
       notifyUser(order.buyerId.toString(), {
@@ -306,10 +306,10 @@ export async function setSupplierVerification(req: Request, res: Response, next:
     if (!profile) throw AppError.notFound('Supplier');
     logger.info('[ops] supplier verification', { opsUserId: req.auth!.userId, supplierId: id, status, note });
     notifyUser(profile.userId.toString(), {
-      title: status === 'VERIFIED' ? '✓ You are verified on BuildX' : 'Verification update',
+      title: status === 'VERIFIED' ? '✓ You are verified on Sthiva' : 'Verification update',
       body: status === 'VERIFIED'
         ? 'Buyers will now see the Verified badge on your products.'
-        : `Your verification was not approved.${note ? ` ${note}` : ''} Contact BuildX support.`,
+        : `Your verification was not approved.${note ? ` ${note}` : ''} Contact Sthiva support.`,
       data: { screen: 'supplier_orders' },
     });
     res.json(ok(profile));

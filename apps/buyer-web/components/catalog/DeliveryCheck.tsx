@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { LocationSelector, useDeliveryServiceability, useSelectedLocation } from '@buildx/web-core';
+import { LocationSelector, useDeliveryServiceability, useSelectedLocation } from '@sthiva/web-core';
 
 type Availability = { deliverable: boolean; reason?: string };
 
 const REASONS: Record<string, string> = {
   PINCODE_NOT_SERVED: 'This supplier has not set up delivery to this PIN.',
   SUPPLIER_NOT_AVAILABLE: 'This supplier is not taking orders right now.',
-  NO_SUPPLIERS: 'No supplier on BuildX delivers to this PIN yet.',
+  NO_SUPPLIERS: 'No supplier on Sthiva delivers to this PIN yet.',
 };
 
 function Row({ tone, icon, title, body }: { tone: 'ok' | 'no' | 'wait'; icon: string; title: string; body?: string }) {

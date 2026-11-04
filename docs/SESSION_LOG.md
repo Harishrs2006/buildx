@@ -21,17 +21,17 @@ Times are IST.
 4. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
 5. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping (ask user).
 
-## DOMAIN PLAN: getbuildx.com (user chose 2026-11-04; brand stays BuildX)
-Not bought yet at 23:40 IST (RDAP 404). Once the user buys it:
-1. Vercel (Claude in Chrome): getbuildx.com + www.getbuildx.com -> buyer project (buildx-vgud),
-   seller.getbuildx.com -> seller project (buildx-48kc), ops.getbuildx.com -> ops project (buildx-ops).
-2. Render: custom domain api.getbuildx.com on the API service (free plan allows it).
+## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
+Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
+1. Vercel (Claude in Chrome): sthiva.com + www.sthiva.com -> buyer project (buildx-vgud),
+   seller.sthiva.com -> seller project (buildx-48kc), ops.sthiva.com -> ops project (buildx-ops).
+2. Render: custom domain api.sthiva.com on the API service (free plan allows it).
 3. DNS at the user's registrar: records Vercel and Render show (A/CNAME). Keep the old *.vercel.app URLs working.
-4. Env: buyer NEXT_PUBLIC_SITE_URL=https://getbuildx.com, NEXT_PUBLIC_SELLER_PORTAL_URL=https://seller.getbuildx.com,
-   NEXT_PUBLIC_ALLOW_INDEXING=true; all web apps NEXT_PUBLIC_API_URL=https://api.getbuildx.com; API FRONTEND_URL add
+4. Env: buyer NEXT_PUBLIC_SITE_URL=https://sthiva.com, NEXT_PUBLIC_SELLER_PORTAL_URL=https://seller.sthiva.com,
+   NEXT_PUBLIC_ALLOW_INDEXING=true; all web apps NEXT_PUBLIC_API_URL=https://api.sthiva.com; API FRONTEND_URL add
    the three new origins (keep old ones). Mobile: EXPO_PUBLIC_API_URL / EXPO_PUBLIC_WEB_URL in the next APK.
    keep-api-awake.yml can keep pinging onrender.com.
-5. DONE already: Firebase Auth authorized domains include getbuildx.com, www., seller., ops. (23:40 IST).
+5. DONE already: Firebase Auth authorized domains include sthiva.com, www., seller., ops. (2026-11-05).
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -365,3 +365,20 @@ Not bought yet at 23:40 IST (RDAP 404). Once the user buys it:
 - 2026-11-04 23:40 IST: User looked for a new company name (Sthambha, Mestrikart, Plinthkart etc. were free) and
   chose getbuildx.com (brand stays BuildX). Not bought yet. Code needs no change (all URLs come from env). Added the
   four getbuildx.com hosts to Firebase authorized domains. Plan in "DOMAIN PLAN" above.
+- 2026-11-05 01:55 IST: BRAND RENAMED BuildX -> Sthiva (user decision). Name research: buildx.in/.com taken, BuildX
+  Technologies Pvt Ltd (Gujarat, 2026) and BuildX.Homes (Bangalore construction) make "BuildX Pvt Ltd" unlikely at MCA.
+  Sthiva: sthiva.com/.in free, no company or trademark found; similar: Sthira Technovations (Dharwad), Sthir-X Systems
+  (Bangalore). User to register "Sthiva Private Limited" (backup Setuzo/Udvora) and buy sthiva.com.
+  Branch feat/sthiva (includes feat/partner-app #56 and the domain-plan log #57):
+  - Every user-facing BuildX -> Sthiva; packages @buildx/* -> @sthiva/*; BuildXLogo/BuildXMark -> SthivaLogo/SthivaMark;
+    storage keys sthiva.*; apps "Sthiva" com.sthiva.app and "Sthiva Partner" com.sthiva.partner (registered in Firebase
+    with SHA-1 5e8f...; google-services.json now holds 4 packages). Firebase project display name "Sthiva".
+  - KEPT on purpose (live services/data): MongoDB dbName 'buildx', Cloudinary cloud/folder buildx, buildx-15494 Firebase
+    project id, buildx-api.onrender.com, buildx-vgud/48kc/ops Vercel URLs, GitHub repo name buildx, logger service name.
+  - New logo: S of two solid blocks with a lime beam (packages/web-core/src/brand/SthivaLogo.tsx; mobile ui.tsx;
+    favicons apps/*/app/icon.svg; app icons via apps/mobile/scripts/make-icons.cjs). Wordmark "sthiva" in the display font,
+    tagline "SOLID MATERIALS, STEADY SUPPLY".
+  - Checks: API tsc + 288 tests + build, web-core 81 tests, buyer/seller typecheck, mobile tsc all pass.
+  - GitHub contributors: only Harishrs2006 and Shubb07; no Claude trailers on any remote branch. Old LOCAL backup
+    branches (backup/local-main-old, backup/stash-main-lockfile, feat/pincode-lookup, feat/rn-mongodb-rewrite) contain
+    Claude trailers but were never pushed; do not push them.

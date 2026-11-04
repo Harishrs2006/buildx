@@ -1,7 +1,7 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 
-// BuildX identities are phone-OTP only (see apps/api's auth middleware) — this is the same
+// Sthiva identities are phone-OTP only (see apps/api's auth middleware) — this is the same
 // Firebase project apps/mobile signs in against, just through the Web SDK instead of
 // @react-native-firebase.
 const firebaseConfig = {

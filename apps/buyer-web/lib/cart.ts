@@ -8,7 +8,7 @@ import { z } from 'zod';
 // be from the same supplier"), so adding a product from a different supplier replaces the cart
 // rather than mixing it.
 
-const CART_STORAGE_KEY = 'buildx.cart';
+const CART_STORAGE_KEY = 'sthiva.cart';
 const STORAGE_VERSION = 1;
 
 export type CartItem = {

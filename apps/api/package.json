@@ -1,11 +1,11 @@
 {
-  "name": "@buildx/api",
+  "name": "@sthiva/api",
   "version": "0.1.0",
   "private": true,
   "type": "commonjs",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "prebuild": "npm run build --workspace=@buildx/shared",
+    "prebuild": "npm run build --workspace=@sthiva/shared",
     "build": "tsc --project tsconfig.build.json",
     "start": "node dist/server.js",
     "test": "vitest run",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.36.3",
-    "@buildx/shared": "*",
+    "@sthiva/shared": "*",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^2.5.1",
     "compression": "^1.7.4",

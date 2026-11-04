@@ -78,7 +78,7 @@ export default function SignInPage() {
   return (
     <AuthShell step="Step 1 of 2">
       <h1 className="font-display text-[clamp(2.25rem,5vw,3rem)] font-bold leading-[0.95] tracking-tightest">Operations sign in</h1>
-      <p className="mt-4 text-[16px] text-stone">For the BuildX operations team. Use the mobile number your account was set up with. We will text you a 6-digit code.</p>
+      <p className="mt-4 text-[16px] text-stone">For the Sthiva operations team. Use the mobile number your account was set up with. We will text you a 6-digit code.</p>
       <form onSubmit={handleSendOtp} className="mt-8 flex flex-col gap-5">
         <label className="flex flex-col gap-2">
           <span className="text-[14px] font-semibold">Mobile number</span>

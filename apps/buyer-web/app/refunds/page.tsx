@@ -3,7 +3,7 @@ import { LegalPage, Section } from '@/components/layout/LegalPage';
 
 export const metadata: Metadata = {
   title: 'Cancellations and refunds',
-  description: 'How to cancel a BuildX order, and what happens if materials arrive damaged or wrong.',
+  description: 'How to cancel a Sthiva order, and what happens if materials arrive damaged or wrong.',
   alternates: { canonical: '/refunds' },
 };
 

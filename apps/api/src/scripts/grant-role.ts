@@ -10,7 +10,7 @@
 import mongoose from 'mongoose';
 import { env } from '../config/env';
 import { User } from '../infrastructure/database/models/User.model';
-import { ROLES, type UserRole } from '@buildx/shared';
+import { ROLES, type UserRole } from '@sthiva/shared';
 
 const GRANTABLE: UserRole[] = [ROLES.OPERATOR, ROLES.ADMIN, ROLES.BUYER];
 

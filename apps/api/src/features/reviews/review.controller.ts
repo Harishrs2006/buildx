@@ -4,7 +4,7 @@ import { Review } from '../../infrastructure/database/models/Review.model';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { AppError } from '../../shared/errors/AppError';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 
 export async function submitReview(req: Request, res: Response, next: NextFunction) {
   try {

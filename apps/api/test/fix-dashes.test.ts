@@ -4,7 +4,7 @@ import { withoutEmDashes } from '../src/scripts/fix-dashes';
 describe('withoutEmDashes', () => {
   it('turns a spaced em dash into a comma', () => {
     expect(withoutEmDashes('Birla Solid Concrete Block 8 inch — Heavy Duty')).toBe('Birla Solid Concrete Block 8 inch, Heavy Duty');
-    expect(withoutEmDashes('BuildX Demo Supplier (placeholder — not a real business)')).toBe('BuildX Demo Supplier (placeholder, not a real business)');
+    expect(withoutEmDashes('Sthiva Demo Supplier (placeholder — not a real business)')).toBe('Sthiva Demo Supplier (placeholder, not a real business)');
   });
 
   it('turns a dash between words into a comma and drops leading or trailing ones', () => {

@@ -52,7 +52,7 @@ export interface IOrder extends Document {
   gstAmount: number;       // Σ GST
   total: number;           // amount payable
   status: 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
-  // Chosen by the supplier at dispatch: BuildX delivery partner, or supplier's own vehicle
+  // Chosen by the supplier at dispatch: Sthiva delivery partner, or supplier's own vehicle
   deliveryMode?: 'PLATFORM' | 'SUPPLIER';
   dispatchedAt?: Date;
   driverId?: Types.ObjectId;

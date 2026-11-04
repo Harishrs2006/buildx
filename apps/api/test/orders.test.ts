@@ -383,7 +383,7 @@ describe('order state machine', () => {
     await supplierStatus(supplier, orderId, 'READY_FOR_PICKUP');
     await assign(driver, orderId);
     await driverStatus(driver, orderId, 'PICKED_UP');
-    // Once a BuildX driver has it, the supplier can't move it
+    // Once a Sthiva driver has it, the supplier can't move it
     expect((await supplierStatus(supplier, orderId, 'IN_TRANSIT')).status).toBe(409);
     expect((await supplierStatus(supplier, orderId, 'DELIVERED')).status).toBe(409);
     expect((await Order.findById(orderId).lean())!.status).toBe('PICKED_UP');

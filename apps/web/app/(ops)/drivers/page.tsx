@@ -20,7 +20,7 @@ export default function DriversPage() {
       {state.status === 'error' && <ErrorNote>{errorText(state.error, 'Couldn’t load drivers.')}</ErrorNote>}
       {state.status === 'success' && (
         state.data.length === 0 ? (
-          <EmptyState icon="local_shipping" title="No drivers yet" body="Delivery partners appear here after they sign up in the BuildX app." />
+          <EmptyState icon="local_shipping" title="No drivers yet" body="Delivery partners appear here after they sign up in the Sthiva app." />
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {state.data.map((d) => {

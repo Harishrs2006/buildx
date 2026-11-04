@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ApiClient } from '@buildx/web-core';
+import type { ApiClient } from '@sthiva/web-core';
 
 // Mirrors apps/api's AuthController.sendSynced / onboard response shapes.
 export const syncedUserSchema = z.object({

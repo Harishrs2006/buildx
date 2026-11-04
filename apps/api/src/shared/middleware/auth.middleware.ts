@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { getAuth } from 'firebase-admin/auth';
-import type { UserRole } from '@buildx/shared';
+import type { UserRole } from '@sthiva/shared';
 import { AppError } from '../errors/AppError';
 import { User } from '../../infrastructure/database/models/User.model';
 
@@ -48,7 +48,7 @@ export async function verifyFirebaseToken(req: Request, _res: Response, next: Ne
     // checkRevoked: also rejects revoked sessions and accounts disabled in Firebase
     const decoded = await getAuth().verifyIdToken(token, true);
 
-    // BuildX identities are a verified phone (OTP) or a verified Google account. Anything else
+    // Sthiva identities are a verified phone (OTP) or a verified Google account. Anything else
     // (anonymous, email/password, unverified email) is not one of ours.
     const googleEmail =
       decoded.firebase?.sign_in_provider === 'google.com' && decoded.email_verified === true && decoded.email

@@ -97,7 +97,7 @@ export default function SignInPage() {
     );
   }
 
-  // While Firebase finishes signing in and BuildX loads the account, keep the button busy
+  // While Firebase finishes signing in and Sthiva loads the account, keep the button busy
   const signingIn = googleBusy || status === 'loading';
 
   return (

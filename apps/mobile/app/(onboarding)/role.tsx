@@ -8,7 +8,7 @@ import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
 import { VEHICLE_ICONS, VEHICLE_LABELS } from '../../src/hooks/useDelivery';
 import { IS_PARTNER } from '../../src/lib/appVariant';
-import { BuildXMark, Button, Eyebrow, Icon, Notice, type IconName } from '../../src/components/ui';
+import { SthivaMark, Button, Eyebrow, Icon, Notice, type IconName } from '../../src/components/ui';
 
 type Role = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER';
 
@@ -17,7 +17,7 @@ const ALL_ROLES: { r: Role; icon: IconName; title: string; desc: string }[] = [
   { r: 'SUPPLIER', icon: 'storefront-outline', title: 'I sell materials', desc: 'Dealers, traders and equipment owners' },
   { r: 'DELIVERY_PARTNER', icon: 'truck-outline', title: 'I deliver orders', desc: 'Drivers with their own vehicle' },
 ];
-// BuildX (buyer app) creates buyer accounts; BuildX Partner creates supplier and delivery partner accounts
+// Sthiva (buyer app) creates buyer accounts; Sthiva Partner creates supplier and delivery partner accounts
 const ROLES = ALL_ROLES.filter(({ r }) => (IS_PARTNER ? r !== 'BUYER' : r === 'BUYER'));
 const VEHICLES = ['BIKE', 'AUTO', 'MINI_TRUCK', 'TEMPO', 'TRUCK', 'TRACTOR'];
 
@@ -71,11 +71,11 @@ export default function RoleScreen() {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <BuildXMark size={40} />
+          <SthivaMark size={40} />
           <Eyebrow>Last step</Eyebrow>
           <Text style={styles.heading}>
             {IS_PARTNER ? 'How will you work with' : 'Welcome to'}{'\n'}
-            <Text style={styles.accent}>{IS_PARTNER ? 'BuildX?' : 'BuildX.'}</Text>
+            <Text style={styles.accent}>{IS_PARTNER ? 'Sthiva?' : 'Sthiva.'}</Text>
           </Text>
 
           {ROLES.length > 1 ? <View style={styles.cards}>
@@ -125,7 +125,7 @@ export default function RoleScreen() {
                   maxLength={10}
                 />
               </View>
-              <Text style={styles.hint}>Buyers and BuildX contact you on this number about orders.</Text>
+              <Text style={styles.hint}>Buyers and Sthiva contact you on this number about orders.</Text>
             </>
           ) : null}
 

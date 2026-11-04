@@ -1,6 +1,6 @@
-# Contributing to BuildX
+# Contributing to Sthiva
 
-Thank you for your interest in contributing to BuildX — India's B2B construction materials marketplace.
+Thank you for your interest in contributing to Sthiva — India's B2B construction materials marketplace.
 
 ## Table of Contents
 - [Getting Started](#getting-started)

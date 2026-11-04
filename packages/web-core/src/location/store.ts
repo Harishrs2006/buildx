@@ -6,7 +6,7 @@ import { PINCODE_RE } from './pincode';
 // (GPS positions are discarded after the PIN is confirmed) or serviceability (it can change at
 // any time, so it is always re-checked — see useDeliveryServiceability / verifyDeliveryForCheckout).
 
-export const LOCATION_STORAGE_KEY = 'buildx.deliveryLocation';
+export const LOCATION_STORAGE_KEY = 'sthiva.deliveryLocation';
 const STORAGE_VERSION = 1;
 export const LOCATION_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // forget after 90 days
 

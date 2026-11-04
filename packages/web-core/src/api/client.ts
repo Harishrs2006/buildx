@@ -1,6 +1,6 @@
 import type { ZodType } from 'zod';
 
-// Shared HTTP client for the BuildX API, used by the buyer and seller websites.
+// Shared HTTP client for the Sthiva API, used by the buyer and seller websites.
 // - The base URL is always supplied by the app (e.g. from NEXT_PUBLIC_API_URL); nothing is
 //   hardcoded here, and no provider keys ever live in the browser.
 // - Every response is validated; an unexpected shape is an error, never a guess.
@@ -119,7 +119,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     } catch (err) {
       if (req.signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
       if (timedOut) throw new ApiClientError('The server took too long to respond', 'TIMEOUT', null);
-      throw new ApiClientError("Couldn't reach BuildX. Check your connection and try again.", 'NETWORK_ERROR', null);
+      throw new ApiClientError("Couldn't reach Sthiva. Check your connection and try again.", 'NETWORK_ERROR', null);
     } finally {
       clearTimeout(timer);
       req.signal?.removeEventListener('abort', onCallerAbort);
@@ -133,7 +133,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
       json = await res.json();
     } catch {
       if (req.signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
-      throw new ApiClientError('Unexpected response from BuildX', res.ok ? 'INVALID_RESPONSE' : 'HTTP_ERROR', res.status, undefined, retryAfterSeconds);
+      throw new ApiClientError('Unexpected response from Sthiva', res.ok ? 'INVALID_RESPONSE' : 'HTTP_ERROR', res.status, undefined, retryAfterSeconds);
     }
 
     if (!res.ok) {
@@ -152,7 +152,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
   function parseOrThrow<T>(payload: unknown, schema: RequestOptions<T>['schema'], status: number): T {
     const parsed = schema.safeParse(payload);
     if (!parsed.success) {
-      throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', status, parsed.error.issues.slice(0, 3));
+      throw new ApiClientError('Unexpected response from Sthiva', 'INVALID_RESPONSE', status, parsed.error.issues.slice(0, 3));
     }
     return parsed.data;
   }
@@ -164,7 +164,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
     if (req.envelope) {
       const env = json as { success?: unknown; data?: unknown } | null;
       if (env?.success !== true || !('data' in (env ?? {}))) {
-        throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', res.status);
+        throw new ApiClientError('Unexpected response from Sthiva', 'INVALID_RESPONSE', res.status);
       }
       payload = env.data;
     }
@@ -177,7 +177,7 @@ export function createApiClient(options: ApiClientOptions): ApiClient {
 
     const env = json as { success?: unknown; data?: unknown; meta?: unknown } | null;
     if (env?.success !== true || !('data' in (env ?? {})) || !env.meta || typeof env.meta !== 'object') {
-      throw new ApiClientError('Unexpected response from BuildX', 'INVALID_RESPONSE', res.status);
+      throw new ApiClientError('Unexpected response from Sthiva', 'INVALID_RESPONSE', res.status);
     }
 
     const data = parseOrThrow(env.data, req.schema, res.status);

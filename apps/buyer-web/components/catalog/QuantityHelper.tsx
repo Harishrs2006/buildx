@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Calculator } from '@buildx/web-core';
-import { units } from '@buildx/web-core';
+import type { Calculator } from '@sthiva/web-core';
+import { units } from '@sthiva/web-core';
 const { bagsForKg, bulkFromBrass, bulkFromTonnes, coilsForMetres, round, tmtBarsForKg, tmtKgPerBar, tmtKgPerMetre } = units;
 
 const fmt = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 2 });

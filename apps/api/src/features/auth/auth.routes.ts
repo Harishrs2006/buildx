@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { SELF_ASSIGNABLE_ROLES } from '@buildx/shared';
+import { SELF_ASSIGNABLE_ROLES } from '@sthiva/shared';
 import { authController } from './auth.controller';
 import { requireAuth, verifyFirebaseToken } from '../../shared/middleware/auth.middleware';
 import { validate } from '../../shared/middleware/validate.middleware';

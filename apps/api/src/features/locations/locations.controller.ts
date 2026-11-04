@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { AppError } from '../../shared/errors/AppError';
 import { lookupPincode, PINCODE_RE, PostalLookupUnavailable, type PostalLookup } from './postal-directory.service';
 import { reverseGeocode, GeocoderUnavailable } from './geocoding.service';
@@ -14,7 +14,7 @@ function unavailable(res: Response, code: 'LOOKUP_UNAVAILABLE' | 'GEOLOCATION_UN
 }
 
 // GET /locations/pincode/:pincode — postal validity and details from the India Post directory.
-// Deliberately says nothing about BuildX delivery: a real PIN is not the same as a served one.
+// Deliberately says nothing about Sthiva delivery: a real PIN is not the same as a served one.
 export async function getPincode(req: Request, res: Response, next: NextFunction) {
   try {
     const pincode = String(req.params.pincode);

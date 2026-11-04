@@ -1,6 +1,6 @@
-# BuildX backend, in plain words
+# Sthiva backend, in plain words
 
-This is the map of how BuildX works behind the screens: who talks to what, where data lives, and
+This is the map of how Sthiva works behind the screens: who talks to what, where data lives, and
 the rules the server enforces. Code lives in `apps/api` (Express + MongoDB, TypeScript).
 
 ## 1. The pieces
@@ -30,7 +30,7 @@ status.
 2. The app gets a Firebase ID token and calls `POST /auth/sync`. The API checks the token with
    Firebase Admin and finds or creates the user.
 3. A new user calls `POST /auth/onboard` once and picks a role: `BUYER`, `SUPPLIER` or
-   `DELIVERY_PARTNER`. `OPERATOR` and `ADMIN` are given by BuildX staff only.
+   `DELIVERY_PARTNER`. `OPERATOR` and `ADMIN` are given by Sthiva staff only.
 4. Every later request sends the token in the `Authorization` header. Each route checks the role
    (`requireRole`), so a buyer can never call supplier routes and the other way round.
 
@@ -46,7 +46,7 @@ The portal enforces this order:
 3. **Delivery PIN codes**, saved with `POST /suppliers/me/service-pincodes`. Each PIN is checked
    against the India Post directory; a PIN that does not exist or has no delivery office is
    refused with a reason.
-4. **Categories and brands** they deal in, from the BuildX catalogue, plus their own local brands.
+4. **Categories and brands** they deal in, from the Sthiva catalogue, plus their own local brands.
 5. Only now can they **list products**. The brand choices on the product form are the brands
    picked in step 4 that make that material, plus "Other".
 6. **Stock** (`/stock`): set how much they can deliver right now, per product.
@@ -80,7 +80,7 @@ it, takes stock), `GET /orders`, `POST /orders/:id/cancel`.
 Status flow (full table in `apps/api/src/features/orders/order-state.ts`):
 
 ```
-CONFIRMED -> READY_FOR_PICKUP -> ASSIGNED -> PICKED_UP -> IN_TRANSIT -> DELIVERED   (BuildX driver)
+CONFIRMED -> READY_FOR_PICKUP -> ASSIGNED -> PICKED_UP -> IN_TRANSIT -> DELIVERED   (Sthiva driver)
 CONFIRMED -> IN_TRANSIT -> DELIVERED                                                (supplier's own vehicle)
 ```
 

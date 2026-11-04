@@ -8,7 +8,7 @@ import { AppError } from '../../shared/errors/AppError';
 import { Category } from '../../infrastructure/database/models/Category.model';
 import { bulkPricingProblem } from './product-rules';
 import { ORDER_STATUSES } from '../ops/ops.schemas';
-import { ok } from '@buildx/shared';
+import { ok } from '@sthiva/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
 import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
@@ -147,7 +147,7 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
 }
 
 // PATCH /suppliers/me/orders/:id/status
-//   READY_FOR_PICKUP — dispatch via a BuildX delivery partner (PLATFORM mode)
+//   READY_FOR_PICKUP — dispatch via a Sthiva delivery partner (PLATFORM mode)
 //   IN_TRANSIT       — dispatch with the supplier's own vehicle (SUPPLIER mode); also takes over
 //                      a READY_FOR_PICKUP order no driver has accepted yet
 //   DELIVERED        — only for orders the supplier is delivering themselves

@@ -30,7 +30,7 @@ export function RequireOps({ children }: { children: React.ReactNode }) {
         <div className="max-w-sm">
           <p className="font-display text-2xl font-semibold tracking-tight">This number has no operations access</p>
           <p className="mt-2 text-[15px] text-stone">
-            The console is only for the BuildX operations team. Ask an admin to give your number access, then sign in again.
+            The console is only for the Sthiva operations team. Ask an admin to give your number access, then sign in again.
           </p>
           <button type="button" onClick={() => signOut()} className="btn-ghost mt-6">Sign out</button>
         </div>

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { z } from 'zod';
-import { ApiClientError, useApiClient, type ApiClient } from '@buildx/web-core';
+import { ApiClientError, useApiClient, type ApiClient } from '@sthiva/web-core';
 import { fetchSupplierProfile, supplierProfileSchema, type SupplierProfile } from './auth';
 
 export type BusinessType = 'RETAILER' | 'DEALER' | 'DISTRIBUTOR' | 'MANUFACTURER';

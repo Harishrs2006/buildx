@@ -73,7 +73,7 @@ export function usePushNotifications() {
 
     // App open: Android and iOS do not show the system notification, so show our own banner
     const unsubForeground = messaging().onMessage(async (msg) => {
-      const title = msg.notification?.title ?? 'BuildX';
+      const title = msg.notification?.title ?? 'Sthiva';
       const body = msg.notification?.body ?? '';
       useInAppAlert.getState().show({
         id: msg.messageId ?? String(Date.now()),

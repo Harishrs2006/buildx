@@ -57,7 +57,7 @@ export function LegalPage({ title, intro, path, children }: { title: string; int
                     Write to <a className="font-medium text-cobalt underline-offset-2 hover:underline" href={`mailto:${SITE.supportEmail}`}>{SITE.supportEmail}</a>.
                   </>
                 ) : (
-                  <>Contact the BuildX team through the support details shown in your account or order confirmation.</>
+                  <>Contact the Sthiva team through the support details shown in your account or order confirmation.</>
                 )}{' '}
                 {SITE.legalName}, {SITE.city}.
               </p>

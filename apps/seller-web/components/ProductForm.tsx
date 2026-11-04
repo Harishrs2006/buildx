@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   useApiClient, catalogItems, catalogItem, matchCatalogItem, suggestedListingName, suggestedListingUnit, type CatalogItem,
-} from '@buildx/web-core';
+} from '@sthiva/web-core';
 import { useCategories } from '../lib/categories';
 import { createSupplierProduct, productErrorText, updateSupplierProduct, type ProductInput, type SupplierProduct } from '../lib/products';
 import { GST_RATES, bulkPricingProblem, gstBreakdown } from '../lib/pricing';
@@ -401,7 +401,7 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
         </Step>
 
         {item && (item.variants.length > 0 || item.brands.length > 0) && (
-          <Step n={++n} title="Specification" hint="The same options buyers filter by on BuildX.">
+          <Step n={++n} title="Specification" hint="The same options buyers filter by on Sthiva.">
             {item.variants.map((v) => (
               <Choice key={v.label} label={v.label} options={v.options} value={specs[v.label] ?? ''} onChange={(val) => setSpec(v.label, val)} allowOther />
             ))}
