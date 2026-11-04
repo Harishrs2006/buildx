@@ -308,3 +308,12 @@ Times are IST.
   checkout when the AI assistant mixed suppliers), dead profile buttons removed, "Popular searches" -> "Try searching for".
   Next: driver (available, deliveries, order), supplier (home, orders, products, add/edit, analytics), ops
   (attention, orders, order, suppliers), onboarding role, OTP screen; then build a phone APK for the user.
+- 2026-11-04 19:10 IST: Mobile pass 2 code COMPLETE on feat/mobile-hivis-2 (all pushed): supplier (home, orders with
+  ChoiceSheet/ConfirmSheet, products with photos + plain status names, shared src/components/ProductForm.tsx for
+  add/edit matching API rules incl. GST 0%, draft, full fields on edit via GET /suppliers/me/products/:id, sales),
+  driver (pickups, deliveries, order: list now sends on-the-way/delivered/cash steps to the order screen so cash is
+  always recorded; Route component), ops (suppliers, order: Notice + cancel sheet, attention), onboarding (name
+  prefilled from Google, "Use a different account"), real logo on sign-in, app icons rendered from the logo vectors
+  (assets/icon.png, android-icon-foreground/monochrome.png, adaptive bg sand). Zero emojis and zero Alert.alert left.
+  Typecheck clean. Building a phone APK now (C:/bx/mobile, prebuild regenerated for icons/svg).
+  NEXT: user installs APK and checks; open PR feat/mobile-hivis-2 for the user to merge.
