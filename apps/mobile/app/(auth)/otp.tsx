@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Eyebrow, type } from '../../src/components/ui';
 
@@ -131,20 +132,20 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.sand },
   container: { flex: 1, paddingHorizontal: 24, paddingTop: 12 },
   back: { alignSelf: 'flex-start', marginBottom: 32, paddingVertical: 6 },
-  backText: { fontSize: 15, color: Colors.cobalt, fontWeight: '600' },
+  backText: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.cobalt },
   heading: { marginTop: 10, marginBottom: 8 },
-  phone: { color: Colors.ink, fontWeight: '700' },
+  phone: { fontFamily: Font.bold, color: Colors.ink },
   hiddenInput: { position: 'absolute', opacity: 0, width: 1, height: 1 },
   boxRow: { flexDirection: 'row', gap: 10, marginTop: 32 },
   box: { flex: 1, height: 60, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.sand4, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.sand2 },
   boxFilled: { borderColor: Colors.ink },
   boxActive: { borderColor: Colors.ink, borderWidth: 2, shadowColor: Colors.lime, shadowOpacity: 1, shadowRadius: 6, shadowOffset: { width: 0, height: 0 }, elevation: 2 },
   boxError: { borderColor: Colors.error },
-  boxText: { fontSize: 24, fontWeight: '700', color: Colors.ink },
-  error: { marginTop: 14, fontSize: 14, color: Colors.error },
+  boxText: { fontFamily: Font.displayBold, fontSize: 24, color: Colors.ink },
+  error: { fontFamily: Font.regular, marginTop: 14, fontSize: 14, color: Colors.error },
   verifying: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
-  verifyingText: { fontSize: 14, color: Colors.stone },
+  verifyingText: { fontFamily: Font.regular, fontSize: 14, color: Colors.stone },
   resend: { alignSelf: 'center', marginTop: 32, paddingVertical: 8 },
-  resendText: { fontSize: 15, color: Colors.cobalt, fontWeight: '600' },
+  resendText: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.cobalt },
   resendDisabled: { color: Colors.stone },
 });

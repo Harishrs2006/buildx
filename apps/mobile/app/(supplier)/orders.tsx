@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshContr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useSupplierOrders, useUpdateOrderStatus, useConfirmSupplierCod, type SupplierOrder } from '../../src/hooks/useSupplier';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../src/hooks/useOrders';
 
@@ -178,31 +179,31 @@ export default function SupplierOrdersScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 16 },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text, marginBottom: 16 },
   tabs: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16, gap: 8 },
   tab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
   tabActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  tabText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  tabText: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.textSecondary },
   tabTextActive: { color: '#fff' },
   card: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  orderNumber: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  orderNumber: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
+  badgeText: { fontFamily: Font.semiBold, fontSize: 11 },
   buyerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  buyerName: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  buyerPhone: { fontSize: 13, color: Colors.textSecondary },
-  address: { fontSize: 12, color: Colors.textSecondary, marginBottom: 2 },
-  contact: { fontSize: 12, color: Colors.textSecondary, marginBottom: 8 },
+  buyerName: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text },
+  buyerPhone: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
+  address: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginBottom: 2 },
+  contact: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginBottom: 8 },
   itemsList: { backgroundColor: Colors.surfaceAlt, borderRadius: 8, padding: 10, marginBottom: 8 },
-  itemText: { fontSize: 12, color: Colors.text, marginBottom: 2 },
-  notes: { fontSize: 12, color: Colors.textMuted, fontStyle: 'italic', marginBottom: 8 },
+  itemText: { fontFamily: Font.regular, fontSize: 12, color: Colors.text, marginBottom: 2 },
+  notes: { fontFamily: Font.serifItalic, fontSize: 12, color: Colors.textMuted, marginBottom: 8 },
   cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 10 },
-  total: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  total: { fontFamily: Font.bold, fontSize: 15, color: Colors.text },
   actionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, flex: 1, marginLeft: 8 },
   actionBtn: { backgroundColor: Colors.primary, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
   actionBtnDanger: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.error },
-  actionBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
+  actionBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 13 },
   actionBtnTextDanger: { color: Colors.error },
-  empty: { textAlign: 'center', color: Colors.textSecondary, marginTop: 80, fontSize: 15 },
+  empty: { fontFamily: Font.regular, textAlign: 'center', color: Colors.textSecondary, marginTop: 80, fontSize: 15 },
 });

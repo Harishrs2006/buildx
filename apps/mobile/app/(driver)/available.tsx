@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useAvailableOrders, useAssignOrder, useDriverStats, useUpdateDriverProfile, type DeliveryOrder } from '../../src/hooks/useDelivery';
 
 function OrderCard({ order, onAssign }: { order: DeliveryOrder; onAssign: (id: string) => void }) {
@@ -135,31 +136,31 @@ export default function AvailableOrdersScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text },
-  subtitle: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text },
+  subtitle: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   availableToggle: { alignItems: 'center', gap: 4 },
-  availableLabel: { fontSize: 11, fontWeight: '700', color: Colors.textSecondary },
+  availableLabel: { fontFamily: Font.bold, fontSize: 11, color: Colors.textSecondary },
   activeBanner: { backgroundColor: Colors.infoLight, paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  activeBannerText: { fontSize: 13, color: Colors.info, fontWeight: '600' },
+  activeBannerText: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.info },
   list: { padding: 16, paddingBottom: 32 },
   card: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, elevation: 3 },
   cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  orderNumber: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  orderNumber: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
   codBadge: { backgroundColor: Colors.successLight, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  codText: { fontSize: 13, fontWeight: '700', color: Colors.success },
+  codText: { fontFamily: Font.bold, fontSize: 13, color: Colors.success },
   locationBlock: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: Colors.stone, marginTop: 4 },
   line: { width: 1, height: 20, backgroundColor: Colors.border, marginLeft: 4.5, marginVertical: 4 },
-  locationLabel: { fontSize: 10, fontWeight: '700', color: Colors.textMuted, letterSpacing: 0.8, marginBottom: 2 },
-  locationValue: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  contactText: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  locationLabel: { fontFamily: Font.bold, fontSize: 10, color: Colors.textMuted, letterSpacing: 0.8, marginBottom: 2 },
+  locationValue: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text },
+  contactText: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   itemsRow: { marginTop: 12, backgroundColor: Colors.surfaceAlt, borderRadius: 8, padding: 10 },
-  itemsSummary: { fontSize: 12, color: Colors.textSecondary },
-  notes: { fontSize: 12, color: Colors.textMuted, fontStyle: 'italic', marginTop: 8 },
+  itemsSummary: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary },
+  notes: { fontFamily: Font.serifItalic, fontSize: 12, color: Colors.textMuted, marginTop: 8 },
   pickBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 14, alignItems: 'center', marginTop: 14 },
-  pickBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  pickBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 15 },
   emptyContainer: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 40 },
-  emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  emptySub: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
+  emptyIcon: { fontFamily: Font.regular, fontSize: 56, marginBottom: 16 },
+  emptyTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.text, marginBottom: 8 },
+  emptySub: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, textAlign: 'center', lineHeight: 22 },
 });

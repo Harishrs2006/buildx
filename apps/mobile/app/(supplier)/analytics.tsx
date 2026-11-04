@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 
 type DayRevenue = { date: string; revenue: number; orders: number };
 type TopProduct = { _id: string; name: string; totalSold: number; basePrice: number; unit: string };
@@ -41,10 +42,10 @@ function RevenueBar({ day, maxRevenue }: { day: DayRevenue; maxRevenue: number }
 
 const bar = StyleSheet.create({
   col: { flex: 1, alignItems: 'center', gap: 4 },
-  amount: { fontSize: 9, color: Colors.textMuted, height: 14 },
+  amount: { fontFamily: Font.regular, fontSize: 9, color: Colors.textMuted, height: 14 },
   bar: { width: 28, backgroundColor: Colors.primary, borderRadius: 6, minHeight: 4 },
-  label: { fontSize: 10, color: Colors.textSecondary },
-  orders: { fontSize: 9, color: Colors.textMuted },
+  label: { fontFamily: Font.regular, fontSize: 10, color: Colors.textSecondary },
+  orders: { fontFamily: Font.regular, fontSize: 9, color: Colors.textMuted },
 });
 
 const STATUS_LABEL: Record<string, string> = {
@@ -152,28 +153,28 @@ const s = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   back: { padding: 4, marginRight: 8 },
-  backIcon: { fontSize: 20, color: Colors.text },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
+  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
+  headerTitle: { fontFamily: Font.bold, fontSize: 17, color: Colors.text },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { padding: 16, gap: 12 },
   summaryRow: { flexDirection: 'row', gap: 12 },
   summaryCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: Colors.border, alignItems: 'center' },
-  summaryNum: { fontSize: 24, fontWeight: '800', color: Colors.primary },
-  summaryLabel: { fontSize: 12, color: Colors.textMuted, marginTop: 4 },
+  summaryNum: { fontFamily: Font.display, fontSize: 24, color: Colors.primary },
+  summaryLabel: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: 4 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: Colors.border, gap: 14 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  cardTitle: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
   chartRow: { flexDirection: 'row', alignItems: 'flex-end', height: 140, gap: 4 },
-  emptyText: { fontSize: 13, color: Colors.textMuted, textAlign: 'center', paddingVertical: 8 },
+  emptyText: { fontFamily: Font.regular, fontSize: 13, color: Colors.textMuted, textAlign: 'center', paddingVertical: 8 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   topRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
   rankBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-  rankText: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary },
-  topName: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  topMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  rankText: { fontFamily: Font.bold, fontSize: 13, color: Colors.textSecondary },
+  topName: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text },
+  topMeta: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   soldBadge: { backgroundColor: Colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  soldText: { fontSize: 12, fontWeight: '700', color: Colors.primaryDark },
+  soldText: { fontFamily: Font.bold, fontSize: 12, color: Colors.primaryDark },
   breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   breakdownDot: { width: 10, height: 10, borderRadius: 5 },
-  breakdownLabel: { flex: 1, fontSize: 14, color: Colors.textSecondary },
-  breakdownCount: { fontSize: 15, fontWeight: '700', color: Colors.text },
+  breakdownLabel: { fontFamily: Font.regular, flex: 1, fontSize: 14, color: Colors.textSecondary },
+  breakdownCount: { fontFamily: Font.bold, fontSize: 15, color: Colors.text },
 });

@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useOrders, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, type Order } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 
 function OrderCard({ order }: { order: Order }) {
   const router = useRouter();
@@ -102,8 +103,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   backBtn: { padding: 4, marginRight: 8 },
-  backIcon: { fontSize: 20, color: Colors.text },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', color: Colors.text },
+  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
+  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 17, color: Colors.text },
   list: { padding: 16, gap: 12 },
   card: {
     backgroundColor: Colors.surface, borderRadius: 16,
@@ -111,20 +112,20 @@ const styles = StyleSheet.create({
     padding: 16, gap: 12,
   },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  orderNum: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  orderDate: { fontSize: 12, color: Colors.textMuted, marginTop: 2 },
+  orderNum: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
+  orderDate: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: 2 },
   statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  statusText: { fontSize: 11, fontWeight: '700' },
+  statusText: { fontFamily: Font.bold, fontSize: 11 },
   cardDivider: { height: 1, backgroundColor: Colors.border },
   cardBody: { gap: 3 },
-  itemSummary: { fontSize: 13, color: Colors.text, fontWeight: '500' },
-  itemCount: { fontSize: 12, color: Colors.textMuted },
+  itemSummary: { fontFamily: Font.medium, fontSize: 13, color: Colors.text },
+  itemCount: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { fontSize: 13, color: Colors.textSecondary },
-  totalValue: { fontSize: 16, fontWeight: '800', color: Colors.primary },
+  totalLabel: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
+  totalValue: { fontFamily: Font.bold, fontSize: 16, color: Colors.primary },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  emptySub: { fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginBottom: 28 },
+  emptyTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.text, marginBottom: 8 },
+  emptySub: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginBottom: 28 },
   browseBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
-  browseBtnText: { color: '#fff', fontWeight: '700', fontSize: 15 },
+  browseBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 15 },
 });

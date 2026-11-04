@@ -5,6 +5,7 @@ import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { useAuthStore } from '../../src/store/auth.store';
 import { useOrders } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 
 export default function ProfileScreen() {
   const { user, clear } = useAuthStore();
@@ -116,28 +117,28 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   container: { paddingHorizontal: 20, paddingTop: 24 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 20 },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text, marginBottom: 20 },
   card: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 16, backgroundColor: Colors.surfaceAlt, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, marginBottom: 20 },
   avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontSize: 24, fontWeight: '700', color: '#fff' },
+  avatarText: { fontFamily: Font.displayBold, fontSize: 24, color: '#fff' },
   info: { flex: 1 },
-  name: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  phone: { fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
+  name: { fontFamily: Font.bold, fontSize: 16, color: Colors.text },
+  phone: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, marginTop: 2 },
   roleBadge: { marginTop: 6, alignSelf: 'flex-start', backgroundColor: Colors.primaryLight, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 6 },
-  roleText: { fontSize: 11, fontWeight: '700', color: Colors.primary },
+  roleText: { fontFamily: Font.bold, fontSize: 11, color: Colors.primary },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   statCard: { flex: 1, backgroundColor: Colors.surfaceAlt, borderRadius: 12, borderWidth: 1, borderColor: Colors.border, padding: 14, alignItems: 'center' },
-  statNum: { fontSize: 22, fontWeight: '800', color: Colors.text },
-  statLabel: { fontSize: 11, color: Colors.textMuted, marginTop: 4 },
+  statNum: { fontFamily: Font.display, fontSize: 22, color: Colors.text },
+  statLabel: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, marginTop: 4 },
   section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 12, fontWeight: '700', color: Colors.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
+  sectionTitle: { fontFamily: Font.bold, fontSize: 12, color: Colors.textMuted, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 8 },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  rowLabel: { fontSize: 15, color: Colors.text },
-  rowArrow: { fontSize: 18, color: Colors.textMuted },
+  rowLabel: { fontFamily: Font.regular, fontSize: 15, color: Colors.text },
+  rowArrow: { fontFamily: Font.regular, fontSize: 18, color: Colors.textMuted },
   aboutBox: { backgroundColor: Colors.surfaceAlt, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, padding: 16, alignItems: 'center', marginBottom: 24 },
-  aboutTitle: { fontSize: 18, fontWeight: '800', color: Colors.primary },
-  aboutSub: { fontSize: 12, color: Colors.textSecondary, textAlign: 'center', marginTop: 4, lineHeight: 18 },
-  version: { fontSize: 11, color: Colors.textMuted, marginTop: 8 },
+  aboutTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.primary },
+  aboutSub: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, textAlign: 'center', marginTop: 4, lineHeight: 18 },
+  version: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, marginTop: 8 },
   signOutBtn: { borderWidth: 1.5, borderColor: Colors.error, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  signOutText: { color: Colors.error, fontWeight: '700', fontSize: 15 },
+  signOutText: { fontFamily: Font.bold, color: Colors.error, fontSize: 15 },
 });

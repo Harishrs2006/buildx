@@ -292,3 +292,11 @@ Times are IST.
   blocked by the permission classifier (not attempted further). New APK at Desktop/BuildX/BuildX-test.apk.
 - 2026-11-04 18:40 IST: User installed the 18:17 APK: sign-in works. Updated CURRENT STATE / NEXT STEPS.
 - 2026-11-04 18:45 IST: Found PR #52 was squash-merged at 17:19 before the 3 fixes; opened follow-up PR from origin/main.
+- 2026-11-04 IST: Mobile pass 2 started, branch feat/mobile-hivis-2. Foundation: brand fonts (Bricolage Grotesque,
+  Geist, Geist Mono, Instrument Serif italic; OFL, TTFs + licences in apps/mobile/assets/fonts, loaded in
+  app/_layout.tsx via useFonts under the names in src/constants/typography.ts `Font`), @expo/vector-icons
+  (MaterialCommunityIcons = Material family like the websites) and react-native-svg (needs native rebuild).
+  ui.tsx: Icon, BuildXMark (real roof logo), Notice (replaces error/success Alerts), ConfirmSheet (replaces confirm
+  Alerts), EmptyState, ScreenHeader, TabItem icons. Codemod: 419 StyleSheet text styles -> Font.* (fontWeight
+  dropped; Android ignores custom fonts with fontWeight). npm installs need --legacy-peer-deps (old react-dom peer clash).
+  Next: per-role screens (emoji -> Icon, Alert -> Notice/ConfirmSheet), then a phone test APK.

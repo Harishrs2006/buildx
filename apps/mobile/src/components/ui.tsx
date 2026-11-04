@@ -1,6 +1,10 @@
-import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import type { ComponentProps, ReactNode } from 'react';
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import Svg, { G, Path, Rect } from 'react-native-svg';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
+import { Font } from '../constants/typography';
 
 // Hi-Vis building blocks for the app, matching the websites (docs/DESIGN_SYSTEM.md)
 
@@ -15,19 +19,20 @@ export const tabBarStyle: ViewStyle = {
   paddingHorizontal: 6,
 };
 
-export function TabItem({ label, focused }: { label: string; focused: boolean }) {
+export function TabItem({ label, focused, icon }: { label: string; focused: boolean; icon?: IconName }) {
   return (
     <View style={[tabStyles.item, focused && tabStyles.itemFocused]} accessibilityState={{ selected: focused }}>
+      {icon ? <Icon name={icon} size={18} color={focused ? Colors.ink : 'rgba(242,239,231,0.65)'} /> : null}
       <Text numberOfLines={1} style={[tabStyles.label, focused && tabStyles.labelFocused]}>{label}</Text>
     </View>
   );
 }
 
 const tabStyles = StyleSheet.create({
-  item: { minWidth: 72, height: 44, paddingHorizontal: 12, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  item: { minWidth: 72, height: 44, paddingHorizontal: 12, borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
   itemFocused: { backgroundColor: Colors.lime },
-  label: { fontSize: 12, fontWeight: '600', color: 'rgba(242,239,231,0.65)' },
-  labelFocused: { color: Colors.ink, fontWeight: '700' },
+  label: { fontSize: 12, fontFamily: Font.semiBold, color: 'rgba(242,239,231,0.65)' },
+  labelFocused: { color: Colors.ink, fontFamily: Font.bold },
 });
 
 type ButtonVariant = 'ink' | 'lime' | 'ghost' | 'danger';
@@ -70,7 +75,7 @@ const BUTTON: Record<ButtonVariant, { box: ViewStyle; text: { color: string } }>
 
 const btn = StyleSheet.create({
   base: { minHeight: 52, borderRadius: 26, paddingHorizontal: 22, alignItems: 'center', justifyContent: 'center' },
-  text: { fontSize: 16, fontWeight: '700' },
+  text: { fontSize: 16, fontFamily: Font.bold },
   disabled: { opacity: 0.4 },
   pressed: { transform: [{ scale: 0.97 }] },
 });
@@ -97,13 +102,192 @@ export function Pill({ label, bg, color }: { label: string; bg: string; color: s
 
 const pill = StyleSheet.create({
   base: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
-  text: { fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  text: { fontSize: 11, fontFamily: Font.monoBold, letterSpacing: 1 },
 });
 
 export const type = StyleSheet.create({
-  eyebrow: { fontSize: 11, fontWeight: '600', letterSpacing: 2, textTransform: 'uppercase' },
-  display: { fontSize: 34, lineHeight: 36, fontWeight: '800', letterSpacing: -1.2, color: Colors.ink },
-  title: { fontSize: 24, lineHeight: 28, fontWeight: '800', letterSpacing: -0.6, color: Colors.ink },
-  body: { fontSize: 16, lineHeight: 23, color: Colors.stone },
+  eyebrow: { fontSize: 11, fontFamily: Font.mono, letterSpacing: 2, textTransform: 'uppercase' },
+  display: { fontSize: 34, lineHeight: 36, fontFamily: Font.display, letterSpacing: -1.2, color: Colors.ink },
+  title: { fontSize: 24, lineHeight: 28, fontFamily: Font.display, letterSpacing: -0.6, color: Colors.ink },
+  heading: { fontSize: 18, lineHeight: 23, fontFamily: Font.bold, color: Colors.ink },
+  body: { fontSize: 16, lineHeight: 23, fontFamily: Font.regular, color: Colors.stone },
+  small: { fontSize: 13, lineHeight: 18, fontFamily: Font.regular, color: Colors.stone },
+  accent: { fontFamily: Font.serifItalic, fontWeight: 'normal', fontStyle: 'normal' },
 });
 
+// Material Community Icons: the same Material family the websites use (Material Symbols)
+export type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
+export function Icon({ name, size = 22, color = Colors.ink }: { name: IconName; size?: number; color?: string }) {
+  return <MaterialCommunityIcons name={name} size={size} color={color} />;
+}
+
+// The BuildX roof-and-X mark, same vectors as packages/web-core/src/brand/BuildXLogo.tsx
+export function BuildXMark({ size = 32, onDark = false, tile = false }: { size?: number; onDark?: boolean; tile?: boolean }) {
+  const dark = onDark && !tile ? Colors.sand : Colors.ink;
+  const grey = '#9E9E9E';
+  return (
+    <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityElementsHidden importantForAccessibility="no">
+      {tile ? <Rect width={48} height={48} rx={12} fill={Colors.sand} /> : null}
+      <Svg x={3} y={3} width={42} height={42} viewBox="135 12 1200 1200">
+        <G fill={dark}>
+          <Path d="M140 650 L420 405 L850 370 L570 650 Z" />
+          <Path d="M850 370 L860 370 L1328 866 L1314 866 Z" />
+        </G>
+        <G fill={grey}>
+          <Path d="M828 418 L856 400 L1294 866 L1256 866 Z" />
+          <Path d="M1228 686 H1306 L1086 930 H1008 Z" />
+          <Path d="M782 527h46v46h-46zM836 527h46v46h-46zM782 581h46v46h-46zM836 581h46v46h-46z" />
+        </G>
+      </Svg>
+    </Svg>
+  );
+}
+
+type Tone = 'error' | 'success' | 'info' | 'warning';
+const TONE: Record<Tone, { bg: string; fg: string; icon: IconName }> = {
+  error: { bg: Colors.errorLight, fg: Colors.error, icon: 'alert-circle-outline' },
+  success: { bg: Colors.successLight, fg: Colors.success, icon: 'check-circle-outline' },
+  info: { bg: Colors.cobaltSoft, fg: Colors.cobalt, icon: 'information-outline' },
+  warning: { bg: Colors.warningLight, fg: Colors.warning, icon: 'alert-outline' },
+};
+
+// In-screen message: used instead of pop-up alerts for errors and confirmations of success
+export function Notice({ tone = 'info', title, children, onClose, style }: {
+  tone?: Tone;
+  title?: string;
+  children?: ReactNode;
+  onClose?: () => void;
+  style?: StyleProp<ViewStyle>;
+}) {
+  const t = TONE[tone];
+  return (
+    <View
+      style={[notice.box, { backgroundColor: t.bg }, style]}
+      accessibilityLiveRegion="polite"
+      accessibilityRole={tone === 'error' ? 'alert' : undefined}
+    >
+      <Icon name={t.icon} size={20} color={t.fg} />
+      <View style={notice.body}>
+        {title ? <Text style={notice.title}>{title}</Text> : null}
+        {typeof children === 'string' ? <Text style={notice.text}>{children}</Text> : children}
+      </View>
+      {onClose ? (
+        <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Dismiss">
+          <Icon name="close" size={18} color={Colors.stone} />
+        </Pressable>
+      ) : null}
+    </View>
+  );
+}
+
+const notice = StyleSheet.create({
+  box: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 14, borderRadius: 16 },
+  body: { flex: 1 },
+  title: { fontSize: 15, lineHeight: 20, fontFamily: Font.bold, color: Colors.ink },
+  text: { fontSize: 14, lineHeight: 20, fontFamily: Font.regular, color: Colors.ink },
+});
+
+// Bottom sheet for "are you sure?" moments: replaces the system confirm dialog
+export function ConfirmSheet({
+  visible,
+  title,
+  body,
+  confirmLabel,
+  cancelLabel = 'Go back',
+  danger,
+  loading,
+  onConfirm,
+  onCancel,
+  children,
+}: {
+  visible: boolean;
+  title: string;
+  body?: string;
+  confirmLabel: string;
+  cancelLabel?: string;
+  danger?: boolean;
+  loading?: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  children?: ReactNode;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onCancel} statusBarTranslucent>
+      <Pressable style={sheet.scrim} onPress={loading ? undefined : onCancel} accessibilityLabel="Close" />
+      <SafeAreaView edges={['bottom']} style={sheet.panel}>
+        <View style={sheet.grabber} />
+        <Text style={sheet.title}>{title}</Text>
+        {body ? <Text style={[type.body, sheet.body]}>{body}</Text> : null}
+        {children}
+        <Button title={confirmLabel} variant={danger ? 'danger' : 'ink'} onPress={onConfirm} loading={loading} style={sheet.confirm} />
+        <Button title={cancelLabel} variant="ghost" onPress={onCancel} disabled={loading} style={sheet.cancel} />
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+const sheet = StyleSheet.create({
+  scrim: { flex: 1, backgroundColor: 'rgba(11,12,10,0.45)' },
+  panel: { backgroundColor: Colors.sand, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 10, paddingBottom: 16 },
+  grabber: { alignSelf: 'center', width: 40, height: 4, borderRadius: 2, backgroundColor: Colors.sand4, marginBottom: 16 },
+  title: { fontSize: 22, lineHeight: 26, fontFamily: Font.display, letterSpacing: -0.5, color: Colors.ink },
+  body: { marginTop: 8 },
+  confirm: { marginTop: 22 },
+  cancel: { marginTop: 10 },
+});
+
+// Empty lists and first-time screens
+export function EmptyState({ icon, title, body, action, style }: {
+  icon: IconName;
+  title: string;
+  body?: string;
+  action?: ReactNode;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <View style={[empty.box, style]}>
+      <View style={empty.badge}><Icon name={icon} size={28} color={Colors.ink} /></View>
+      <Text style={empty.title}>{title}</Text>
+      {body ? <Text style={[type.body, empty.body]}>{body}</Text> : null}
+      {action ? <View style={empty.action}>{action}</View> : null}
+    </View>
+  );
+}
+
+const empty = StyleSheet.create({
+  box: { alignItems: 'center', paddingHorizontal: 28, paddingVertical: 40 },
+  badge: { width: 64, height: 64, borderRadius: 32, backgroundColor: Colors.lime, alignItems: 'center', justifyContent: 'center' },
+  title: { marginTop: 16, fontSize: 20, lineHeight: 24, fontFamily: Font.display, color: Colors.ink, textAlign: 'center' },
+  body: { marginTop: 6, textAlign: 'center' },
+  action: { marginTop: 20, alignSelf: 'stretch' },
+});
+
+// Title row for pushed screens: round back button, eyebrow and title
+export function ScreenHeader({ title, eyebrow, onBack, right }: {
+  title: string;
+  eyebrow?: string;
+  onBack?: () => void;
+  right?: ReactNode;
+}) {
+  return (
+    <View style={header.row}>
+      {onBack ? (
+        <Pressable onPress={onBack} style={header.back} hitSlop={8} accessibilityRole="button" accessibilityLabel="Back">
+          <Icon name="arrow-left" size={22} />
+        </Pressable>
+      ) : null}
+      <View style={header.text}>
+        {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
+        <Text style={header.title} numberOfLines={2}>{title}</Text>
+      </View>
+      {right}
+    </View>
+  );
+}
+
+const header = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+  back: { width: 44, height: 44, borderRadius: 22, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4, alignItems: 'center', justifyContent: 'center' },
+  text: { flex: 1 },
+  title: { fontSize: 24, lineHeight: 28, fontFamily: Font.display, letterSpacing: -0.6, color: Colors.ink },
+});

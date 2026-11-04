@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/lib/api';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 
 type Role = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER';
 
@@ -188,38 +189,36 @@ export default function RoleScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   container: { paddingHorizontal: 24, paddingTop: 32, paddingBottom: 40 },
-  heading: { fontSize: 26, fontWeight: '700', color: Colors.text, marginBottom: 8 },
-  sub: { fontSize: 14, color: Colors.textSecondary, marginBottom: 28 },
+  heading: { fontFamily: Font.displayBold, fontSize: 26, color: Colors.text, marginBottom: 8 },
+  sub: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, marginBottom: 28 },
   cards: { flexDirection: 'row', gap: 12, marginBottom: 28 },
   card: {
     flex: 1, padding: 16, borderRadius: 14, borderWidth: 1.5,
     borderColor: Colors.border, backgroundColor: Colors.surfaceAlt,
   },
   cardSelected: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  cardEmoji: { fontSize: 28, marginBottom: 8 },
-  cardTitle: { fontSize: 13, fontWeight: '700', color: Colors.textSecondary, marginBottom: 4 },
+  cardEmoji: { fontFamily: Font.regular, fontSize: 28, marginBottom: 8 },
+  cardTitle: { fontFamily: Font.bold, fontSize: 13, color: Colors.textSecondary, marginBottom: 4 },
   cardTitleSelected: { color: Colors.primary },
-  cardDesc: { fontSize: 12, color: Colors.textMuted, lineHeight: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6 },
-  input: {
-    borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12,
+  cardDesc: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, lineHeight: 16 },
+  label: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text, marginBottom: 6 },
+  input: { fontFamily: Font.regular, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 14, fontSize: 15,
-    color: Colors.text, backgroundColor: Colors.surface, marginBottom: 16,
-  },
+    color: Colors.text, backgroundColor: Colors.surface, marginBottom: 16 },
   inputRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   inputFlex: { flex: 1 },
-  prefix: { fontSize: 15, fontWeight: '600', color: Colors.text, marginBottom: 16 },
-  hint: { fontSize: 12, color: Colors.textMuted, marginTop: -10, marginBottom: 20 },
+  prefix: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.text, marginBottom: 16 },
+  hint: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: -10, marginBottom: 20 },
   btn: {
     backgroundColor: Colors.primary, borderRadius: 12,
     paddingVertical: 16, alignItems: 'center', marginTop: 8,
   },
   btnDisabled: { opacity: 0.5 },
-  btnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  btnText: { fontFamily: Font.bold, color: '#fff', fontSize: 16 },
   vehicleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 16 },
   vehicleChip: { width: '30%', alignItems: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: 1.5, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
   vehicleChipActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  vehicleIcon: { fontSize: 24, marginBottom: 4 },
-  vehicleLabel: { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+  vehicleIcon: { fontFamily: Font.regular, fontSize: 24, marginBottom: 4 },
+  vehicleLabel: { fontFamily: Font.semiBold, fontSize: 11, color: Colors.textSecondary },
   vehicleLabelActive: { color: Colors.primary },
 });

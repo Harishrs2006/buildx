@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useSupplierProducts, useUpdateProduct, type SupplierProduct } from '../../src/hooks/useSupplier';
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -112,31 +113,31 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text },
   addBtn: { backgroundColor: Colors.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  addBtnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  addBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 14 },
   filterRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
   filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  filterText: { fontSize: 11, fontWeight: '600', color: Colors.textSecondary },
+  filterText: { fontFamily: Font.semiBold, fontSize: 11, color: Colors.textSecondary },
   filterTextActive: { color: '#fff' },
   card: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
   cardRow: { flexDirection: 'row', gap: 12, marginBottom: 10 },
   imagePlaceholder: { width: 60, height: 60, borderRadius: 10, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-  imagePlaceholderText: { fontSize: 24 },
-  productName: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  productCategory: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
-  productPrice: { fontSize: 14, fontWeight: '600', color: Colors.primary, marginTop: 4 },
-  productStock: { fontSize: 11, color: Colors.textMuted, marginTop: 2 },
+  imagePlaceholderText: { fontFamily: Font.regular, fontSize: 24 },
+  productName: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
+  productCategory: { fontFamily: Font.regular, fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  productPrice: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.primary, marginTop: 4 },
+  productStock: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, marginTop: 2 },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
-  badgeText: { fontSize: 10, fontWeight: '700' },
+  badgeText: { fontFamily: Font.bold, fontSize: 10 },
   cardActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 10 },
-  soldText: { fontSize: 12, color: Colors.textMuted },
+  soldText: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted },
   btnRow: { flexDirection: 'row', gap: 8 },
   btn: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   btnOutline: { borderWidth: 1, borderColor: Colors.border },
-  btnText: { fontSize: 12, fontWeight: '700' },
+  btnText: { fontFamily: Font.bold, fontSize: 12 },
   emptyContainer: { alignItems: 'center', marginTop: 80 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
-  empty: { textAlign: 'center', color: Colors.textSecondary, lineHeight: 24, fontSize: 15 },
+  emptyIcon: { fontFamily: Font.regular, fontSize: 48, marginBottom: 16 },
+  empty: { fontFamily: Font.regular, textAlign: 'center', color: Colors.textSecondary, lineHeight: 24, fontSize: 15 },
 });

@@ -5,6 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Colors } from '../../../src/constants/colors';
+import { Font } from '../../../src/constants/typography';
 import { ORDER_STATUS_LABELS } from '../../../src/hooks/useOrders';
 import {
   useOpsOrder, useOpsDrivers, useOpsCancel, useOpsUnassign, useOpsAssign, useOpsRecordCod, useOpsAddNote,
@@ -243,27 +244,25 @@ const s = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: Colors.border, backgroundColor: Colors.surface,
   },
   back: { padding: 4, marginRight: 8 },
-  backIcon: { fontSize: 20, color: Colors.text },
-  headerTitle: { flex: 1, fontSize: 16, fontWeight: '700', color: Colors.text },
-  status: { fontSize: 12, fontWeight: '700', color: Colors.primary },
+  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
+  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 16, color: Colors.text },
+  status: { fontFamily: Font.bold, fontSize: 12, color: Colors.primary },
   scroll: { padding: 16, gap: 12, paddingBottom: 48 },
   card: { backgroundColor: Colors.surface, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: Colors.border, gap: 8 },
-  cardTitle: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  cardTitle: { fontFamily: Font.bold, fontSize: 13, color: Colors.text },
   row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  rowLabel: { fontSize: 12, color: Colors.textMuted, width: 70 },
-  rowValue: { fontSize: 14, color: Colors.text, fontWeight: '600', flexShrink: 1 },
-  call: { fontSize: 13, color: Colors.info, fontWeight: '600' },
-  address: { fontSize: 12, color: Colors.textSecondary, marginLeft: 78 },
-  line: { fontSize: 13, color: Colors.text },
-  muted: { fontSize: 12, color: Colors.textSecondary },
-  input: {
-    borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
-    fontSize: 14, color: Colors.text, backgroundColor: Colors.surfaceAlt,
-  },
+  rowLabel: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, width: 70 },
+  rowValue: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text, flexShrink: 1 },
+  call: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.info },
+  address: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginLeft: 78 },
+  line: { fontFamily: Font.regular, fontSize: 13, color: Colors.text },
+  muted: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary },
+  input: { fontFamily: Font.regular, borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: 14, color: Colors.text, backgroundColor: Colors.surfaceAlt },
   driverRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Colors.border },
   toggle: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   btn: { backgroundColor: Colors.primary, borderRadius: 10, paddingVertical: 12, alignItems: 'center' },
   btnDanger: { backgroundColor: Colors.surface, borderWidth: 1.5, borderColor: Colors.error },
   btnSecondary: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
-  btnText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  btnText: { fontFamily: Font.bold, color: '#fff', fontSize: 14 },
 });

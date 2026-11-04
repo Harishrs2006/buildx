@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useOpsOrders } from '../../src/hooks/useOps';
 import { OpsOrderRow } from '../../src/components/OpsOrderRow';
 
@@ -61,15 +62,13 @@ export default function OpsOrdersScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
   container: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 12 },
-  search: {
-    borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
-    backgroundColor: Colors.surface, fontSize: 14, color: Colors.text, marginBottom: 10,
-  },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text, marginBottom: 12 },
+  search: { fontFamily: Font.regular, borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10,
+    backgroundColor: Colors.surface, fontSize: 14, color: Colors.text, marginBottom: 10 },
   filters: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 },
   chip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.border },
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  chipText: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.textSecondary },
   chipTextActive: { color: '#fff' },
   empty: { textAlign: 'center', color: Colors.textSecondary, marginTop: 48 },
 });

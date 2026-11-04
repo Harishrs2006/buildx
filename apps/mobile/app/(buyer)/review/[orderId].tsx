@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useSubmitReview, useOrderReview } from '../../../src/hooks/useReviews';
 import { Colors } from '../../../src/constants/colors';
+import { Font } from '../../../src/constants/typography';
 
 const TAGS = [
   'Fast delivery', 'Good quality', 'True to description',
@@ -27,7 +28,7 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 
 const star = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
-  star: { fontSize: 40, color: Colors.border },
+  star: { fontFamily: Font.regular, fontSize: 40, color: Colors.border },
   starActive: { color: '#F59E0B' },
 });
 
@@ -82,11 +83,11 @@ export default function ReviewScreen() {
           <Text style={s.headerTitle}>Your Review</Text>
         </View>
         <View style={s.center}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>⭐</Text>
+          <Text style={{ fontFamily: Font.regular, fontSize: 52, marginBottom: 16 }}>⭐</Text>
           <Text style={s.alreadyTitle}>Review submitted!</Text>
           <View style={star.row}>
             {[1, 2, 3, 4, 5].map((n) => (
-              <Text key={n} style={[{ fontSize: 28 }, n <= existing.data!.rating && { color: '#F59E0B' }]}>★</Text>
+              <Text key={n} style={[{ fontFamily: Font.regular, fontSize: 28 }, n <= existing.data!.rating && { color: '#F59E0B' }]}>★</Text>
             ))}
           </View>
           {existing.data.comment ? (
@@ -177,33 +178,31 @@ const s = StyleSheet.create({
     backgroundColor: Colors.surface,
   },
   backBtn: { padding: 4, marginRight: 8 },
-  backIcon: { fontSize: 20, color: Colors.text },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
+  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
+  headerTitle: { fontFamily: Font.bold, fontSize: 17, color: Colors.text },
   scroll: { padding: 16, gap: 12 },
   card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: Colors.border, gap: 14 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: Colors.text },
+  cardTitle: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  alreadyTitle: { fontSize: 18, fontWeight: '700', color: Colors.text },
-  alreadyComment: { fontSize: 14, color: Colors.textSecondary, fontStyle: 'italic', textAlign: 'center', paddingHorizontal: 24, marginTop: 8 },
-  ratingLabel: { fontSize: 15, fontWeight: '600', color: Colors.primary },
+  alreadyTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.text },
+  alreadyComment: { fontFamily: Font.serifItalic, fontSize: 14, color: Colors.textSecondary, textAlign: 'center', paddingHorizontal: 24, marginTop: 8 },
+  ratingLabel: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.primary },
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   tag: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
     borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt,
   },
   tagActive: { borderColor: Colors.primary, backgroundColor: Colors.primaryLight },
-  tagText: { fontSize: 13, color: Colors.textSecondary },
-  tagTextActive: { color: Colors.primary, fontWeight: '600' },
-  input: {
-    borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12,
+  tagText: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
+  tagTextActive: { fontFamily: Font.semiBold, color: Colors.primary },
+  input: { fontFamily: Font.regular, borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 15,
-    color: Colors.text, backgroundColor: Colors.surfaceAlt, textAlignVertical: 'top', minHeight: 100,
-  },
-  charCount: { fontSize: 11, color: Colors.textMuted, textAlign: 'right' },
+    color: Colors.text, backgroundColor: Colors.surfaceAlt, textAlignVertical: 'top', minHeight: 100 },
+  charCount: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, textAlign: 'right' },
   submitBtn: {
     backgroundColor: Colors.primary, borderRadius: 16,
     paddingVertical: 16, alignItems: 'center', marginTop: 4,
   },
   submitBtnDisabled: { opacity: 0.5 },
-  submitText: { color: '#fff', fontWeight: '800', fontSize: 16 },
+  submitText: { fontFamily: Font.bold, color: '#fff', fontSize: 16 },
 });

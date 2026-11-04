@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Button, Eyebrow, type } from '../../src/components/ui';
 import { signInWithGoogle, signOutEverywhere } from '../../src/lib/googleAuth';
@@ -19,7 +20,7 @@ export function LogoMark({ size = 40 }: { size?: number }) {
 
 const logo = StyleSheet.create({
   box: { backgroundColor: Colors.ink3, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(242,239,231,0.12)' },
-  x: { color: Colors.lime, fontWeight: '900' },
+  x: { fontFamily: Font.bold, color: Colors.lime },
 });
 
 export default function PhoneScreen() {
@@ -186,29 +187,29 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   hero: { backgroundColor: Colors.ink, paddingHorizontal: 24, paddingBottom: 28, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
   brandRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 16 },
-  brand: { color: Colors.sand, fontSize: 22, fontWeight: '800', letterSpacing: -0.8 },
-  heroTitle: { marginTop: 36, color: Colors.sand, fontSize: 38, lineHeight: 40, fontWeight: '800', letterSpacing: -1.4 },
-  heroAccent: { color: Colors.lime, fontStyle: 'italic', fontWeight: '400' },
+  brand: { fontFamily: Font.display, color: Colors.sand, fontSize: 22, letterSpacing: -0.8 },
+  heroTitle: { fontFamily: Font.display, marginTop: 36, color: Colors.sand, fontSize: 38, lineHeight: 40, letterSpacing: -1.4 },
+  heroAccent: { fontFamily: Font.serifItalic, color: Colors.lime },
   form: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 40 },
   heading: { marginTop: 10, marginBottom: 8 },
-  label: { marginTop: 28, marginBottom: 8, fontSize: 14, fontWeight: '700', color: Colors.ink },
+  label: { fontFamily: Font.bold, marginTop: 28, marginBottom: 8, fontSize: 14, color: Colors.ink },
   inputRow: { flexDirection: 'row', alignItems: 'center', borderWidth: 1.5, borderColor: Colors.sand4, borderRadius: 16, backgroundColor: Colors.sand2 },
   inputRowError: { borderColor: Colors.error },
   country: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, borderRightWidth: 1, borderRightColor: Colors.sand4, alignSelf: 'stretch' },
   inBadge: { backgroundColor: Colors.ink, borderRadius: 4, paddingHorizontal: 5, paddingVertical: 2 },
-  inBadgeText: { color: Colors.lime, fontSize: 10, fontWeight: '800' },
-  countryText: { fontSize: 16, color: Colors.ink, fontWeight: '600' },
-  input: { flex: 1, paddingHorizontal: 16, paddingVertical: 16, fontSize: 19, color: Colors.ink, letterSpacing: 1.2 },
-  hint: { marginTop: 8, fontSize: 13, color: Colors.stone },
-  error: { marginTop: 8, fontSize: 13, color: Colors.error },
+  inBadgeText: { fontFamily: Font.bold, color: Colors.lime, fontSize: 10 },
+  countryText: { fontFamily: Font.semiBold, fontSize: 16, color: Colors.ink },
+  input: { fontFamily: Font.regular, flex: 1, paddingHorizontal: 16, paddingVertical: 16, fontSize: 19, color: Colors.ink, letterSpacing: 1.2 },
+  hint: { fontFamily: Font.regular, marginTop: 8, fontSize: 13, color: Colors.stone },
+  error: { fontFamily: Font.regular, marginTop: 8, fontSize: 13, color: Colors.error },
   cta: { marginTop: 24 },
   syncBox: { marginTop: 24, padding: 16, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.error, backgroundColor: Colors.sand2 },
-  syncText: { fontSize: 15, lineHeight: 21, color: Colors.ink },
+  syncText: { fontFamily: Font.regular, fontSize: 15, lineHeight: 21, color: Colors.ink },
   syncBtn: { marginTop: 14 },
   switch: { marginTop: 20, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 12 },
-  switchText: { fontSize: 15, fontWeight: '700', color: Colors.ink, textDecorationLine: 'underline' },
+  switchText: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink, textDecorationLine: 'underline' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 28 },
   dividerLine: { flex: 1, height: 1, backgroundColor: Colors.sand4 },
-  dividerText: { fontSize: 13, color: Colors.stone },
-  terms: { marginTop: 20, fontSize: 12, lineHeight: 18, color: Colors.stone, textAlign: 'center' },
+  dividerText: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone },
+  terms: { fontFamily: Font.regular, marginTop: 20, fontSize: 12, lineHeight: 18, color: Colors.stone, textAlign: 'center' },
 });

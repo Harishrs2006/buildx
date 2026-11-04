@@ -16,6 +16,7 @@ import { useRef, useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useAiChat, ChatMessage, AnalysedItem, PriceOption } from '../../src/hooks/useAiChat';
 import { useCartStore } from '../../src/store/cart.store';
 
@@ -352,8 +353,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: Colors.text },
-  headerSub: { fontSize: 12, color: Colors.textMuted, marginTop: 1 },
+  headerTitle: { fontFamily: Font.bold, fontSize: 16, color: Colors.text },
+  headerSub: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: 1 },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   cartBtn: {
     backgroundColor: Colors.primaryLight,
@@ -361,8 +362,8 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
   },
-  cartBtnText: { fontSize: 13, fontWeight: '700', color: Colors.primaryDark },
-  clearBtn: { fontSize: 13, color: Colors.textMuted },
+  cartBtnText: { fontFamily: Font.bold, fontSize: 13, color: Colors.primaryDark },
+  clearBtn: { fontFamily: Font.regular, fontSize: 13, color: Colors.textMuted },
 
   messageList: { padding: 12, paddingBottom: 8 },
 
@@ -374,17 +375,17 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primaryLight,
     alignItems: 'center', justifyContent: 'center',
   },
-  avatarEmoji: { fontSize: 14 },
+  avatarEmoji: { fontFamily: Font.regular, fontSize: 14 },
 
   bubble: { maxWidth: '78%', borderRadius: 16, padding: 10 },
   userBubble: { backgroundColor: Colors.primary, borderBottomRightRadius: 4 },
   assistantBubble: { backgroundColor: Colors.surface, borderBottomLeftRadius: 4, elevation: 1 },
-  bubbleText: { fontSize: 14, lineHeight: 20 },
+  bubbleText: { fontFamily: Font.regular, fontSize: 14, lineHeight: 20 },
   userBubbleText: { color: Colors.textInverse },
   assistantBubbleText: { color: Colors.text },
 
   typingBubble: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  typingText: { fontSize: 13, color: Colors.textMuted },
+  typingText: { fontFamily: Font.regular, fontSize: 13, color: Colors.textMuted },
 
   imagePreview: { width: 200, height: 150, borderRadius: 8, marginBottom: 4 },
 
@@ -404,8 +405,8 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     marginBottom: 8,
   },
-  assistantBadgeText: { fontSize: 11, fontWeight: '700', color: Colors.primaryDark },
-  priceListSummary: { fontSize: 13, color: Colors.textSecondary, marginBottom: 12 },
+  assistantBadgeText: { fontFamily: Font.bold, fontSize: 11, color: Colors.primaryDark },
+  priceListSummary: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, marginBottom: 12 },
 
   priceItemCard: {
     borderWidth: 1,
@@ -421,9 +422,9 @@ const styles = StyleSheet.create({
     alignItems: 'baseline',
     marginBottom: 8,
   },
-  priceItemName: { fontSize: 14, fontWeight: '700', color: Colors.text, flex: 1 },
-  priceItemQty: { fontSize: 13, color: Colors.textSecondary, marginLeft: 8 },
-  notFound: { fontSize: 13, color: Colors.textMuted, fontStyle: 'italic' },
+  priceItemName: { fontFamily: Font.bold, fontSize: 14, color: Colors.text, flex: 1 },
+  priceItemQty: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary, marginLeft: 8 },
+  notFound: { fontFamily: Font.serifItalic, fontSize: 13, color: Colors.textMuted },
 
   optionRow: {
     flexDirection: 'row',
@@ -446,16 +447,16 @@ const styles = StyleSheet.create({
   radioDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.primary },
 
   optionInfo: { flex: 1 },
-  optionName: { fontSize: 13, fontWeight: '600', color: Colors.text },
-  optionSupplier: { fontSize: 11, color: Colors.textMuted, marginTop: 1 },
+  optionName: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text },
+  optionSupplier: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, marginTop: 1 },
   optionMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 2 },
-  optionDelivery: { fontSize: 11, color: Colors.textSecondary },
-  outOfStock: { fontSize: 11, color: Colors.error, fontWeight: '600' },
+  optionDelivery: { fontFamily: Font.regular, fontSize: 11, color: Colors.textSecondary },
+  outOfStock: { fontFamily: Font.semiBold, fontSize: 11, color: Colors.error },
 
   optionPriceCol: { alignItems: 'flex-end' },
-  optionPrice: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  optionUnit: { fontSize: 10, color: Colors.textMuted },
-  optionTotal: { fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
+  optionPrice: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
+  optionUnit: { fontFamily: Font.regular, fontSize: 10, color: Colors.textMuted },
+  optionTotal: { fontFamily: Font.regular, fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
 
   addAllBtn: {
     backgroundColor: Colors.primary,
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  addAllBtnText: { color: Colors.textInverse, fontWeight: '700', fontSize: 14 },
+  addAllBtnText: { fontFamily: Font.bold, color: Colors.textInverse, fontSize: 14 },
 
   uploadHint: {
     backgroundColor: Colors.primaryLight,
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.primaryLight,
   },
-  uploadHintText: { fontSize: 12, color: Colors.primaryDark, textAlign: 'center' },
+  uploadHintText: { fontFamily: Font.regular, fontSize: 12, color: Colors.primaryDark, textAlign: 'center' },
 
   inputBar: {
     flexDirection: 'row',
@@ -494,9 +495,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconBtnText: { fontSize: 18 },
-  input: {
-    flex: 1,
+  iconBtnText: { fontFamily: Font.regular, fontSize: 18 },
+  input: { fontFamily: Font.regular, flex: 1,
     minHeight: 38,
     maxHeight: 100,
     backgroundColor: Colors.surfaceAlt,
@@ -506,8 +506,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     fontSize: 14,
-    color: Colors.text,
-  },
+    color: Colors.text },
   sendBtn: {
     width: 38, height: 38,
     borderRadius: 19,
@@ -516,5 +515,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   sendBtnDisabled: { backgroundColor: Colors.border },
-  sendBtnText: { color: Colors.textInverse, fontSize: 18, fontWeight: '700' },
+  sendBtnText: { fontFamily: Font.bold, color: Colors.textInverse, fontSize: 18 },
 });

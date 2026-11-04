@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, A
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useSupplierStats, useSupplierProfile, useSupplierOrders } from '../../src/hooks/useSupplier';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../src/hooks/useOrders';
 
@@ -113,27 +114,27 @@ export default function SupplierHome() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
-  greeting: { fontSize: 13, color: Colors.textSecondary },
-  businessName: { fontSize: 20, fontWeight: '700', color: Colors.text, maxWidth: 220 },
+  greeting: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
+  businessName: { fontFamily: Font.bold, fontSize: 20, color: Colors.text, maxWidth: 220 },
   verifiedBadge: { borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  verifiedText: { fontSize: 12, fontWeight: '600' },
+  verifiedText: { fontFamily: Font.semiBold, fontSize: 12 },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: 12, paddingVertical: 8, gap: 10 },
   statCard: { width: '47%', backgroundColor: '#fff', borderRadius: 12, padding: 16, borderLeftWidth: 4, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 },
-  statValue: { fontSize: 26, fontWeight: '800', color: Colors.text },
-  statLabel: { fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
+  statValue: { fontFamily: Font.display, fontSize: 26, color: Colors.text },
+  statLabel: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
   section: { paddingHorizontal: 20, marginTop: 20 },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: Colors.text, marginBottom: 12 },
-  seeAll: { fontSize: 13, color: Colors.primary, fontWeight: '600' },
+  sectionTitle: { fontFamily: Font.bold, fontSize: 16, color: Colors.text, marginBottom: 12 },
+  seeAll: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.primary },
   actionsRow: { flexDirection: 'row', justifyContent: 'space-between' },
   actionBtn: { alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, paddingVertical: 14, paddingHorizontal: 8, width: '23%', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
-  actionIcon: { fontSize: 22, marginBottom: 6 },
-  actionLabel: { fontSize: 10, color: Colors.text, fontWeight: '600', textAlign: 'center' },
+  actionIcon: { fontFamily: Font.regular, fontSize: 22, marginBottom: 6 },
+  actionLabel: { fontFamily: Font.semiBold, fontSize: 10, color: Colors.text, textAlign: 'center' },
   orderCard: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 8, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 },
   orderTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  orderNumber: { fontSize: 13, fontWeight: '700', color: Colors.text },
+  orderNumber: { fontFamily: Font.bold, fontSize: 13, color: Colors.text },
   badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  orderBuyer: { fontSize: 13, color: Colors.textSecondary },
-  orderTotal: { fontSize: 15, fontWeight: '700', color: Colors.text, marginTop: 4 },
+  badgeText: { fontFamily: Font.semiBold, fontSize: 11 },
+  orderBuyer: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
+  orderTotal: { fontFamily: Font.bold, fontSize: 15, color: Colors.text, marginTop: 4 },
 });

@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 
 export default function OpsProfileScreen() {
   const { user, clear } = useAuthStore();
@@ -37,12 +38,12 @@ export default function OpsProfileScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
   container: { padding: 20, gap: 16 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text },
+  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text },
   card: { backgroundColor: Colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: Colors.border, gap: 4 },
-  name: { fontSize: 17, fontWeight: '700', color: Colors.text },
-  phone: { fontSize: 14, color: Colors.textSecondary },
-  role: { fontSize: 11, fontWeight: '700', color: Colors.primary, letterSpacing: 1, marginTop: 4 },
-  hint: { fontSize: 12, color: Colors.textSecondary, lineHeight: 18 },
+  name: { fontFamily: Font.bold, fontSize: 17, color: Colors.text },
+  phone: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary },
+  role: { fontFamily: Font.bold, fontSize: 11, color: Colors.primary, letterSpacing: 1, marginTop: 4 },
+  hint: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, lineHeight: 18 },
   signOut: { borderWidth: 1.5, borderColor: Colors.error, borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
-  signOutText: { color: Colors.error, fontWeight: '700', fontSize: 15 },
+  signOutText: { fontFamily: Font.bold, color: Colors.error, fontSize: 15 },
 });

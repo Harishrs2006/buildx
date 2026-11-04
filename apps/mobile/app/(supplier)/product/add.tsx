@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors } from '../../../src/constants/colors';
+import { Font } from '../../../src/constants/typography';
 import { useCreateProduct } from '../../../src/hooks/useSupplier';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../../../src/lib/api';
@@ -200,19 +201,19 @@ export default function AddProductScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: Colors.surface },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  back: { fontSize: 15, color: Colors.primary, fontWeight: '600' },
-  topTitle: { fontSize: 17, fontWeight: '700', color: Colors.text },
+  back: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.primary },
+  topTitle: { fontFamily: Font.bold, fontSize: 17, color: Colors.text },
   content: { padding: 20, paddingBottom: 48 },
   field: { marginBottom: 16 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.text, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: Colors.text, backgroundColor: '#fff' },
+  label: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text, marginBottom: 6 },
+  input: { fontFamily: Font.regular, borderWidth: 1, borderColor: Colors.border, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: Colors.text, backgroundColor: '#fff' },
   textarea: { height: 100, textAlignVertical: 'top' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt },
   chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
+  chipText: { fontFamily: Font.semiBold, fontSize: 12, color: Colors.textSecondary },
   chipTextActive: { color: '#fff' },
   row2: { flexDirection: 'row', gap: 12 },
   submitBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 8 },
-  submitText: { color: '#fff', fontSize: 16, fontWeight: '700' },
+  submitText: { fontFamily: Font.bold, color: '#fff', fontSize: 16 },
 });
