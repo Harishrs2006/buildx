@@ -246,12 +246,23 @@ export default function AiChatScreen() {
   }
 
   function handleAddToCart(msg: Extract<ChatMessage, { type: 'price_list' }>) {
-    const count = addSelectedToCart(msg);
-    if (count === 0) {
+    const r = addSelectedToCart(msg);
+    if (r.status === 'nothing') {
       setNotice({ tone: 'info', text: 'Nothing was added. Pick an option and check the quantities first.' });
-      return;
+    } else if (r.status === 'mixed') {
+      setNotice({
+        tone: 'info',
+        text: `One order comes from one supplier. Your picks are from ${r.suppliers.join(' and ')}. Choose options from one supplier, then order the rest separately.`,
+      });
+    } else if (r.status === 'cart_conflict') {
+      setNotice({
+        tone: 'info',
+        text: `Your cart already has items from ${r.cartSupplier}. Place that order or empty your cart before adding items from ${r.supplier}.`,
+        cart: true,
+      });
+    } else {
+      setNotice({ tone: 'success', text: `${r.count} item${r.count > 1 ? 's' : ''} added to your cart.`, cart: true });
     }
-    setNotice({ tone: 'success', text: `${count} item${count > 1 ? 's' : ''} added to your cart.`, cart: true });
   }
 
   return (
