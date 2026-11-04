@@ -1,52 +1,58 @@
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert,
-} from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useCartStore, type CartItem } from '../../src/store/cart.store';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { Button, ConfirmSheet, EmptyState, Eyebrow, Icon, ScreenHeader } from '../../src/components/ui';
 
-function CartRow({ item }: { item: CartItem }) {
+const rupees = (n: number, digits = 0) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: digits })}`;
+
+function CartRow({ item, onRemove }: { item: CartItem; onRemove: (item: CartItem) => void }) {
   const updateQty = useCartStore((s) => s.updateQty);
-  const removeItem = useCartStore((s) => s.removeItem);
   const lineTotal = useCartStore((s) => s.lineTotal(item.productId));
 
   return (
     <View style={styles.row}>
       {item.image ? (
-        <Image source={{ uri: item.image }} style={styles.thumb} resizeMode="cover" />
+        <Image source={{ uri: item.image }} style={styles.thumb} contentFit="cover" transition={150} />
       ) : (
-        <View style={styles.thumbPlaceholder}><Text style={{ fontSize: 20 }}>🏗️</Text></View>
+        <View style={[styles.thumb, styles.thumbEmpty]}><Icon name="package-variant-closed" size={26} color={Colors.stone} /></View>
       )}
       <View style={styles.rowBody}>
         <Text style={styles.rowSupplier} numberOfLines={1}>{item.supplierName}</Text>
         <Text style={styles.rowName} numberOfLines={2}>{item.name}</Text>
-        <Text style={styles.rowPrice}>₹{item.basePrice.toLocaleString('en-IN')} / {item.unit}</Text>
+        <Text style={styles.rowPrice}>{rupees(item.basePrice)} / {item.unit}</Text>
         <View style={styles.qtyRow}>
-          <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item.productId, item.quantity - 1)}>
-            <Text style={styles.qtyBtnText}>−</Text>
-          </TouchableOpacity>
-          <Text style={styles.qtyVal}>{item.quantity}</Text>
-          <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQty(item.productId, item.quantity + 1)}>
-            <Text style={styles.qtyBtnText}>+</Text>
-          </TouchableOpacity>
-          <Text style={styles.rowLineTotal}>
-            = ₹{lineTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-          </Text>
+          <View style={styles.stepper}>
+            <Pressable
+              style={styles.stepBtn}
+              onPress={() => (item.quantity <= 1 ? onRemove(item) : updateQty(item.productId, item.quantity - 1))}
+              accessibilityRole="button"
+              accessibilityLabel={`One less ${item.name}`}
+              hitSlop={6}
+            >
+              <Icon name="minus" size={18} />
+            </Pressable>
+            <Text style={styles.qtyVal} accessibilityLabel={`Quantity ${item.quantity}`}>{item.quantity}</Text>
+            <Pressable
+              style={styles.stepBtn}
+              onPress={() => updateQty(item.productId, item.quantity + 1)}
+              accessibilityRole="button"
+              accessibilityLabel={`One more ${item.name}`}
+              hitSlop={6}
+            >
+              <Icon name="plus" size={18} />
+            </Pressable>
+          </View>
+          <Text style={styles.rowLineTotal}>{rupees(lineTotal, 2)}</Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.removeBtn}
-        onPress={() =>
-          Alert.alert('Remove item', `Remove ${item.name} from cart?`, [
-            { text: 'Cancel', style: 'cancel' },
-            { text: 'Remove', style: 'destructive', onPress: () => removeItem(item.productId) },
-          ])
-        }
-      >
-        <Text style={styles.removeText}>✕</Text>
-      </TouchableOpacity>
+      <Pressable onPress={() => onRemove(item)} style={styles.removeBtn} hitSlop={8} accessibilityRole="button" accessibilityLabel={`Remove ${item.name}`}>
+        <Icon name="trash-can-outline" size={20} color={Colors.stone} />
+      </Pressable>
     </View>
   );
 }
@@ -58,131 +64,132 @@ export default function CartScreen() {
   const gstTotal = useCartStore((s) => s.gstTotal());
   const grandTotal = useCartStore((s) => s.grandTotal());
   const itemCount = useCartStore((s) => s.itemCount());
+  const removeItem = useCartStore((s) => s.removeItem);
   const clear = useCartStore((s) => s.clear);
+
+  const [removing, setRemoving] = useState<CartItem | null>(null);
+  const [clearing, setClearing] = useState(false);
 
   if (items.length === 0) {
     return (
       <SafeAreaView style={styles.safe}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Cart</Text>
-        </View>
-        <View style={styles.empty}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>🛒</Text>
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
-          <Text style={styles.emptySub}>Browse materials and add them here.</Text>
-          <TouchableOpacity style={styles.browseBtn} onPress={() => router.back()}>
-            <Text style={styles.browseBtnText}>Browse products</Text>
-          </TouchableOpacity>
-        </View>
+        <ScreenHeader title="Cart" onBack={() => router.back()} />
+        <EmptyState
+          icon="cart-outline"
+          title="Your cart is empty"
+          body="Browse materials and add what the site needs."
+          action={<Button title="Browse materials" onPress={() => router.replace('/(buyer)/home')} />}
+          style={styles.emptyBox}
+        />
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Cart ({itemCount})</Text>
-        <TouchableOpacity
-          onPress={() =>
-            Alert.alert('Clear cart', 'Remove all items?', [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Clear', style: 'destructive', onPress: clear },
-            ])
-          }
-        >
-          <Text style={styles.clearAll}>Clear all</Text>
-        </TouchableOpacity>
-      </View>
+      <ScreenHeader
+        eyebrow={`${itemCount} item${itemCount === 1 ? '' : 's'}`}
+        title="Cart"
+        onBack={() => router.back()}
+        right={
+          <Pressable onPress={() => setClearing(true)} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.clearAll}>Clear all</Text>
+          </Pressable>
+        }
+      />
 
       <FlatList
         data={items}
         keyExtractor={(item) => item.productId}
-        renderItem={({ item }) => <CartRow item={item} />}
+        renderItem={({ item }) => <CartRow item={item} onRemove={setRemoving} />}
         contentContainerStyle={styles.list}
         ListFooterComponent={
           <View style={styles.summary}>
-            <Text style={styles.summaryTitle}>Order Summary</Text>
+            <Eyebrow>Summary</Eyebrow>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Subtotal</Text>
-              <Text style={styles.summaryValue}>₹{subtotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.summaryValue}>{rupees(subtotal)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>GST</Text>
-              <Text style={styles.summaryValue}>₹{gstTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.summaryValue}>{rupees(gstTotal)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Delivery</Text>
-              <Text style={[styles.summaryValue, { color: Colors.success }]}>FREE</Text>
+              <Text style={styles.summaryMuted}>Calculated at checkout</Text>
             </View>
             <View style={[styles.summaryRow, styles.summaryTotal]}>
-              <Text style={styles.summaryTotalLabel}>Total</Text>
-              <Text style={styles.summaryTotalValue}>₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+              <Text style={styles.summaryTotalLabel}>Estimated total</Text>
+              <Text style={styles.summaryTotalValue}>{rupees(grandTotal)}</Text>
             </View>
           </View>
         }
       />
 
-      <View style={styles.stickyBar}>
+      <SafeAreaView edges={['bottom']} style={styles.stickyBar}>
         <View>
-          <Text style={styles.stickyLabel}>Total incl. GST</Text>
-          <Text style={styles.stickyTotal}>₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+          <Text style={styles.stickyLabel}>Incl. GST</Text>
+          <Text style={styles.stickyTotal}>{rupees(grandTotal)}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.checkoutBtn}
-          onPress={() => router.push('/(buyer)/checkout' as never)}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.checkoutText}>Proceed to Checkout →</Text>
-        </TouchableOpacity>
-      </View>
+        <Button title="Checkout" variant="lime" onPress={() => router.push('/(buyer)/checkout' as never)} style={styles.checkoutBtn} />
+      </SafeAreaView>
+
+      <ConfirmSheet
+        visible={!!removing}
+        title="Remove this item?"
+        body={removing ? `${removing.name} will be taken out of your cart.` : undefined}
+        confirmLabel="Remove"
+        danger
+        onConfirm={() => {
+          if (removing) removeItem(removing.productId);
+          setRemoving(null);
+        }}
+        onCancel={() => setRemoving(null)}
+      />
+      <ConfirmSheet
+        visible={clearing}
+        title="Clear your cart?"
+        body="Every item will be removed. This cannot be undone."
+        confirmLabel="Clear cart"
+        danger
+        onConfirm={() => {
+          clear();
+          setClearing(false);
+        }}
+        onCancel={() => setClearing(false)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border },
-  backBtn: { padding: 4, marginRight: 8 },
-  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
-  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 17, color: Colors.text },
-  clearAll: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.error },
-  list: { paddingHorizontal: 16, paddingBottom: 16 },
-  row: { flexDirection: 'row', paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 12 },
-  thumb: { width: 72, height: 72, borderRadius: 10 },
-  thumbPlaceholder: { width: 72, height: 72, borderRadius: 10, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  emptyBox: { flex: 1, justifyContent: 'center' },
+  clearAll: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.error },
+  list: { paddingHorizontal: 20, paddingBottom: 24 },
+  row: { flexDirection: 'row', gap: 12, padding: 12, marginBottom: 10, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  thumb: { width: 76, height: 76, borderRadius: 12, backgroundColor: Colors.sand3 },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
   rowBody: { flex: 1 },
-  rowSupplier: { fontFamily: Font.regular, fontSize: 10, color: Colors.textMuted, marginBottom: 2 },
-  rowName: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.text, lineHeight: 18 },
-  rowPrice: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginTop: 4 },
-  qtyRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 8 },
-  qtyBtn: { width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: Colors.primary, alignItems: 'center', justifyContent: 'center' },
-  qtyBtnText: { fontFamily: Font.bold, fontSize: 16, color: Colors.primary, lineHeight: 20 },
-  qtyVal: { fontFamily: Font.bold, fontSize: 15, color: Colors.text, minWidth: 20, textAlign: 'center' },
-  rowLineTotal: { fontFamily: Font.bold, marginLeft: 'auto', fontSize: 13, color: Colors.text },
-  removeBtn: { padding: 4 },
-  removeText: { fontFamily: Font.regular, fontSize: 14, color: Colors.textMuted },
-  summary: { marginTop: 20, padding: 16, backgroundColor: Colors.surfaceAlt, borderRadius: 14, borderWidth: 1, borderColor: Colors.border },
-  summaryTitle: { fontFamily: Font.bold, fontSize: 14, color: Colors.text, marginBottom: 14 },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  summaryLabel: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary },
-  summaryValue: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text },
-  summaryTotal: { borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 12, marginBottom: 0, marginTop: 4 },
-  summaryTotalLabel: { fontFamily: Font.bold, fontSize: 15, color: Colors.text },
-  summaryTotalValue: { fontFamily: Font.bold, fontSize: 18, color: Colors.primary },
-  empty: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  emptyTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.text, marginBottom: 8 },
-  emptySub: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginBottom: 24 },
-  browseBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
-  browseBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 15 },
-  stickyBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: Colors.border, backgroundColor: Colors.surface, gap: 16 },
-  stickyLabel: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted },
-  stickyTotal: { fontFamily: Font.bold, fontSize: 18, color: Colors.text },
-  checkoutBtn: { flex: 1, backgroundColor: Colors.primary, borderRadius: 14, paddingVertical: 15, alignItems: 'center' },
-  checkoutText: { fontFamily: Font.bold, color: '#fff', fontSize: 15 },
+  rowSupplier: { fontFamily: Font.mono, fontSize: 11, letterSpacing: 0.5, color: Colors.stone, textTransform: 'uppercase' },
+  rowName: { fontFamily: Font.semiBold, fontSize: 15, lineHeight: 20, color: Colors.ink, marginTop: 2 },
+  rowPrice: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 2 },
+  qtyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 10 },
+  stepper: { flexDirection: 'row', alignItems: 'center', borderRadius: 20, borderWidth: 1, borderColor: Colors.sand4, backgroundColor: Colors.sand },
+  stepBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  qtyVal: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink, minWidth: 28, textAlign: 'center' },
+  rowLineTotal: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  removeBtn: { padding: 4, alignSelf: 'flex-start' },
+  summary: { marginTop: 10, padding: 18, backgroundColor: Colors.sand2, borderRadius: 18, borderWidth: 1, borderColor: Colors.sand4, gap: 10 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  summaryLabel: { fontFamily: Font.regular, fontSize: 15, color: Colors.stone },
+  summaryValue: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.ink },
+  summaryMuted: { fontFamily: Font.regular, fontSize: 14, color: Colors.stone },
+  summaryTotal: { borderTopWidth: 1, borderTopColor: Colors.sand4, paddingTop: 12, marginTop: 2 },
+  summaryTotalLabel: { fontFamily: Font.bold, fontSize: 16, color: Colors.ink },
+  summaryTotalValue: { fontFamily: Font.display, fontSize: 22, color: Colors.ink },
+  stickyBar: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, backgroundColor: Colors.ink, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  stickyLabel: { fontFamily: Font.mono, fontSize: 11, letterSpacing: 1, color: 'rgba(242,239,231,0.6)', textTransform: 'uppercase' },
+  stickyTotal: { fontFamily: Font.display, fontSize: 22, color: Colors.sand },
+  checkoutBtn: { flex: 1 },
 });

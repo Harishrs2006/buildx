@@ -11,7 +11,7 @@ import { Font } from '../constants/typography';
 // Tab bar shared by every role: an ink bar, the active tab filled with lime. It sits in normal
 // layout flow (not floating) so it can never cover a screen's bottom buttons.
 export const tabBarStyle: ViewStyle = {
-  height: 76,
+  height: 80,
   backgroundColor: Colors.ink,
   borderTopWidth: 0,
   paddingTop: 6,
@@ -22,16 +22,16 @@ export const tabBarStyle: ViewStyle = {
 export function TabItem({ label, focused, icon }: { label: string; focused: boolean; icon?: IconName }) {
   return (
     <View style={[tabStyles.item, focused && tabStyles.itemFocused]} accessibilityState={{ selected: focused }}>
-      {icon ? <Icon name={icon} size={18} color={focused ? Colors.ink : 'rgba(242,239,231,0.65)'} /> : null}
+      {icon ? <Icon name={icon} size={20} color={focused ? Colors.ink : 'rgba(242,239,231,0.65)'} /> : null}
       <Text numberOfLines={1} style={[tabStyles.label, focused && tabStyles.labelFocused]}>{label}</Text>
     </View>
   );
 }
 
 const tabStyles = StyleSheet.create({
-  item: { minWidth: 72, height: 44, paddingHorizontal: 12, borderRadius: 22, alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6 },
+  item: { minWidth: 68, height: 54, paddingHorizontal: 10, borderRadius: 18, alignItems: 'center', justifyContent: 'center', gap: 2 },
   itemFocused: { backgroundColor: Colors.lime },
-  label: { fontSize: 12, fontFamily: Font.semiBold, color: 'rgba(242,239,231,0.65)' },
+  label: { fontSize: 11, fontFamily: Font.semiBold, color: 'rgba(242,239,231,0.65)' },
   labelFocused: { color: Colors.ink, fontFamily: Font.bold },
 });
 
