@@ -47,12 +47,13 @@ const mocks = vi.hoisted(() => {
   const anthropicCreate = vi.fn(async (_params: unknown) => ({
     content: [{ type: 'text', text: 'Namaskara! How can I help?' }],
   }));
-  return { verifyIdToken, anthropicCreate };
+  const deleteUser = vi.fn(async (_uid: string) => undefined);
+  return { verifyIdToken, anthropicCreate, deleteUser };
 });
 
-export const { verifyIdToken, anthropicCreate } = mocks;
+export const { verifyIdToken, anthropicCreate, deleteUser } = mocks;
 
-vi.mock('firebase-admin/auth', () => ({ getAuth: () => ({ verifyIdToken: mocks.verifyIdToken }) }));
+vi.mock('firebase-admin/auth', () => ({ getAuth: () => ({ verifyIdToken: mocks.verifyIdToken, deleteUser: mocks.deleteUser }) }));
 vi.mock('firebase-admin/messaging', () => ({
   getMessaging: () => ({
     send: vi.fn().mockResolvedValue('msg-id'),

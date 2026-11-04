@@ -27,3 +27,8 @@ export async function onboardBuyer(client: ApiClient, name: string): Promise<Syn
     body: { name, role: 'BUYER' },
   });
 }
+
+// Erases the account (DELETE /users/me). Refused with 409 while an order is still open.
+export async function deleteAccount(client: ApiClient): Promise<void> {
+  await client.request('/users/me', { method: 'DELETE', auth: true, envelope: true, schema: z.object({ deleted: z.literal(true) }) });
+}

@@ -401,3 +401,37 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
 - 2026-11-05 02:45 IST: User merged #59 and #60. Vercel production deploys of #60 failed: daily deployment limit on the
   free plan (too many branch pushes today). APKs rebuilt with the owner's logo and verified: C:/dev/BuildX/Sthiva.apk
   (com.sthiva.app) and Sthiva-Partner.apk (com.sthiva.partner); bundles contain Sthiva and #F3B806.
+- 2026-11-04 IST (launch prep, branch feat/launch-ready in worktree C:\Users\Harish\buildx-launch, outside OneDrive):
+  User asked to get everything ready for a real launch BEFORE paying for anything. Done so far:
+  SECURITY: Firebase test number +917019282019 no longer uses the public code 123456 (it was in this public log).
+  New private code is ONLY in C:/dev/BuildX/buildx-secrets/TEST_SIGNIN.txt (outside the repo). Admin test number
+  untouched. STOREFRONT: real page titles for product, category and material pages (server layouts with
+  generateMetadata; product title fetched from the API with a 4 s timeout, generic title if the API is asleep);
+  sitemap now lists 10 categories, every material guide and every live product, drops /signin; search fixes typos
+  and trade words (cemnt -> cement, saria -> TMT) and shows matching material guides above supplier listings
+  (packages/web-core/src/catalog/search.ts + 6 tests, 87 web-core tests pass); phone buy bar on the product page
+  (price + Add to cart, hides when the real button is on screen, turns into View cart after adding).
+  Verified on a local production build at 375 px through a read-only local CORS proxy (Render CORS no longer allows
+  localhost). Note: the other session's branch feat/mobile-google-signin (mobile Google sign-in, Android build not
+  verified) is untouched in the OneDrive checkout.
+- 2026-11-04 IST: ACCOUNT DELETION (both app stores require it; privacy policy already promised it). API: DELETE
+  /api/v1/users/me for BUYER and SUPPLIER (staff/drivers get 403, ops closes them). Refused with 409 while any order is
+  open (as buyer or as supplier). Erases name/phone/email/addresses/GST/bank/avatar, firebaseUid -> deleted:<id>,
+  isActive false, deletedAt set; supplier listings -> DISCONTINUED and profile inactive; orders kept (tax records);
+  Firebase login deleted (user-not-found tolerated). 7 tests, API 295/295 pass. Buyer web: Account page has
+  "Delete my account" with in-page confirm; public page /account-deletion (link it in the Play and App Store
+  listings), linked from the footer, legal pages and sitemap. TODO: same button in seller-web and the mobile app
+  (mobile is on the other session's branch feat/mobile-google-signin; add it after that merges).
+- 2026-11-04 IST: apps/mobile/eas.json (preview APK, production AAB with remote version numbers, live API URL)
+  and docs/LAUNCH.md (launch runbook: free owner steps, paid switches with prices, domain switch env vars,
+  Play Store steps incl. SHA fingerprints, google-services.json for EAS, data safety answers). PR opened for
+  feat/launch-ready. NEXT: user merges; then the paid switches in LAUNCH.md section 2 when the user says yes;
+  demo supplier removal needs the user's OK; delete-account button still missing in seller-web and mobile app.
+- 2026-11-05 03:00 IST: Revived PR #51 (launch prep + account deletion + LAUNCH.md + eas.json) on branch
+  feat/launch-ready-sthiva: merged main, resolved 4 conflicts (imports, footer: kept main + "Delete your account"
+  link), applied the Sthiva rename and yellow colour to its files. API 295 tests, web-core 87 tests, buyer and seller
+  typecheck pass. Log merge had duplicated the whole file (CRLF vs LF): restored main's log and re-added #51's entries.
+  Same branch: delete-account added to the seller portal (Business page) and both mobile apps (profile footer, buyers
+  and suppliers only; mobile api errors now keep the HTTP status). apps/*/vercel.json ignoreCommand: websites rebuild
+  only when their folder, packages/web-core or the root package files change (Vercel project roots are apps/<name>,
+  "skip unchanged" was already on). LAUNCH.md updated for the Sthiva name decision.

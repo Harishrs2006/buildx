@@ -10,6 +10,7 @@ const LEGAL_LINKS = [
   { href: '/privacy', label: 'Privacy policy' },
   { href: '/refunds', label: 'Cancellations and refunds' },
   { href: '/cookies', label: 'Cookie policy' },
+  { href: '/account-deletion', label: 'Delete your account' },
 ];
 
 export function LegalPage({ title, intro, path, children }: { title: string; intro: string; path: string; children: ReactNode }) {

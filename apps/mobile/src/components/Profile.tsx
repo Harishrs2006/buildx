@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Constants from 'expo-constants';
 import { useAuthStore } from '../store/auth.store';
 import { signOutEverywhere } from '../lib/googleAuth';
+import { api } from '../lib/api';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { SthivaMark, ConfirmSheet, Eyebrow, Icon, type IconName } from './ui';
@@ -72,17 +73,42 @@ export function Tags({ items }: { items: string[] }) {
   );
 }
 
-// Sign out button with its confirm sheet, and the app version under it
+// Sign out button with its confirm sheet, the delete-account option (buyers and suppliers; the app stores require
+// it) and the app version under it
 export function SignOutFooter() {
   const clear = useAuthStore((s) => s.clear);
+  const role = useAuthStore((s) => s.user?.role);
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const canDelete = role === 'BUYER' || role === 'SUPPLIER';
+
+  async function deleteAccount() {
+    setDeleteBusy(true);
+    setDeleteError(null);
+    try {
+      // The API refuses (409) while an order is still open and says why
+      await api.delete('/users/me');
+      await signOutEverywhere();
+      clear();
+    } catch (err: any) {
+      setDeleteError(err?.status === 409 && err?.message ? err.message : 'We could not delete your account. Please try again.');
+      setDeleteBusy(false);
+    }
+  }
   return (
     <View style={styles.footer}>
       <Pressable style={styles.signOut} onPress={() => setAsking(true)} accessibilityRole="button">
         <Icon name="logout" size={20} color={Colors.error} />
         <Text style={styles.signOutText}>Sign out</Text>
       </Pressable>
+      {canDelete ? (
+        <Pressable style={styles.deleteLink} onPress={() => { setDeleteError(null); setDeleting(true); }} accessibilityRole="button">
+          <Text style={styles.deleteText}>Delete my account</Text>
+        </Pressable>
+      ) : null}
       <View style={styles.brand}>
         <SthivaMark size={28} />
         <Text style={styles.version}>Sthiva {Constants.expoConfig?.version ?? ''}</Text>
@@ -103,6 +129,20 @@ export function SignOutFooter() {
         }}
         onCancel={() => setAsking(false)}
       />
+      <ConfirmSheet
+        visible={deleting}
+        title="Delete your account?"
+        body={role === 'SUPPLIER'
+          ? 'Your details are erased, your listings are taken down and you are signed out. Past orders are kept without your contact details, because invoices must be kept by law.'
+          : 'Your name, phone or email and saved addresses are erased and you are signed out. Past orders are kept without your contact details, because invoices must be kept by law.'}
+        confirmLabel="Delete my account"
+        danger
+        loading={deleteBusy}
+        onConfirm={deleteAccount}
+        onCancel={() => setDeleting(false)}
+      >
+        {deleteError ? <Text style={styles.deleteError} accessibilityLiveRegion="polite">{deleteError}</Text> : null}
+      </ConfirmSheet>
     </View>
   );
 }
@@ -134,6 +174,9 @@ const styles = StyleSheet.create({
   footer: { marginTop: 28, alignItems: 'stretch' },
   signOut: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 52, borderRadius: 26, backgroundColor: Colors.errorLight },
   signOutText: { fontFamily: Font.bold, fontSize: 16, color: Colors.error },
+  deleteLink: { alignSelf: 'center', marginTop: 14, padding: 8 },
+  deleteText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.stone, textDecorationLine: 'underline' },
+  deleteError: { fontFamily: Font.regular, fontSize: 14, lineHeight: 20, color: Colors.error, marginTop: 4 },
   brand: { alignItems: 'center', gap: 6, marginTop: 24 },
   version: { fontFamily: Font.mono, fontSize: 11, color: Colors.stone },
 });

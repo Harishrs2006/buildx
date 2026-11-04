@@ -1,12 +1,13 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useProductsForLocation, useSelectedLocation } from '@sthiva/web-core';
+import { searchCatalog, useProductsForLocation, useSelectedLocation } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ProductListCard } from '@/components/ProductListCard';
+import { MaterialCard } from '@/components/catalog/MaterialCard';
 
 const SUGGESTIONS = ['Cement', 'TMT bar', 'M-sand', 'Red bricks', 'Plywood', 'PVC pipe'];
 
@@ -15,7 +16,10 @@ function SearchResults() {
   const q = useSearchParams().get('q')?.trim() ?? '';
   const [input, setInput] = useState(q);
   const location = useSelectedLocation();
-  const products = useProductsForLocation({ q: q || undefined, limit: 24 });
+  // Typos and trade words are fixed before asking the API, and matching material guides are shown
+  // even when no supplier has listed that material yet
+  const catalog = useMemo(() => searchCatalog(q), [q]);
+  const products = useProductsForLocation({ q: catalog.query || undefined, limit: 24 });
 
   useEffect(() => setInput(q), [q]);
 
@@ -73,8 +77,27 @@ function SearchResults() {
         </div>
       )}
 
+      {q && catalog.corrected && (
+        <p className="mt-4 text-[14px] text-stone">
+          Showing results for <span className="font-semibold text-ink">{catalog.query}</span>
+        </p>
+      )}
+
+      {q && catalog.items.length > 0 && (
+        <section className="mt-12" aria-labelledby="materials-title">
+          <h2 id="materials-title" className="font-display text-xl font-semibold tracking-tight">Materials</h2>
+          <p className="mt-1 text-[14px] text-stone">Specs, sizes and how each is sold. Open one to see offers that deliver to you.</p>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {catalog.items.map((item) => (
+              <MaterialCard key={item.id} item={item} />
+            ))}
+          </div>
+        </section>
+      )}
+
       {q && (
         <div className="mt-12">
+          {catalog.items.length > 0 && <h2 className="mb-5 font-display text-xl font-semibold tracking-tight">Supplier listings</h2>}
           {products.status === 'loading' && (
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Searching">
               {Array.from({ length: 6 }, (_, i) => <div key={i} className="skeleton h-[420px]" />)}
@@ -88,10 +111,13 @@ function SearchResults() {
           {products.status === 'success' && products.data.products.length === 0 && (
             <div className="card flex flex-col items-center gap-2 px-6 py-16 text-center">
               <span className="material-symbols-outlined text-4xl text-stone" aria-hidden="true">search_off</span>
-              <p className="font-display text-xl font-semibold">Nothing matches &ldquo;{q}&rdquo;</p>
+              <p className="font-display text-xl font-semibold">
+                {catalog.items.length > 0 ? 'No supplier has listed this yet' : <>Nothing matches &ldquo;{q}&rdquo;</>}
+              </p>
               <p className="max-w-sm text-[15px] text-stone">
-                Try a simpler word, like &ldquo;cement&rdquo; or &ldquo;steel&rdquo;
-                {location ? ', or a different delivery PIN.' : '.'}
+                {catalog.items.length > 0
+                  ? 'The material guides above show the specs and how it is sold.'
+                  : <>Try a simpler word, like &ldquo;cement&rdquo; or &ldquo;steel&rdquo;{location ? ', or a different delivery PIN.' : '.'}</>}
               </p>
             </div>
           )}

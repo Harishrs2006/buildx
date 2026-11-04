@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useMemo, useState } from 'react';
+import { use, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSelectedLocation } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
@@ -53,6 +53,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const location = useSelectedLocation();
   const [quantity, setQuantity] = useState<number | null>(null);
   const [cartNotice, setCartNotice] = useState<string | null>(null);
+  // Phones see the buy box only after the gallery and details, so a slim bar keeps price and
+  // Add to cart in reach until the real button scrolls into view
+  const buyButtonRef = useRef<HTMLButtonElement>(null);
+  const [buyButtonVisible, setBuyButtonVisible] = useState(true);
 
   const product = useProduct(id, location?.pincode ?? null);
   const data = product.status === 'success' ? product.data : undefined;
@@ -66,6 +70,15 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const inStock = (data?.stockQuantity ?? 0) > 0;
   const blockedByPin = !!(location && data?.availability && !data.availability.deliverable);
   const unit = data ? unitLabel(data.unit) : '';
+  const canBuy = inStock && !blockedByPin;
+
+  useEffect(() => {
+    const el = buyButtonRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setBuyButtonVisible(entry.isIntersecting));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [data]);
 
   function handleAddToCart() {
     if (!data) return;
@@ -266,7 +279,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </section>
 
-                <button type="button" onClick={handleAddToCart} disabled={!inStock || blockedByPin} className="btn-lime w-full py-4 text-[16px]">
+                <button ref={buyButtonRef} type="button" onClick={handleAddToCart} disabled={!canBuy} className="btn-lime w-full py-4 text-[16px]">
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add_shopping_cart</span>
                   {blockedByPin ? 'Not deliverable to your PIN' : !inStock ? 'Out of stock' : 'Add to cart'}
                 </button>
@@ -282,6 +295,36 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </p>
               </aside>
             </div>
+
+            {!buyButtonVisible && (
+              <div className="fixed inset-x-3 bottom-[92px] z-40 flex items-center justify-between gap-3 rounded-2xl border border-sand-4 bg-sand px-4 py-3 shadow-[0_18px_50px_-12px_rgba(11,12,10,0.45)] md:bottom-4 lg:hidden">
+                <div className="min-w-0">
+                  <p className="truncate text-[12px] text-stone" role={cartNotice ? 'status' : undefined}>
+                    {cartNotice ? 'Added to your cart' : `${qty} ${unit} · + GST, delivery`}
+                  </p>
+                  <p className="font-display text-xl font-bold tabular-nums">{rupees.format(unitPrice * qty)}</p>
+                </div>
+                {cartNotice ? (
+                  <Link href="/cart" className="btn-ink shrink-0 px-5 py-3 text-[15px]">
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">shopping_cart</span>
+                    View cart
+                  </Link>
+                ) : canBuy ? (
+                  <button type="button" onClick={handleAddToCart} className="btn-lime shrink-0 px-5 py-3 text-[15px]">
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">add_shopping_cart</span>
+                    Add to cart
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => buyButtonRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+                    className="btn-ink shrink-0 px-5 py-3 text-[15px]"
+                  >
+                    {blockedByPin ? 'Not deliverable' : 'Out of stock'}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* supplier + reviews */}
             <section className="mt-20 grid gap-4 md:grid-cols-3" aria-labelledby="reviews-title">

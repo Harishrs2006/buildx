@@ -29,6 +29,7 @@ export interface IUser extends Document {
   isActive: boolean;
   onboardingComplete: boolean;
   preferredLanguage: 'en' | 'kn' | 'hi' | 'te';
+  deletedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -65,6 +66,8 @@ const userSchema = new Schema<IUser>(
     isActive: { type: Boolean, default: true },
     onboardingComplete: { type: Boolean, default: false },
     preferredLanguage: { type: String, enum: ['en', 'kn', 'hi', 'te'], default: 'en' },
+    // Set when the user deletes their account (DELETE /users/me); the record keeps no personal details
+    deletedAt: Date,
   },
   { timestamps: true }
 );

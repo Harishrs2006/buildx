@@ -55,6 +55,7 @@ export function SiteFooter() {
             { href: '/privacy', label: 'Privacy policy' },
             { href: '/refunds', label: 'Cancellations and refunds' },
             { href: '/cookies', label: 'Cookie policy' },
+            { href: '/account-deletion', label: 'Delete your account' },
           ]}
         />
       </div>
