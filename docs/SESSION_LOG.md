@@ -317,3 +317,8 @@ Times are IST.
   (assets/icon.png, android-icon-foreground/monochrome.png, adaptive bg sand). Zero emojis and zero Alert.alert left.
   Typecheck clean. Building a phone APK now (C:/bx/mobile, prebuild regenerated for icons/svg).
   NEXT: user installs APK and checks; open PR feat/mobile-hivis-2 for the user to merge.
+- 2026-11-04 19:40 IST: Redesign APK built (PR #54 branch) and copied to Desktop/BuildX/BuildX-test.apk. Build notes:
+  run gradle in the foreground (the idle-memory reaper kills background builds), skip lint
+  (`-x lintVitalRelease -x lintVitalAnalyzeRelease`) and use -Xmx1536m -XX:MaxMetaspaceSize=640m (384m ran out).
+  Verified: live API URL, new screens and fonts in the bundle, signed with SHA-1 5e8f...f625.
+  NEXT: user installs and checks the redesign on their phone, then merges PR #54.
