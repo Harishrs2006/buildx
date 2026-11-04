@@ -1,56 +1,74 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image } from 'expo-image';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
 import { useSupplierProducts, useUpdateProduct, type SupplierProduct } from '../../src/hooks/useSupplier';
+import { Button, EmptyState, Icon, Notice, Pill, type } from '../../src/components/ui';
 
-const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  ACTIVE:       { bg: '#D1FAE5', text: '#065F46' },
-  DRAFT:        { bg: '#DBEAFE', text: '#1E40AF' },
-  INACTIVE:     { bg: Colors.sand3, text: Colors.stone },
-  OUT_OF_STOCK: { bg: '#FEE2E2', text: '#991B1B' },
-  DISCONTINUED: { bg: Colors.sand3, text: Colors.stone },
+const STATUS: Record<string, { label: string; bg: string; text: string }> = {
+  ACTIVE: { label: 'Live', bg: Colors.successLight, text: Colors.success },
+  DRAFT: { label: 'Draft', bg: Colors.cobaltSoft, text: Colors.cobalt },
+  INACTIVE: { label: 'Paused', bg: Colors.sand3, text: Colors.stone },
+  OUT_OF_STOCK: { label: 'Out of stock', bg: Colors.errorLight, text: Colors.error },
+  DISCONTINUED: { label: 'Discontinued', bg: Colors.sand3, text: Colors.stone },
 };
 
-function ProductCard({ product, onToggle }: { product: SupplierProduct; onToggle: (id: string, status: string) => void }) {
-  const sc = STATUS_COLORS[product.status] ?? STATUS_COLORS.INACTIVE;
-  const primaryImage = product.images?.find((i) => i.isPrimary)?.url ?? product.images?.[0]?.url;
+const FILTERS: [string, string][] = [['', 'All'], ['ACTIVE', 'Live'], ['DRAFT', 'Drafts'], ['OUT_OF_STOCK', 'Out of stock']];
+
+function ProductCard({ product, onToggle, busy }: { product: SupplierProduct; onToggle: (id: string, status: SupplierProduct['status']) => void; busy: boolean }) {
+  const st = STATUS[product.status] ?? STATUS.INACTIVE;
+  const image = product.images?.find((i) => i.isPrimary)?.url ?? product.images?.[0]?.url;
 
   return (
     <View style={styles.card}>
       <View style={styles.cardRow}>
-        <View style={styles.imagePlaceholder}>
-          {primaryImage ? null : <Text style={styles.imagePlaceholderText}>📦</Text>}
+        {image ? (
+          <Image source={{ uri: image }} style={styles.thumb} contentFit="cover" transition={150} />
+        ) : (
+          <View style={[styles.thumb, styles.thumbEmpty]}><Icon name="image-off-outline" size={24} color={Colors.stone} /></View>
+        )}
+        <View style={styles.flex}>
+          <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
+          <Text style={styles.category}>{(product.categoryId as any)?.name ?? ''}</Text>
+          <Text style={styles.price}>₹{product.basePrice.toLocaleString('en-IN')} <Text style={styles.unit}>/ {product.unit}</Text></Text>
         </View>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
-          <Text style={styles.productCategory}>{(product.categoryId as any)?.name ?? ''}</Text>
-          <Text style={styles.productPrice}>₹{product.basePrice.toLocaleString('en-IN')} / {product.unit}</Text>
-          <Text style={styles.productStock}>Stock: {product.stockQuantity} {product.unit}</Text>
+        <Pill label={st.label} bg={st.bg} color={st.text} />
+      </View>
+
+      <View style={styles.facts}>
+        <View style={styles.fact}>
+          <Text style={styles.factValue}>{product.stockQuantity}</Text>
+          <Text style={styles.factLabel}>{product.unit} in stock</Text>
         </View>
-        <View style={[styles.badge, { backgroundColor: sc.bg }]}>
-          <Text style={[styles.badgeText, { color: sc.text }]}>{product.status}</Text>
+        <View style={styles.fact}>
+          <Text style={styles.factValue}>{product.totalSold}</Text>
+          <Text style={styles.factLabel}>sold</Text>
         </View>
       </View>
 
-      <View style={styles.cardActions}>
-        <Text style={styles.soldText}>{product.totalSold} sold</Text>
-        <View style={styles.btnRow}>
-          {product.status === 'ACTIVE' ? (
-            <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={() => onToggle(product._id, 'INACTIVE')}>
-              <Text style={[styles.btnText, { color: Colors.textSecondary }]}>Deactivate</Text>
-            </TouchableOpacity>
-          ) : product.status !== 'DISCONTINUED' ? (
-            <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={() => onToggle(product._id, 'ACTIVE')}>
-              <Text style={[styles.btnText, { color: Colors.primary }]}>Activate</Text>
-            </TouchableOpacity>
-          ) : null}
-          <TouchableOpacity style={[styles.btn, { backgroundColor: Colors.primary }]} onPress={() => router.push({ pathname: '/(supplier)/product/edit', params: { id: product._id } })}>
-            <Text style={[styles.btnText, { color: '#fff' }]}>Edit</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.actions}>
+        {product.status === 'ACTIVE' ? (
+          <Pressable style={styles.action} onPress={() => onToggle(product._id, 'INACTIVE')} disabled={busy} accessibilityRole="button">
+            <Icon name="pause" size={18} />
+            <Text style={styles.actionText}>Pause</Text>
+          </Pressable>
+        ) : product.status !== 'DISCONTINUED' ? (
+          <Pressable style={styles.action} onPress={() => onToggle(product._id, 'ACTIVE')} disabled={busy} accessibilityRole="button">
+            <Icon name="play" size={18} />
+            <Text style={styles.actionText}>{product.status === 'DRAFT' ? 'Publish' : 'Make live'}</Text>
+          </Pressable>
+        ) : null}
+        <Pressable
+          style={[styles.action, styles.actionPrimary]}
+          onPress={() => router.push({ pathname: '/(supplier)/product/edit', params: { id: product._id } })}
+          accessibilityRole="button"
+        >
+          <Icon name="pencil-outline" size={18} />
+          <Text style={styles.actionText}>Edit</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -58,86 +76,98 @@ function ProductCard({ product, onToggle }: { product: SupplierProduct; onToggle
 
 export default function SupplierProductsScreen() {
   const [filter, setFilter] = useState('');
-  const { data, isLoading, refetch, isRefetching } = useSupplierProducts(filter || undefined);
-  const { mutate: updateProduct } = useUpdateProduct();
+  const { data, isLoading, isError, refetch, isRefetching } = useSupplierProducts(filter || undefined);
+  const { mutate: updateProduct, isPending, variables } = useUpdateProduct();
+  const [error, setError] = useState<string | null>(null);
 
   const products = data?.data ?? [];
 
-  function handleToggle(id: string, status: string) {
+  function handleToggle(id: string, status: SupplierProduct['status']) {
+    setError(null);
     updateProduct({ id, data: { status } }, {
-      onError: () => Alert.alert('Error', 'Failed to update product.'),
+      onError: (err) => setError(err.message || 'We could not update that product. Please try again.'),
     });
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <Text style={styles.title}>My Products</Text>
-          <TouchableOpacity style={styles.addBtn} onPress={() => router.push('/(supplier)/product/add')}>
-            <Text style={styles.addBtnText}>+ Add</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.filterRow}>
-          {[['', 'All'], ['ACTIVE', 'Active'], ['DRAFT', 'Draft'], ['OUT_OF_STOCK', 'Out of Stock']].map(([key, label]) => (
-            <TouchableOpacity key={key} style={[styles.filterChip, filter === key && styles.filterChipActive]} onPress={() => setFilter(key)}>
-              <Text style={[styles.filterText, filter === key && styles.filterTextActive]}>{label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {isLoading ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 48 }} />
-        ) : (
-          <FlatList
-            data={products}
-            keyExtractor={(p) => p._id}
-            renderItem={({ item }) => <ProductCard product={item} onToggle={handleToggle} />}
-            contentContainerStyle={{ paddingBottom: 32 }}
-            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyIcon}>📦</Text>
-                <Text style={styles.empty}>No products yet{'\n'}Tap + Add to list your first material</Text>
-              </View>
-            }
-          />
-        )}
+    <SafeAreaView edges={['top']} style={styles.safe}>
+      <View style={styles.header}>
+        <Text style={type.title}>Products</Text>
+        <Button title="List a product" variant="lime" onPress={() => router.push('/(supplier)/product/add')} style={styles.addBtn} />
       </View>
+
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters}>
+          {FILTERS.map(([key, label]) => {
+            const on = filter === key;
+            return (
+              <Pressable key={key} style={[styles.chip, on && styles.chipOn]} onPress={() => setFilter(key)} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+                <Text style={[styles.chipText, on && styles.chipTextOn]}>{label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {error ? <Notice tone="error" onClose={() => setError(null)} style={styles.notice}>{error}</Notice> : null}
+
+      {isLoading ? (
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
+      ) : isError ? (
+        <Notice tone="error" title="We could not load your products" style={styles.notice}>
+          <Pressable onPress={() => refetch()} hitSlop={8} accessibilityRole="button"><Text style={styles.link}>Try again</Text></Pressable>
+        </Notice>
+      ) : (
+        <FlatList
+          data={products}
+          keyExtractor={(p) => p._id}
+          renderItem={({ item }) => (
+            <ProductCard product={item} onToggle={handleToggle} busy={isPending && (variables as any)?.id === item._id} />
+          )}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="package-variant"
+              title={filter ? 'Nothing here' : 'No products yet'}
+              body={filter ? 'No products with this status.' : 'List your first product so buyers can order it.'}
+              action={filter ? undefined : <Button title="List a product" onPress={() => router.push('/(supplier)/product/add')} />}
+            />
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  title: { fontFamily: Font.displayBold, fontSize: 22, color: Colors.text },
-  addBtn: { backgroundColor: Colors.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
-  addBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 14 },
-  filterRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  filterChip: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
-  filterChipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  filterText: { fontFamily: Font.semiBold, fontSize: 11, color: Colors.textSecondary },
-  filterTextActive: { color: '#fff' },
-  card: { backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  cardRow: { flexDirection: 'row', gap: 12, marginBottom: 10 },
-  imagePlaceholder: { width: 60, height: 60, borderRadius: 10, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
-  imagePlaceholderText: { fontFamily: Font.regular, fontSize: 24 },
-  productName: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
-  productCategory: { fontFamily: Font.regular, fontSize: 11, color: Colors.textSecondary, marginTop: 2 },
-  productPrice: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.primary, marginTop: 4 },
-  productStock: { fontFamily: Font.regular, fontSize: 11, color: Colors.textMuted, marginTop: 2 },
-  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
-  badgeText: { fontFamily: Font.bold, fontSize: 10 },
-  cardActions: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 10 },
-  soldText: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted },
-  btnRow: { flexDirection: 'row', gap: 8 },
-  btn: { borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  btnOutline: { borderWidth: 1, borderColor: Colors.border },
-  btnText: { fontFamily: Font.bold, fontSize: 12 },
-  emptyContainer: { alignItems: 'center', marginTop: 80 },
-  emptyIcon: { fontFamily: Font.regular, fontSize: 48, marginBottom: 16 },
-  empty: { fontFamily: Font.regular, textAlign: 'center', color: Colors.textSecondary, lineHeight: 24, fontSize: 15 },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  flex: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12 },
+  addBtn: { minHeight: 44, paddingHorizontal: 18 },
+  filters: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
+  chip: { height: 38, paddingHorizontal: 16, borderRadius: 19, borderWidth: 1, borderColor: Colors.sand4, backgroundColor: Colors.sand2, justifyContent: 'center' },
+  chipOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  chipText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink },
+  chipTextOn: { color: Colors.sand },
+  notice: { marginHorizontal: 20, marginBottom: 10 },
+  link: { fontFamily: Font.bold, fontSize: 14, color: Colors.ink, textDecorationLine: 'underline', marginTop: 4 },
+  loading: { marginTop: 48 },
+  list: { paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
+  card: { padding: 14, borderRadius: 20, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  cardRow: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
+  thumb: { width: 68, height: 68, borderRadius: 12, backgroundColor: Colors.sand3 },
+  thumbEmpty: { alignItems: 'center', justifyContent: 'center' },
+  name: { fontFamily: Font.semiBold, fontSize: 15, lineHeight: 20, color: Colors.ink },
+  category: { fontFamily: Font.mono, fontSize: 10, letterSpacing: 0.5, color: Colors.stone, textTransform: 'uppercase', marginTop: 2 },
+  price: { fontFamily: Font.bold, fontSize: 16, color: Colors.ink, marginTop: 4 },
+  unit: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone },
+  facts: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  fact: { flex: 1, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, backgroundColor: Colors.sand },
+  factValue: { fontFamily: Font.display, fontSize: 18, color: Colors.ink },
+  factLabel: { fontFamily: Font.regular, fontSize: 12, color: Colors.stone },
+  actions: { flexDirection: 'row', gap: 8, marginTop: 12 },
+  action: { flex: 1, flexDirection: 'row', gap: 6, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(11,12,10,0.18)' },
+  actionPrimary: { backgroundColor: Colors.lime, borderColor: Colors.lime },
+  actionText: { fontFamily: Font.bold, fontSize: 14, color: Colors.ink },
 });

@@ -56,6 +56,13 @@ export type SupplierProduct = {
   categoryId: { _id: string; name: string; slug: string };
   totalSold: number;
   createdAt: string;
+  // Present on the single-product read (GET /suppliers/me/products/:id)
+  description?: string;
+  shortDescription?: string;
+  isGstInclusive?: boolean;
+  minOrderQuantity?: number;
+  deliveryDays?: number;
+  tags?: string[];
 };
 
 export type CreateProductPayload = {
@@ -71,7 +78,16 @@ export type CreateProductPayload = {
   minOrderQuantity: number;
   deliveryDays: number;
   tags?: string[];
+  status?: 'DRAFT' | 'ACTIVE';
 };
+
+export function useSupplierProduct(id?: string) {
+  return useQuery<{ data: SupplierProduct }>({
+    queryKey: ['supplier-product', id],
+    queryFn: () => api.get(`/suppliers/me/products/${id}`).then((r) => r.data),
+    enabled: !!id,
+  });
+}
 
 export function useSupplierProfile() {
   return useQuery<{ data: SupplierProfile }>({
@@ -149,9 +165,12 @@ export function useCreateProduct() {
 
 export function useUpdateProduct() {
   const qc = useQueryClient();
-  return useMutation<{ data: SupplierProduct }, Error, { id: string; data: Partial<CreateProductPayload & { status: string }> }>({
+  return useMutation<{ data: SupplierProduct }, Error, { id: string; data: Partial<Omit<CreateProductPayload, 'status'> & { status: SupplierProduct['status'] }> }>({
     mutationFn: ({ id, data }) => api.patch(`/suppliers/me/products/${id}`, data).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['supplier-products'] }),
+    onSuccess: (_res, { id }) => {
+      qc.invalidateQueries({ queryKey: ['supplier-products'] });
+      qc.invalidateQueries({ queryKey: ['supplier-product', id] });
+    },
   });
 }
 
