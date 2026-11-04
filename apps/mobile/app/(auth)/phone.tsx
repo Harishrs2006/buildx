@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -6,7 +6,7 @@ import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Button, Eyebrow, type } from '../../src/components/ui';
-import { signInWithGoogle } from '../../src/lib/googleAuth';
+import { signInWithGoogle, signOutEverywhere } from '../../src/lib/googleAuth';
 
 // The BuildX mark: two crossing beams, the lime one on top
 export function LogoMark({ size = 40 }: { size?: number }) {
@@ -31,6 +31,26 @@ export default function PhoneScreen() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
   const [showPhone, setShowPhone] = useState(false);
+  const syncError = useAuthStore((s) => s.syncError);
+  const syncWithBackend = useAuthStore((s) => s.syncWithBackend);
+  const clearAuth = useAuthStore((s) => s.clear);
+  const [retrying, setRetrying] = useState(false);
+
+  // Google worked but the API did not answer: stop the spinner and show the retry box
+  useEffect(() => {
+    if (syncError) setGoogleLoading(false);
+  }, [syncError]);
+
+  async function retrySync() {
+    setRetrying(true);
+    await syncWithBackend();
+    setRetrying(false);
+  }
+
+  async function useDifferentAccount() {
+    await signOutEverywhere();
+    clearAuth();
+  }
 
   const cleaned = phone.replace(/\D/g, '');
   const valid = /^[6-9]\d{9}$/.test(cleaned);
@@ -57,11 +77,12 @@ export default function PhoneScreen() {
     setGoogleError(null);
     setGoogleLoading(true);
     try {
-      // On success AuthGate (app/_layout.tsx) syncs with the API and routes on
-      await signInWithGoogle();
+      // On success AuthGate (app/_layout.tsx) syncs with the API and routes on, so the spinner
+      // stays until this screen goes away (or the retry box appears)
+      const signedIn = await signInWithGoogle();
+      if (!signedIn) setGoogleLoading(false);
     } catch (err: any) {
       setGoogleError(err?.message ?? 'We could not sign you in with Google. Please try again.');
-    } finally {
       setGoogleLoading(false);
     }
   }
@@ -84,6 +105,16 @@ export default function PhoneScreen() {
           <Eyebrow>Welcome</Eyebrow>
           <Text style={[type.title, styles.heading]}>Sign in or create an account</Text>
           <Text style={type.body}>Use your Google account. It is free and takes one tap.</Text>
+
+          {syncError ? (
+            <View style={styles.syncBox} accessibilityLiveRegion="polite">
+              <Text style={styles.syncText}>{syncError}</Text>
+              <Button title="Try again" onPress={retrySync} loading={retrying} style={styles.syncBtn} />
+              <TouchableOpacity onPress={useDifferentAccount} style={styles.switch} accessibilityRole="button">
+                <Text style={styles.switchText}>Use a different account</Text>
+              </TouchableOpacity>
+            </View>
+          ) : null}
 
           <Button title="Continue with Google" onPress={continueWithGoogle} loading={googleLoading} disabled={loading} style={styles.cta} />
           {googleError ? <Text style={styles.error} accessibilityLiveRegion="polite">{googleError}</Text> : null}
@@ -171,6 +202,9 @@ const styles = StyleSheet.create({
   hint: { marginTop: 8, fontSize: 13, color: Colors.stone },
   error: { marginTop: 8, fontSize: 13, color: Colors.error },
   cta: { marginTop: 24 },
+  syncBox: { marginTop: 24, padding: 16, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.error, backgroundColor: Colors.sand2 },
+  syncText: { fontSize: 15, lineHeight: 21, color: Colors.ink },
+  syncBtn: { marginTop: 14 },
   switch: { marginTop: 20, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 12 },
   switchText: { fontSize: 15, fontWeight: '700', color: Colors.ink, textDecorationLine: 'underline' },
   dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 28 },
