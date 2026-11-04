@@ -1,90 +1,55 @@
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, Linking,
-} from 'react-native';
+import { useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMyDeliveries, useUpdateDeliveryStatus, useConfirmCodCollected, type DeliveryOrder } from '../../../src/hooks/useDelivery';
 import { ORDER_STATUS_LABELS, type OrderStatus } from '../../../src/hooks/useOrders';
 import { Colors } from '../../../src/constants/colors';
 import { Font } from '../../../src/constants/typography';
+import { Button, ConfirmSheet, EmptyState, Eyebrow, Icon, Notice, ScreenHeader } from '../../../src/components/ui';
 
-const NEXT_STATUS: Record<string, { label: string; status: OrderStatus; color: string } | null> = {
-  ASSIGNED:  { label: 'Mark as Picked Up', status: 'PICKED_UP', color: Colors.warning },
-  PICKED_UP: { label: 'Mark as In Transit', status: 'IN_TRANSIT', color: Colors.info },
-  IN_TRANSIT:{ label: 'Mark as Delivered', status: 'DELIVERED', color: Colors.success },
+const NEXT_STATUS: Record<string, { label: string; status: OrderStatus; ask: string } | null> = {
+  ASSIGNED: { label: 'Picked up', status: 'PICKED_UP', ask: 'Confirm you have collected the material from the supplier.' },
+  PICKED_UP: { label: 'On the way', status: 'IN_TRANSIT', ask: 'Let the buyer know the material is on its way.' },
+  IN_TRANSIT: { label: 'Delivered', status: 'DELIVERED', ask: 'Confirm the buyer has received all the material.' },
 };
+
+const rupees = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const time = (iso?: string) => (iso ? new Date(iso).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : null);
+
+function CallButton({ label, phone }: { label: string; phone: string }) {
+  return (
+    <Pressable style={styles.call} onPress={() => Linking.openURL(`tel:${phone}`)} accessibilityRole="button" accessibilityLabel={`${label}, ${phone}`}>
+      <Icon name="phone" size={18} color={Colors.ink} />
+      <Text style={styles.callText}>{label}</Text>
+    </Pressable>
+  );
+}
 
 export default function DriverOrderDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { data, isLoading } = useMyDeliveries();
+  const { data, isLoading, refetch } = useMyDeliveries();
   const { mutate: updateStatus, isPending } = useUpdateDeliveryStatus();
   const { mutate: confirmCod, isPending: codPending } = useConfirmCodCollected();
+  const [sheet, setSheet] = useState<'status' | 'cash' | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const order: DeliveryOrder | undefined = data?.data.find((o) => o._id === id);
 
-  function handleStatusUpdate() {
-    if (!order) return;
-    const next = NEXT_STATUS[order.status];
-    if (!next) return;
-    Alert.alert(
-      next.label,
-      `Update this order to "${ORDER_STATUS_LABELS[next.status]}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Confirm',
-          onPress: () =>
-            // After DELIVERED the screen stays open so the driver can confirm the cash
-            updateStatus({ id: order._id, status: next.status }, {
-              onError: (err) => Alert.alert('Error', err.message),
-            }),
-        },
-      ]
-    );
-  }
-
-  // Delivery doesn't mark COD as paid — the driver confirms the exact amount separately
-  function handleConfirmCash() {
-    if (!order) return;
-    const amount = order.total;
-    Alert.alert(
-      'Cash collected?',
-      `Confirm you received exactly ₹${amount.toLocaleString('en-IN', { maximumFractionDigits: 2 })} in cash from the buyer.`,
-      [
-        { text: 'Not yet', style: 'cancel' },
-        {
-          text: 'Yes, collected',
-          onPress: () =>
-            confirmCod({ id: order._id, amount }, {
-              onSuccess: () => router.back(),
-              onError: (err) => Alert.alert('Error', err.message),
-            }),
-        },
-      ]
-    );
-  }
-
-  function callContact(phone: string) {
-    Linking.openURL(`tel:${phone}`);
-  }
-
   if (isLoading) {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.center}><ActivityIndicator size="large" color={Colors.primary} /></View>
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
       </SafeAreaView>
     );
   }
 
   if (!order) {
     return (
-      <SafeAreaView style={s.safe}>
-        <View style={s.header}>
-          <TouchableOpacity onPress={() => router.back()} style={s.back}><Text style={s.backIcon}>←</Text></TouchableOpacity>
-          <Text style={s.headerTitle}>Order</Text>
-        </View>
-        <View style={s.center}><Text style={{ color: Colors.textSecondary }}>Order not found.</Text></View>
+      <SafeAreaView style={styles.safe}>
+        <ScreenHeader title="Delivery" onBack={() => router.back()} />
+        <EmptyState icon="file-question-outline" title="We could not find this delivery" action={<Button title="Try again" variant="ghost" onPress={() => refetch()} />} />
       </SafeAreaView>
     );
   }
@@ -94,145 +59,128 @@ export default function DriverOrderDetail() {
   const cashPending = order.status === 'DELIVERED' && order.paymentStatus === 'PENDING';
   const cashCollected = order.paymentStatus === 'CAPTURED';
 
+  function doStatus() {
+    if (!order || !next) return;
+    setError(null);
+    // After DELIVERED the screen stays open so the driver can confirm the cash
+    updateStatus({ id: order._id, status: next.status }, {
+      onSuccess: () => setSheet(null),
+      onError: (err) => { setSheet(null); setError(err.message); },
+    });
+  }
+
+  // Delivery doesn't mark COD as paid: the driver confirms the exact amount separately
+  function doCash() {
+    if (!order) return;
+    setError(null);
+    confirmCod({ id: order._id, amount: order.total }, {
+      onSuccess: () => { setSheet(null); router.back(); },
+      onError: (err) => { setSheet(null); setError(err.message); },
+    });
+  }
+
   return (
-    <SafeAreaView style={s.safe}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.back}><Text style={s.backIcon}>←</Text></TouchableOpacity>
-        <Text style={s.headerTitle}>{order.orderNumber}</Text>
-        <View style={s.statusBadge}><Text style={s.statusText}>{ORDER_STATUS_LABELS[order.status]}</Text></View>
-      </View>
+    <SafeAreaView style={styles.safe}>
+      <ScreenHeader eyebrow={ORDER_STATUS_LABELS[order.status]} title={order.orderNumber} onBack={() => router.back()} />
 
-      <ScrollView contentContainerStyle={s.scroll} showsVerticalScrollIndicator={false}>
-        {/* Pickup section */}
-        <View style={s.card}>
-          <Text style={s.cardLabel}>PICKUP FROM</Text>
-          <Text style={s.cardValue}>{supplier?.businessName}</Text>
-          {supplier?.whatsappNumber && (
-            <TouchableOpacity style={s.callBtn} onPress={() => callContact(supplier.whatsappNumber)}>
-              <Text style={s.callBtnText}>📞 Call Supplier</Text>
-            </TouchableOpacity>
-          )}
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <View style={styles.cash}>
+          <Eyebrow color="rgba(242,239,231,0.6)">{cashCollected ? 'Cash collected' : 'Collect in cash'}</Eyebrow>
+          <Text style={styles.cashAmount}>{rupees(order.total)}</Text>
+          <Text style={styles.cashNote}>{cashCollected ? 'Recorded. Thank you.' : 'Take exactly this amount from the buyer at the site.'}</Text>
         </View>
 
-        {/* Drop section */}
-        <View style={[s.card, { borderColor: Colors.primary }]}>
-          <Text style={[s.cardLabel, { color: Colors.primary }]}>DELIVER TO</Text>
-          <Text style={s.cardValue}>{order.deliveryAddress.label} — {order.deliveryAddress.fullAddress}</Text>
-          {order.deliveryAddress.contactPhone && (
-            <TouchableOpacity style={s.callBtn} onPress={() => callContact(order.deliveryAddress.contactPhone)}>
-              <Text style={s.callBtnText}>📞 Call Buyer</Text>
-            </TouchableOpacity>
-          )}
+        <View style={styles.card}>
+          <Eyebrow>Pick up from</Eyebrow>
+          <Text style={styles.value}>{supplier?.businessName ?? 'Supplier'}</Text>
+          {supplier?.whatsappNumber ? <CallButton label="Call supplier" phone={supplier.whatsappNumber} /> : null}
         </View>
 
-        {/* Items */}
-        <View style={s.card}>
-          <Text style={s.sectionTitle}>Items to Deliver</Text>
+        <View style={[styles.card, styles.drop]}>
+          <Eyebrow>Deliver to · {order.deliveryAddress.label}</Eyebrow>
+          <Text style={styles.value}>{order.deliveryAddress.fullAddress}</Text>
+          {order.deliveryAddress.contactPhone ? <CallButton label="Call buyer" phone={order.deliveryAddress.contactPhone} /> : null}
+        </View>
+
+        <View style={styles.card}>
+          <Eyebrow>Items</Eyebrow>
           {order.items.map((item, i) => (
-            <View key={i} style={[s.itemRow, i < order.items.length - 1 && s.itemBorder]}>
-              <Text style={s.itemName}>{item.name}</Text>
-              <Text style={s.itemQty}>{item.quantity} {item.unit}</Text>
+            <View key={i} style={[styles.itemRow, i > 0 && styles.itemBorder]}>
+              <Text style={styles.itemName}>{item.name}</Text>
+              <Text style={styles.itemQty}>{item.quantity} {item.unit}</Text>
             </View>
           ))}
         </View>
 
-        {/* COD amount */}
-        <View style={[s.card, { backgroundColor: Colors.successLight, borderColor: Colors.success }]}>
-          <Text style={[s.cardLabel, { color: Colors.success }]}>COLLECT ON DELIVERY (COD)</Text>
-          <Text style={s.codAmount}>₹{order.total.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</Text>
-          <Text style={s.codNote}>
-            {cashCollected ? '✓ Cash collected' : 'Collect cash from buyer at delivery site'}
-          </Text>
-        </View>
-
-        {order.notes && (
-          <View style={s.card}>
-            <Text style={s.sectionTitle}>Buyer Notes</Text>
-            <Text style={s.notesText}>{order.notes}</Text>
+        {order.notes ? (
+          <View style={styles.card}>
+            <Eyebrow>Buyer note</Eyebrow>
+            <Text style={styles.note}>{order.notes}</Text>
           </View>
-        )}
+        ) : null}
 
-        {/* Timestamps */}
-        {(order.assignedAt || order.pickedUpAt) && (
-          <View style={s.card}>
-            <Text style={s.sectionTitle}>Timeline</Text>
-            {order.assignedAt && (
-              <Text style={s.tsRow}>Assigned: {new Date(order.assignedAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</Text>
-            )}
-            {order.pickedUpAt && (
-              <Text style={s.tsRow}>Picked Up: {new Date(order.pickedUpAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</Text>
-            )}
+        {order.assignedAt || order.pickedUpAt ? (
+          <View style={styles.card}>
+            <Eyebrow>Times</Eyebrow>
+            {order.assignedAt ? <Text style={styles.time}>Accepted at {time(order.assignedAt)}</Text> : null}
+            {order.pickedUpAt ? <Text style={styles.time}>Picked up at {time(order.pickedUpAt)}</Text> : null}
           </View>
-        )}
+        ) : null}
 
-        <View style={{ height: 100 }} />
+        {error ? <Notice tone="error" title="Not updated" onClose={() => setError(null)}>{error}</Notice> : null}
       </ScrollView>
 
-      {next && (
-        <View style={s.stickyBar}>
-          <TouchableOpacity
-            style={[s.actionBtn, { backgroundColor: next.color }, isPending && s.actionBtnDisabled]}
-            onPress={handleStatusUpdate}
-            disabled={isPending}
-            activeOpacity={0.85}
-          >
-            {isPending ? <ActivityIndicator color="#fff" /> : <Text style={s.actionBtnText}>{next.label}</Text>}
-          </TouchableOpacity>
-        </View>
-      )}
+      {next || cashPending ? (
+        <SafeAreaView edges={['bottom']} style={styles.bottom}>
+          {next ? (
+            <Button title={next.label} variant="lime" onPress={() => setSheet('status')} />
+          ) : (
+            <Button title={`Confirm ${rupees(order.total)} collected`} variant="lime" onPress={() => setSheet('cash')} />
+          )}
+        </SafeAreaView>
+      ) : null}
 
-      {!next && cashPending && (
-        <View style={s.stickyBar}>
-          <TouchableOpacity
-            style={[s.actionBtn, { backgroundColor: Colors.success }, codPending && s.actionBtnDisabled]}
-            onPress={handleConfirmCash}
-            disabled={codPending}
-            activeOpacity={0.85}
-          >
-            {codPending ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={s.actionBtnText}>
-                Confirm ₹{order.total.toLocaleString('en-IN', { maximumFractionDigits: 2 })} Cash Collected
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
+      <ConfirmSheet
+        visible={sheet === 'status' && !!next}
+        title={next ? `Mark as ${next.label.toLowerCase()}?` : ''}
+        body={next?.ask}
+        confirmLabel={next ? `Yes, ${next.label.toLowerCase()}` : 'Yes'}
+        cancelLabel="Not yet"
+        loading={isPending}
+        onConfirm={doStatus}
+        onCancel={() => setSheet(null)}
+      />
+      <ConfirmSheet
+        visible={sheet === 'cash'}
+        title="Cash collected?"
+        body={`Confirm you received exactly ${rupees(order.total)} in cash from the buyer.`}
+        confirmLabel="Yes, collected"
+        cancelLabel="Not yet"
+        loading={codPending}
+        onConfirm={doCash}
+        onCancel={() => setSheet(null)}
+      />
     </SafeAreaView>
   );
 }
 
-const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  back: { padding: 4, marginRight: 8 },
-  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
-  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 16, color: Colors.text },
-  statusBadge: { backgroundColor: Colors.warningLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  statusText: { fontFamily: Font.bold, fontSize: 11, color: Colors.warning },
-  scroll: { padding: 16, gap: 12 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: Colors.border, gap: 8 },
-  cardLabel: { fontFamily: Font.bold, fontSize: 10, color: Colors.textMuted, letterSpacing: 0.8, textTransform: 'uppercase' },
-  cardValue: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.text, lineHeight: 22 },
-  callBtn: { backgroundColor: Colors.infoLight, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 14, alignSelf: 'flex-start' },
-  callBtnText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.info },
-  sectionTitle: { fontFamily: Font.bold, fontSize: 13, color: Colors.text },
-  itemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10 },
-  itemBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
-  itemName: { fontFamily: Font.regular, fontSize: 14, color: Colors.text, flex: 1 },
-  itemQty: { fontFamily: Font.bold, fontSize: 14, color: Colors.textSecondary },
-  codAmount: { fontFamily: Font.display, fontSize: 28, color: Colors.success },
-  codNote: { fontFamily: Font.regular, fontSize: 12, color: Colors.success },
-  notesText: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, lineHeight: 20 },
-  tsRow: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
-  stickyBar: { paddingHorizontal: 20, paddingVertical: 12, borderTopWidth: 1, borderTopColor: Colors.border, backgroundColor: Colors.surface },
-  actionBtn: { borderRadius: 14, paddingVertical: 16, alignItems: 'center' },
-  actionBtnDisabled: { opacity: 0.5 },
-  actionBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 16 },
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  loading: { marginTop: 60 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
+  cash: { padding: 20, borderRadius: 24, backgroundColor: Colors.ink },
+  cashAmount: { fontFamily: Font.display, fontSize: 36, letterSpacing: -1, color: Colors.lime, marginTop: 6 },
+  cashNote: { fontFamily: Font.regular, fontSize: 14, color: 'rgba(242,239,231,0.72)', marginTop: 4 },
+  card: { padding: 16, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  drop: { borderColor: Colors.ink, borderWidth: 1.5 },
+  value: { fontFamily: Font.semiBold, fontSize: 16, lineHeight: 22, color: Colors.ink, marginTop: 6 },
+  call: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, height: 46, marginTop: 12, borderRadius: 23, backgroundColor: Colors.lime },
+  callText: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingTop: 10, marginTop: 10 },
+  itemBorder: { borderTopWidth: 1, borderTopColor: Colors.sand4 },
+  itemName: { fontFamily: Font.medium, flex: 1, fontSize: 15, color: Colors.ink },
+  itemQty: { fontFamily: Font.monoBold, fontSize: 14, color: Colors.ink },
+  note: { fontFamily: Font.regular, fontSize: 15, lineHeight: 21, color: Colors.ink, marginTop: 6 },
+  time: { fontFamily: Font.regular, fontSize: 14, color: Colors.stone, marginTop: 6 },
+  bottom: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, backgroundColor: Colors.sand, borderTopWidth: 1, borderTopColor: Colors.sand4 },
 });

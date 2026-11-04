@@ -23,12 +23,15 @@ function DeliveryCard({ order, onAction }: { order: DeliveryOrder; onAction: (o:
   const colors = ORDER_STATUS_COLORS[order.status as OrderStatus] ?? { bg: Colors.sand3, text: Colors.stone };
   const supplier = order.supplierId as any;
   const buyer = order.buyerId as any;
-  const canUpdate = order.status === 'ASSIGNED' || order.status === 'PICKED_UP';
+  // Pick-up is one tap here; the later steps (on the way, delivered, cash) happen on the order screen
+  const canPickUp = order.status === 'ASSIGNED';
+  const openOrder = () => router.push({ pathname: '/(driver)/order/[id]', params: { id: order._id } } as never);
+  const needsMore = order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT' || (order.status === 'DELIVERED' && order.paymentStatus === 'PENDING');
 
   return (
     <Pressable
       style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
-      onPress={() => router.push({ pathname: '/(driver)/order/[id]', params: { id: order._id } } as never)}
+      onPress={openOrder}
       accessibilityRole="button"
       accessibilityLabel={`Order ${order.orderNumber}`}
     >
@@ -54,15 +57,12 @@ function DeliveryCard({ order, onAction }: { order: DeliveryOrder; onAction: (o:
       <View style={styles.bottom}>
         <View>
           <Text style={styles.total}>{rupees(order.total)}</Text>
-          <Text style={styles.collect}>{order.status === 'DELIVERED' ? 'Delivered' : 'Collect in cash'}</Text>
+          <Text style={styles.collect}>{order.paymentStatus === 'CAPTURED' ? 'Cash collected' : 'Collect in cash'}</Text>
         </View>
-        {canUpdate ? (
-          <Button
-            title={order.status === 'ASSIGNED' ? 'Picked up' : 'Delivered'}
-            variant="lime"
-            onPress={() => onAction(order)}
-            style={styles.action}
-          />
+        {canPickUp ? (
+          <Button title="Picked up" variant="lime" onPress={() => onAction(order)} style={styles.action} />
+        ) : needsMore ? (
+          <Button title={order.status === 'DELIVERED' ? 'Confirm cash' : 'Open'} variant="ink" onPress={openOrder} style={styles.action} />
         ) : order.status === 'DELIVERED' ? (
           <Icon name="check-circle" size={28} color={Colors.success} />
         ) : null}
@@ -79,7 +79,6 @@ export default function MyDeliveriesScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const orders = data?.data ?? [];
-  const pickup = acting?.status === 'ASSIGNED';
   const supplierName = (acting?.supplierId as any)?.businessName ?? 'the supplier';
 
   function confirm() {
@@ -87,7 +86,7 @@ export default function MyDeliveriesScreen() {
     const order = acting;
     setError(null);
     updateStatus(
-      { id: order._id, status: order.status === 'ASSIGNED' ? 'PICKED_UP' : 'DELIVERED' },
+      { id: order._id, status: 'PICKED_UP' },
       {
         onSuccess: () => setActing(null),
         onError: (err) => { setActing(null); setError(`Could not update ${order.orderNumber}: ${err.message}`); },
@@ -135,13 +134,9 @@ export default function MyDeliveriesScreen() {
 
       <ConfirmSheet
         visible={!!acting}
-        title={pickup ? 'Picked up the material?' : 'Handed over to the buyer?'}
-        body={
-          pickup
-            ? `Confirm you have collected ${acting?.orderNumber} from ${supplierName}.`
-            : `Confirm the buyer has all the material and you collected ${acting ? rupees(acting.total) : ''} in cash.`
-        }
-        confirmLabel={pickup ? 'Yes, picked up' : 'Yes, delivered'}
+        title="Picked up the material?"
+        body={`Confirm you have collected ${acting?.orderNumber ?? 'the order'} from ${supplierName}.`}
+        confirmLabel="Yes, picked up"
         cancelLabel="Not yet"
         loading={isPending}
         onConfirm={confirm}
