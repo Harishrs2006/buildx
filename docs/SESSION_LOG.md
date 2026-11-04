@@ -342,3 +342,11 @@ Times are IST.
   - .github/workflows/keep-api-awake.yml pings /health every 10 min (free; Render gives 750 h/month).
   - Partner icons: ink background, sand mark, lime bar (assets/partner, make-icons.cjs needs sharp).
   Build: in C:/bx/mobile run `APP_VARIANT=partner npx expo prebuild -p android --clean --no-install` then gradle.
+- 2026-11-04 23:05 IST: Built and verified both APKs from C:/bx/mobile (includes PR #55 and #56 changes):
+  C:/dev/BuildX/BuildX.apk (com.buildx.app) and C:/dev/BuildX/BuildX-Partner.apk (com.buildx.partner), both live API,
+  SHA-1 5e8f...f625, partner has POST_NOTIFICATIONS. Old BuildX-test.apk removed. The user's Google account is a
+  seller, so it now belongs in BuildX Partner (BuildX shows the "use BuildX Partner" screen).
+  Domains (RDAP check): buildx.in, buildx.co.in, buildx.com, buildx.store are taken; free: buildxapp.in, getbuildx.in,
+  getbuildx.com, buildxapp.com, usebuildx.com, buildxhq.com/.in. Waiting for the user to buy one (money).
+  Waiting on user: MongoDB credentials (they will send), government sign-in method later (likely DigiLocker /
+  Aadhaar based: decide when they give details), support email/phone/legal name for the websites.
