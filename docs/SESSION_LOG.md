@@ -270,3 +270,16 @@ Times are IST.
   "not a buyer account" screen (session from a seller/admin account), which had no way out. Added a Sign out button
   and account-neutral copy to wrong-role screens on buyer (signin + RequireAuth) and seller (RequireSupplier).
   Firebase has 1 Google user so far. Branch fix/wrong-role-signout.
+- 2026-11-04 IST (launch prep, branch feat/launch-ready in worktree C:\Users\Harish\buildx-launch, outside OneDrive):
+  User asked to get everything ready for a real launch BEFORE paying for anything. Done so far:
+  SECURITY: Firebase test number +917019282019 no longer uses the public code 123456 (it was in this public log).
+  New private code is ONLY in Desktop/BuildX/buildx-secrets/TEST_SIGNIN.txt (outside the repo). Admin test number
+  untouched. STOREFRONT: real page titles for product, category and material pages (server layouts with
+  generateMetadata; product title fetched from the API with a 4 s timeout, generic title if the API is asleep);
+  sitemap now lists 10 categories, every material guide and every live product, drops /signin; search fixes typos
+  and trade words (cemnt -> cement, saria -> TMT) and shows matching material guides above supplier listings
+  (packages/web-core/src/catalog/search.ts + 6 tests, 87 web-core tests pass); phone buy bar on the product page
+  (price + Add to cart, hides when the real button is on screen, turns into View cart after adding).
+  Verified on a local production build at 375 px through a read-only local CORS proxy (Render CORS no longer allows
+  localhost). Note: the other session's branch feat/mobile-google-signin (mobile Google sign-in, Android build not
+  verified) is untouched in the OneDrive checkout.

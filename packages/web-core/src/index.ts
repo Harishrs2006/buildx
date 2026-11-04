@@ -34,6 +34,8 @@ export {
   CATALOG, CATALOG_CATEGORIES, catalogCategory, catalogItems, catalogItem, matchCatalogItem, offerQuery,
   suggestedListingUnit, suggestedListingName,
 } from './catalog/data';
+export { searchCatalog } from './catalog/search';
+export type { CatalogSearch } from './catalog/search';
 export type { CatalogItem, CatalogCategory, Calculator, ListingUnit, Spec, VariantGroup, SoldAs } from './catalog/types';
 export * as units from './catalog/units';
 
