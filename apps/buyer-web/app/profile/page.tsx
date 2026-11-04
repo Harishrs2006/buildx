@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useApiClient } from '@buildx/web-core';
+import { ApiClientError, useApiClient } from '@buildx/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { RequireAuth } from '@/components/auth/RequireAuth';
@@ -10,6 +10,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { PageHead } from '@/components/account/AccountUI';
 import { OrderRow } from '@/components/account/OrderRow';
 import { fetchOrders, type BuyerOrder } from '@/lib/orders';
+import { deleteAccount } from '@/lib/auth';
 
 const RECENT_COUNT = 3;
 
@@ -45,6 +46,51 @@ function RecentOrders() {
           <p className="card px-5 py-6 text-[15px] text-stone">No orders yet. Your orders will show up here.</p>
         )}
         {state.status === 'success' && state.orders.map((order) => <OrderRow key={order._id} order={order} />)}
+      </div>
+    </section>
+  );
+}
+
+// Account deletion, required by the app stores and promised in the privacy policy. Confirmed in the
+// page (no browser dialog); the API refuses while an order is still open and says why.
+function DeleteAccount({ onDeleted }: { onDeleted: () => void }) {
+  const client = useApiClient();
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function confirm() {
+    setBusy(true);
+    setError(null);
+    try {
+      await deleteAccount(client);
+      onDeleted();
+    } catch (err) {
+      setError(err instanceof ApiClientError && err.status === 409 ? err.message : 'Could not delete your account. Please try again.');
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="text-[14px] font-medium text-stone underline-offset-4 hover:text-error hover:underline">
+        Delete my account
+      </button>
+    );
+  }
+  return (
+    <section className="card p-5" aria-labelledby="delete-title">
+      <h2 id="delete-title" className="font-display text-lg font-semibold">Delete your account?</h2>
+      <p className="mt-2 text-[14px] leading-relaxed text-stone">
+        Your name, phone or email and saved addresses are erased and you are signed out. Past orders are kept without
+        your contact details, because invoices must be kept by law. You can sign up again later with the same number.
+      </p>
+      {error && <p role="alert" className="mt-3 text-[14px] text-error">{error}</p>}
+      <div className="mt-4 flex gap-2">
+        <button type="button" onClick={confirm} disabled={busy} className="btn-ink flex-1 bg-error">
+          {busy ? 'Deleting...' : 'Delete my account'}
+        </button>
+        <button type="button" onClick={() => setOpen(false)} disabled={busy} className="btn-ghost flex-1">Cancel</button>
       </div>
     </section>
   );
@@ -94,6 +140,8 @@ function ProfileDetails() {
           <span className="material-symbols-outlined text-[20px]" aria-hidden="true">logout</span>
           Sign out
         </button>
+
+        <DeleteAccount onDeleted={() => signOut()} />
       </div>
 
       <RecentOrders />

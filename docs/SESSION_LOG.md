@@ -283,3 +283,11 @@ Times are IST.
   Verified on a local production build at 375 px through a read-only local CORS proxy (Render CORS no longer allows
   localhost). Note: the other session's branch feat/mobile-google-signin (mobile Google sign-in, Android build not
   verified) is untouched in the OneDrive checkout.
+- 2026-11-04 IST: ACCOUNT DELETION (both app stores require it; privacy policy already promised it). API: DELETE
+  /api/v1/users/me for BUYER and SUPPLIER (staff/drivers get 403, ops closes them). Refused with 409 while any order is
+  open (as buyer or as supplier). Erases name/phone/email/addresses/GST/bank/avatar, firebaseUid -> deleted:<id>,
+  isActive false, deletedAt set; supplier listings -> DISCONTINUED and profile inactive; orders kept (tax records);
+  Firebase login deleted (user-not-found tolerated). 7 tests, API 295/295 pass. Buyer web: Account page has
+  "Delete my account" with in-page confirm; public page /account-deletion (link it in the Play and App Store
+  listings), linked from the footer, legal pages and sitemap. TODO: same button in seller-web and the mobile app
+  (mobile is on the other session's branch feat/mobile-google-signin; add it after that merges).

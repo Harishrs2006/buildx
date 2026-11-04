@@ -23,6 +23,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...CATALOG_CATEGORIES.map((c) => page(`/category/${c.slug}`, 'daily', 0.8)),
     ...CATALOG.map((i) => page(`/materials/${i.id}`, 'weekly', 0.6)),
     ...products.map((p) => page(`/product/${p._id}`, 'daily', 0.7, p.updatedAt ? new Date(p.updatedAt) : now)),
-    ...['/search', '/terms', '/privacy', '/refunds', '/cookies'].map((path) => page(path, 'monthly', 0.3)),
+    ...['/search', '/terms', '/privacy', '/refunds', '/cookies', '/account-deletion'].map((path) => page(path, 'monthly', 0.3)),
   ];
 }
