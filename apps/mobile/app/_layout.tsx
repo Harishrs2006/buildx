@@ -5,7 +5,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import auth from '@react-native-firebase/auth';
 import { useAuthStore } from '../src/store/auth.store';
-import { useRouter, useSegments } from 'expo-router';
+import { useRouter, useSegments, type Href } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { usePushNotifications } from '../src/hooks/usePushNotifications';
 
@@ -49,15 +49,14 @@ function AuthGate() {
       return;
     }
 
-    if (user.role === 'SUPPLIER' && !inAuth && !inOnboarding) {
-      if (segments[0] !== '(supplier)') router.replace('/(supplier)/home');
-    } else if (user.role === 'DELIVERY_PARTNER' && !inAuth && !inOnboarding) {
-      if (segments[0] !== '(driver)') router.replace('/(driver)/available');
-    } else if ((user.role === 'OPERATOR' || user.role === 'ADMIN') && !inAuth && !inOnboarding) {
-      if (segments[0] !== '(ops)') router.replace('/(ops)/attention');
-    } else if (!inAuth && !inOnboarding) {
-      if (segments[0] !== '(buyer)') router.replace('/(buyer)/home');
-    }
+    // Signed in and set up: send each role to its own area, including straight from the
+    // sign-in screen (Google sign-in and OTP both land here after the API sync)
+    const home =
+      user.role === 'SUPPLIER' ? '/(supplier)/home'
+      : user.role === 'DELIVERY_PARTNER' ? '/(driver)/available'
+      : user.role === 'OPERATOR' || user.role === 'ADMIN' ? '/(ops)/attention'
+      : '/(buyer)/home';
+    if (segments[0] !== home.split('/')[1]) router.replace(home as Href);
   }, [user, loading, segments]);
 
   return null;
