@@ -5,7 +5,9 @@ export type UserRole = 'BUYER' | 'SUPPLIER' | 'DELIVERY_PARTNER' | 'OPERATOR' | 
 
 interface AuthUser {
   id: string;
-  phone: string;
+  // Phone sign-in users have a phone, Google sign-in users have an email
+  phone?: string;
+  email?: string;
   name: string;
   role: UserRole;
   onboardingComplete: boolean;

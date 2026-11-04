@@ -29,10 +29,13 @@ export default function CheckoutScreen() {
   const [address, setAddress] = useState<DeliveryAddress>({
     label: 'Site',
     fullAddress: '',
-    contactPhone: user?.phone ?? '',
+    // Google sign-in accounts have no phone: the buyer types one (the driver calls it)
+    contactPhone: user?.phone ? user.phone.slice(-10) : '',
   });
   const [notes, setNotes] = useState('');
   const [step, setStep] = useState<'address' | 'summary'>('address');
+  const phoneOk = /^[6-9]\d{9}$/.test(address.contactPhone.trim());
+  const addressReady = !!address.fullAddress.trim() && phoneOk;
 
   // Prices shown on the summary come from the server (GST-inclusive/exclusive, bulk tiers)
   const orderItems = cartItemsToOrderPayload(items);
@@ -131,15 +134,19 @@ export default function CheckoutScreen() {
 
           {step === 'address' ? (
             <TouchableOpacity
-              style={[styles.btn, !address.fullAddress.trim() && styles.btnDisabled]}
+              style={[styles.btn, !addressReady && styles.btnDisabled]}
               onPress={() => {
                 if (!address.fullAddress.trim()) {
                   Alert.alert('Required', 'Enter your delivery address before continuing');
                   return;
                 }
+                if (!phoneOk) {
+                  Alert.alert('Required', 'Enter a 10-digit mobile number the driver can call');
+                  return;
+                }
                 setStep('summary');
               }}
-              disabled={!address.fullAddress.trim()}
+              disabled={!addressReady}
             >
               <Text style={styles.btnText}>Review Order →</Text>
             </TouchableOpacity>
@@ -204,7 +211,7 @@ function AddressForm({ address, onChange, notes, onNotesChange }: {
       <TextInput
         style={styles.input}
         value={address.contactPhone}
-        onChangeText={(v) => onChange({ ...address, contactPhone: v })}
+        onChangeText={(v) => onChange({ ...address, contactPhone: v.replace(/\D/g, '') })}
         placeholder="10-digit mobile number"
         placeholderTextColor={Colors.textMuted}
         keyboardType="phone-pad"

@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import auth from '@react-native-firebase/auth';
+import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { useAuthStore } from '../../src/store/auth.store';
 import { useOrders } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
@@ -21,7 +21,7 @@ export default function ProfileScreen() {
         text: 'Sign out',
         style: 'destructive',
         onPress: async () => {
-          await auth().signOut();
+          await signOutEverywhere();
           clear();
         },
       },
@@ -40,7 +40,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.info}>
             <Text style={styles.name}>{user?.name}</Text>
-            <Text style={styles.phone}>{user?.phone}</Text>
+            <Text style={styles.phone}>{user?.phone ?? user?.email}</Text>
             <View style={styles.roleBadge}>
               <Text style={styles.roleText}>BUYER</Text>
             </View>

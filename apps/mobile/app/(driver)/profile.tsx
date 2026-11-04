@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Switch, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import auth from '@react-native-firebase/auth';
+import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Colors } from '../../src/constants/colors';
 import { useDriverProfile, useDriverStats, useUpdateDriverProfile, VEHICLE_LABELS, VEHICLE_ICONS } from '../../src/hooks/useDelivery';
@@ -17,7 +17,7 @@ export default function DriverProfileScreen() {
   async function signOut() {
     Alert.alert('Sign out', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: async () => { await auth().signOut(); clear(); } },
+      { text: 'Sign out', style: 'destructive', onPress: async () => { await signOutEverywhere(); clear(); } },
     ]);
   }
 
@@ -37,7 +37,7 @@ export default function DriverProfileScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{user?.name}</Text>
-            <Text style={styles.phone}>{user?.phone}</Text>
+            <Text style={styles.phone}>{user?.phone ?? user?.email}</Text>
             <View style={styles.roleBadge}>
               <Text style={styles.roleText}>DELIVERY PARTNER</Text>
             </View>

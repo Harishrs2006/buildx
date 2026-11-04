@@ -270,3 +270,26 @@ Times are IST.
   "not a buyer account" screen (session from a seller/admin account), which had no way out. Added a Sign out button
   and account-neutral copy to wrong-role screens on buyer (signin + RequireAuth) and seller (RequireSupplier).
   Firebase has 1 Google user so far. Branch fix/wrong-role-signout.
+- 2026-11-04 IST: User chose NEXT STEP "mobile app Google sign-in". Branch feat/mobile-google-signin. Firebase Android
+  app already had the debug keystore SHA-1 (5e8f...f625); downloaded fresh google-services.json and
+  GoogleService-Info.plist via Firebase Management API with gcloud (both gitignored, local only). Added
+  @react-native-google-signin/google-signin 17 (Firebase-mode config plugin), src/lib/googleAuth.ts (web client
+  5ibngc...), sign-in screen: Continue with Google first, "Use mobile number instead" second (billing-not-enabled
+  mapped to a clear message), sign-out also signs out of Google, profiles show email when no phone, checkout
+  requires a contact phone. Needs a native rebuild (expo run:android). Claude in Chrome was not connected.
+- 2026-11-04 IST: Native Android build NOT verified yet. Code typechecks. Problems hit: emulator Pixel_8 first stuck
+  "offline" (fixed by cold boot -no-snapshot); Gradle could not delete build folders inside node_modules because the
+  repo lives in OneDrive (cleared 22 stale Gradle build dirs, only folders next to a build.gradle). Then Claude Code
+  stopped both the emulator and the clean Gradle build because the laptop ran low on memory. NEXT: when the user says
+  so, run the build alone (no emulator), e.g. `cd apps/mobile/android && ./gradlew assembleDebug`, then boot the
+  emulator and install; test Google sign-in + phone test number. If OneDrive locks continue, pause OneDrive sync or
+  build from a copy outside OneDrive. Then open the PR.
+- 2026-11-04 16:45 IST: Android build VERIFIED on emulator Pixel_8. OneDrive breaks Gradle (turns new build files into
+  cloud placeholders: "not a regular file"), so build from a copy OUTSIDE OneDrive: robocopy apps/mobile to C:/bx/mobile
+  (exclude android build dirs), then `cd C:/bx/mobile/android && ./gradlew assembleDebug --max-workers=2
+  -PreactNativeArchitectures=x86_64`; run Metro from the real repo (`npx expo start`), `adb reverse tcp:8081 tcp:8081`.
+  Emulator: use -no-snapshot (snapshot boot hangs "offline"), -memory 2048. Checked: new sign-in screen renders,
+  Continue with Google opens Google's account flow (no DEVELOPER_ERROR, so client IDs + SHA-1 are right), mobile number
+  option opens, a real number shows "Text message codes are not available yet..." (Android sends BILLING_NOT_ENABLED
+  inside auth/internal-error, now handled). NOT checked: finishing a Google sign-in (needs the user's Google account on
+  the emulator) and the checkout phone step. PR opened for the user to merge.

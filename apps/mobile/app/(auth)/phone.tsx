@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import auth from '@react-native-firebase/auth';
 import { Colors } from '../../src/constants/colors';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Button, Eyebrow, type } from '../../src/components/ui';
+import { signInWithGoogle } from '../../src/lib/googleAuth';
 
 // The BuildX mark: two crossing beams, the lime one on top
 export function LogoMark({ size = 40 }: { size?: number }) {
@@ -27,6 +28,9 @@ export default function PhoneScreen() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const [showPhone, setShowPhone] = useState(false);
 
   const cleaned = phone.replace(/\D/g, '');
   const valid = /^[6-9]\d{9}$/.test(cleaned);
@@ -43,9 +47,22 @@ export default function PhoneScreen() {
       setPendingConfirmation(confirmation);
       router.push({ pathname: '/(auth)/otp', params: { phone: cleaned } });
     } catch (err: any) {
-      setError(err?.code === 'auth/too-many-requests' ? 'Too many attempts. Try again in a few minutes.' : 'We could not send a code right now. Please try again.');
+      setError(phoneErrorMessage(err?.code, err?.message));
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function continueWithGoogle() {
+    setGoogleError(null);
+    setGoogleLoading(true);
+    try {
+      // On success AuthGate (app/_layout.tsx) syncs with the API and routes on
+      await signInWithGoogle();
+    } catch (err: any) {
+      setGoogleError(err?.message ?? 'We could not sign you in with Google. Please try again.');
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -64,41 +81,73 @@ export default function PhoneScreen() {
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-          <Eyebrow>Step 1 of 2</Eyebrow>
+          <Eyebrow>Welcome</Eyebrow>
           <Text style={[type.title, styles.heading]}>Sign in or create an account</Text>
-          <Text style={type.body}>Enter your mobile number. We will text you a 6-digit code.</Text>
+          <Text style={type.body}>Use your Google account. It is free and takes one tap.</Text>
 
-          <Text style={styles.label}>Mobile number</Text>
-          <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
-            <View style={styles.country}>
-              <View style={styles.inBadge}><Text style={styles.inBadgeText}>IN</Text></View>
-              <Text style={styles.countryText}>+91</Text>
-            </View>
-            <TextInput
-              style={styles.input}
-              value={phone}
-              onChangeText={(t) => { setPhone(t.replace(/\D/g, '')); setError(null); }}
-              placeholder="98765 43210"
-              keyboardType="number-pad"
-              textContentType="telephoneNumber"
-              autoComplete="tel"
-              maxLength={10}
-              autoFocus
-              placeholderTextColor={Colors.stoneLight}
-              accessibilityLabel="Mobile number"
-              returnKeyType="done"
-              onSubmitEditing={sendOtp}
-            />
-          </View>
-          {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : <Text style={styles.hint}>Indian mobile numbers only.</Text>}
+          <Button title="Continue with Google" onPress={continueWithGoogle} loading={googleLoading} disabled={loading} style={styles.cta} />
+          {googleError ? <Text style={styles.error} accessibilityLiveRegion="polite">{googleError}</Text> : null}
 
-          <Button title="Send code" onPress={sendOtp} disabled={!valid} loading={loading} style={styles.cta} />
+          {!showPhone ? (
+            <TouchableOpacity onPress={() => setShowPhone(true)} style={styles.switch} accessibilityRole="button">
+              <Text style={styles.switchText}>Use mobile number instead</Text>
+            </TouchableOpacity>
+          ) : (
+            <>
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>or with your mobile number</Text>
+                <View style={styles.dividerLine} />
+              </View>
 
-          <Text style={styles.terms}>By continuing you agree to the BuildX Terms of Service and Privacy Policy. Standard SMS rates may apply.</Text>
+              <Text style={styles.label}>Mobile number</Text>
+              <View style={[styles.inputRow, error ? styles.inputRowError : null]}>
+                <View style={styles.country}>
+                  <View style={styles.inBadge}><Text style={styles.inBadgeText}>IN</Text></View>
+                  <Text style={styles.countryText}>+91</Text>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={(t) => { setPhone(t.replace(/\D/g, '')); setError(null); }}
+                  placeholder="98765 43210"
+                  keyboardType="number-pad"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
+                  maxLength={10}
+                  autoFocus
+                  placeholderTextColor={Colors.stoneLight}
+                  accessibilityLabel="Mobile number"
+                  returnKeyType="done"
+                  onSubmitEditing={sendOtp}
+                />
+              </View>
+              {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : <Text style={styles.hint}>We will text you a 6-digit code. Indian mobile numbers only.</Text>}
+
+              <Button title="Send code" onPress={sendOtp} disabled={!valid || googleLoading} loading={loading} variant="ghost" style={styles.cta} />
+            </>
+          )}
+
+          <Text style={styles.terms}>By continuing you agree to the BuildX Terms of Service and Privacy Policy.</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
+}
+
+function phoneErrorMessage(code?: string, message?: string) {
+  // Android reports a missing paid plan as auth/internal-error with BILLING_NOT_ENABLED in the message
+  if (message?.includes('BILLING_NOT_ENABLED')) code = 'auth/billing-not-enabled';
+  switch (code) {
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Try again in a few minutes.';
+    // Text codes need Firebase's paid plan, which is not on yet
+    case 'auth/billing-not-enabled':
+    case 'auth/quota-exceeded':
+      return 'Text message codes are not available yet. Please use Continue with Google.';
+    default:
+      return 'We could not send a code right now. Please try again.';
+  }
 }
 
 const styles = StyleSheet.create({
@@ -122,5 +171,10 @@ const styles = StyleSheet.create({
   hint: { marginTop: 8, fontSize: 13, color: Colors.stone },
   error: { marginTop: 8, fontSize: 13, color: Colors.error },
   cta: { marginTop: 24 },
+  switch: { marginTop: 20, alignSelf: 'center', paddingVertical: 8, paddingHorizontal: 12 },
+  switchText: { fontSize: 15, fontWeight: '700', color: Colors.ink, textDecorationLine: 'underline' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 28 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: Colors.sand4 },
+  dividerText: { fontSize: 13, color: Colors.stone },
   terms: { marginTop: 20, fontSize: 12, lineHeight: 18, color: Colors.stone, textAlign: 'center' },
 });

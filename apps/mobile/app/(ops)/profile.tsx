@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import auth from '@react-native-firebase/auth';
+import { signOutEverywhere } from '../../src/lib/googleAuth';
 import { useAuthStore } from '../../src/store/auth.store';
 import { Colors } from '../../src/constants/colors';
 
@@ -10,7 +10,7 @@ export default function OpsProfileScreen() {
   function signOut() {
     Alert.alert('Sign out', 'Are you sure?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: async () => { await auth().signOut(); clear(); } },
+      { text: 'Sign out', style: 'destructive', onPress: async () => { await signOutEverywhere(); clear(); } },
     ]);
   }
 
@@ -20,7 +20,7 @@ export default function OpsProfileScreen() {
         <Text style={styles.title}>Profile</Text>
         <View style={styles.card}>
           <Text style={styles.name}>{user?.name}</Text>
-          <Text style={styles.phone}>{user?.phone}</Text>
+          <Text style={styles.phone}>{user?.phone ?? user?.email}</Text>
           <Text style={styles.role}>{user?.role === 'ADMIN' ? 'ADMIN' : 'OPERATIONS'}</Text>
         </View>
         <Text style={styles.hint}>
