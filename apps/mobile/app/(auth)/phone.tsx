@@ -47,7 +47,7 @@ export default function PhoneScreen() {
       setPendingConfirmation(confirmation);
       router.push({ pathname: '/(auth)/otp', params: { phone: cleaned } });
     } catch (err: any) {
-      setError(phoneErrorMessage(err?.code));
+      setError(phoneErrorMessage(err?.code, err?.message));
     } finally {
       setLoading(false);
     }
@@ -135,7 +135,9 @@ export default function PhoneScreen() {
   );
 }
 
-function phoneErrorMessage(code?: string) {
+function phoneErrorMessage(code?: string, message?: string) {
+  // Android reports a missing paid plan as auth/internal-error with BILLING_NOT_ENABLED in the message
+  if (message?.includes('BILLING_NOT_ENABLED')) code = 'auth/billing-not-enabled';
   switch (code) {
     case 'auth/too-many-requests':
       return 'Too many attempts. Try again in a few minutes.';
