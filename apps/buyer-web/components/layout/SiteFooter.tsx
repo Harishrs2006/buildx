@@ -9,7 +9,7 @@ export function SiteFooter() {
       <div className="container-x relative z-10 grid gap-12 py-16 md:grid-cols-12 md:py-20">
         <div className="md:col-span-5">
           <div className="flex items-center gap-3">
-            <SthivaLogo onDark tagline height={64} />
+            <SthivaLogo onDark height={44} />
           </div>
           <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-sand/60">
             The construction materials marketplace. Verified suppliers, honest prices, delivery checked against your PIN code.

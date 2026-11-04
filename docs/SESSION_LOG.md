@@ -435,3 +435,14 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   and suppliers only; mobile api errors now keep the HTTP status). apps/*/vercel.json ignoreCommand: websites rebuild
   only when their folder, packages/web-core or the root package files change (Vercel project roots are apps/<name>,
   "skip unchanged" was already on). LAUNCH.md updated for the Sthiva name decision.
+- 2026-11-05 IST: BRAND SYSTEM v2 (user sent 5 reference logos: hexagon split by an S, "STHIVA PARTNER / SELLER
+  PLATFORM", block-S tile; refs in user-brief/images/logo-research). Decision (one master mark, two colourways, like
+  Swiggy/Swiggy Partner): pointy-top hexagon (bolt head) split by a point-symmetric S into two halves (buyer + seller).
+  Sharp corners so the S gap cuts cleanly through the edges (rounded corners left slivers; a vertex-to-vertex S broke
+  the outline: both tried and rejected). Wordmark: Geist Bold outlines, 0.16em tracking; PARTNER Geist SemiBold 0.36em.
+  Sthiva: ink+yellow mark, ink word (white on dark); app icon yellow tile, ink/white mark. Sthiva Partner: white+yellow
+  mark on ink, PARTNER in yellow; app icon ink tile. Kit + generator: docs/brand (node docs/brand/generate.cjs
+  docs/brand with BRAND_NODE_MODULES pointing at sharp + opentype.js). Code: web-core brand/paths.ts (generated) +
+  SthivaLogo (partner prop, SVG mask with useId), seller portal uses the partner lockup + partner favicon, OG image
+  uses an SVG data URI, mobile src/constants/brand.ts copy + SthivaMark (react-native-svg Mask; tile follows the app
+  variant), app icons via apps/mobile/scripts/make-icons.cjs. Checked the real component on a local dev server.

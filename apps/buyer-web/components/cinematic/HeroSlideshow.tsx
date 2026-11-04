@@ -137,7 +137,7 @@ export function HeroSlideshow({ categories }: { categories: Categories }) {
       {/* brand message: stays put while the photos change behind it */}
       <div className="relative z-[4] flex h-full flex-col items-center justify-center px-5 pb-56 pt-[var(--header-h)] text-center md:pb-40">
         <div className="animate-fade-up">
-          <SthivaLogo onDark tagline height={88} className="h-[72px] w-auto sm:h-[96px]" />
+          <SthivaLogo onDark height={72} className="h-[48px] w-auto sm:h-[72px]" />
         </div>
         <h1 className="mt-6 max-w-5xl font-display text-[clamp(2.75rem,7.6vw,6.5rem)] font-bold leading-[0.92] tracking-tightest text-white text-balance">
           <span className="block animate-fade-up" style={{ animationDelay: '120ms' }}>{hero.title}</span>

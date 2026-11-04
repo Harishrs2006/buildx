@@ -41,3 +41,4 @@ export * as units from './catalog/units';
 
 // Brand: the Sthiva logo (vector) and its roof-and-X symbol
 export { SthivaLogo, SthivaMark } from './brand/SthivaLogo';
+export { MARK, WORD_STHIVA, WORD_PARTNER, BRAND_COLORS } from './brand/paths';

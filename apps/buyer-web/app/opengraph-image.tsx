@@ -1,4 +1,9 @@
 import { ImageResponse } from 'next/og';
+import { MARK, BRAND_COLORS } from '@sthiva/web-core/src/brand/paths';
+
+// The Sthiva mark as an image (the OG renderer draws SVG masks only inside images)
+const MARK_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${MARK.viewBox}"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="1536" height="1536"><polygon points="${MARK.hex}" fill="#fff" stroke="#fff" stroke-width="${MARK.cornerRound}" stroke-linejoin="round"/><path d="${MARK.curve}" fill="none" stroke="#000" stroke-width="${MARK.gap}"/></mask></defs><g mask="url(#m)"><rect width="1536" height="1536" fill="${BRAND_COLORS.yellow}"/><path d="${MARK.left}" fill="${BRAND_COLORS.white}"/></g></svg>`;
+const MARK_DATA_URI = `data:image/svg+xml;utf8,${encodeURIComponent(MARK_SVG)}`;
 
 export const alt = 'Sthiva: construction materials, delivered to your site';
 export const size = { width: 1200, height: 630 };
@@ -24,12 +29,9 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-          <svg width="64" height="64" viewBox="0 0 1536 1536">
-            <rect width="1536" height="1536" rx="340" fill="#F3B806" />
-            <path d="M1128 318 H588 A270 270 0 0 0 588 858 H741 V678 H588 A90 90 0 0 1 588 498 H1128 Z" fill="#1B1B19" />
-            <path d="M796 678 H948 A270 270 0 0 1 948 1218 H408 V1038 H948 A90 90 0 0 0 948 858 H796 Z" fill="#FBFAF6" />
-          </svg>
-          <span style={{ fontSize: 44, fontWeight: 800, letterSpacing: -2 }}>Sthiva</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={MARK_DATA_URI} width={64} height={64} alt="" />
+          <span style={{ fontSize: 40, fontWeight: 800, letterSpacing: 8 }}>STHIVA</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: 104, fontWeight: 800, lineHeight: 0.95, letterSpacing: -5 }}>Build with materials</span>
