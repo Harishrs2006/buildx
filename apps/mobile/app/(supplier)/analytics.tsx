@@ -8,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '../../src/lib/api';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { ScreenHeader } from '../../src/components/ui';
 
 type DayRevenue = { date: string; revenue: number; orders: number };
 type TopProduct = { _id: string; name: string; totalSold: number; basePrice: number; unit: string };
@@ -43,7 +44,7 @@ function RevenueBar({ day, maxRevenue }: { day: DayRevenue; maxRevenue: number }
 const bar = StyleSheet.create({
   col: { flex: 1, alignItems: 'center', gap: 4 },
   amount: { fontFamily: Font.regular, fontSize: 9, color: Colors.textMuted, height: 14 },
-  bar: { width: 28, backgroundColor: Colors.primary, borderRadius: 6, minHeight: 4 },
+  bar: { width: 28, backgroundColor: Colors.ink, borderRadius: 8, minHeight: 4 },
   label: { fontFamily: Font.regular, fontSize: 10, color: Colors.textSecondary },
   orders: { fontFamily: Font.regular, fontSize: 9, color: Colors.textMuted },
 });
@@ -71,18 +72,15 @@ export default function AnalyticsScreen() {
 
   return (
     <SafeAreaView style={s.safe}>
-      <View style={s.header}>
-        <TouchableOpacity onPress={() => router.back()} style={s.back}><Text style={s.backIcon}>←</Text></TouchableOpacity>
-        <Text style={s.headerTitle}>Analytics</Text>
-      </View>
+      <ScreenHeader eyebrow="Last 7 days" title="Sales" onBack={() => router.back()} />
 
       {isLoading ? (
-        <View style={s.center}><ActivityIndicator size="large" color={Colors.primary} /></View>
+        <View style={s.center}><ActivityIndicator color={Colors.ink} /></View>
       ) : (
         <ScrollView
           contentContainerStyle={s.scroll}
           showsVerticalScrollIndicator={false}
-          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
         >
           {/* Summary */}
           <View style={s.summaryRow}>
@@ -146,7 +144,7 @@ export default function AnalyticsScreen() {
 }
 
 const s = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
+  safe: { flex: 1, backgroundColor: Colors.sand },
   header: {
     flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
     paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border,
@@ -158,21 +156,21 @@ const s = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { padding: 16, gap: 12 },
   summaryRow: { flexDirection: 'row', gap: 12 },
-  summaryCard: { flex: 1, backgroundColor: Colors.surface, borderRadius: 14, padding: 16, borderWidth: 1, borderColor: Colors.border, alignItems: 'center' },
-  summaryNum: { fontFamily: Font.display, fontSize: 24, color: Colors.primary },
+  summaryCard: { flex: 1, backgroundColor: Colors.sand2, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: Colors.sand4, alignItems: 'center' },
+  summaryNum: { fontFamily: Font.display, fontSize: 24, color: Colors.ink },
   summaryLabel: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: 4 },
-  card: { backgroundColor: Colors.surface, borderRadius: 16, padding: 16, borderWidth: 1, borderColor: Colors.border, gap: 14 },
+  card: { backgroundColor: Colors.sand2, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: Colors.sand4, gap: 14 },
   cardTitle: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
   chartRow: { flexDirection: 'row', alignItems: 'flex-end', height: 140, gap: 4 },
   emptyText: { fontFamily: Font.regular, fontSize: 13, color: Colors.textMuted, textAlign: 'center', paddingVertical: 8 },
   topRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
   topRowBorder: { borderBottomWidth: 1, borderBottomColor: Colors.border },
-  rankBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
+  rankBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: Colors.lime, alignItems: 'center', justifyContent: 'center' },
   rankText: { fontFamily: Font.bold, fontSize: 13, color: Colors.textSecondary },
   topName: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.text },
   topMeta: { fontFamily: Font.regular, fontSize: 12, color: Colors.textSecondary, marginTop: 2 },
-  soldBadge: { backgroundColor: Colors.primaryLight, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  soldText: { fontFamily: Font.bold, fontSize: 12, color: Colors.primaryDark },
+  soldBadge: { backgroundColor: Colors.ink, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
+  soldText: { fontFamily: Font.bold, fontSize: 12, color: Colors.lime },
   breakdownRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 6 },
   breakdownDot: { width: 10, height: 10, borderRadius: 5 },
   breakdownLabel: { fontFamily: Font.regular, flex: 1, fontSize: 14, color: Colors.textSecondary },
