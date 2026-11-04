@@ -15,6 +15,10 @@ Times are IST.
 - API keep-alive: .github/workflows/keep-api-awake.yml (every 10 min).
 
 ## NEXT STEPS
+0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
+   Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
+   projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
+   commits do not build the websites. Until then avoid pushing many branches (each push = 3 deployments).
 1. User installs Sthiva-Partner.apk (their Google account is a supplier) and Sthiva.apk, checks look and order alerts.
 2. User registers "Sthiva Private Limited" (backup Setuzo/Udvora), files trademark (class 35), buys sthiva.com.
    Then follow DOMAIN PLAN below.
@@ -394,3 +398,6 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   web-core SthivaLogo/SthivaMark (tile + "sthiva" wordmark), favicons, OG image, mobile SthivaMark, app icons
   (buyer: yellow bg, ink/white S, adaptive bg #F3B806; partner: ink bg, yellow/white S). Brand accent lime -> logo
   yellow #F3B806 (deep #D49E00, soft #FDF0C4) in all tailwind configs, globals.css, mobile colors, design doc.
+- 2026-11-05 02:45 IST: User merged #59 and #60. Vercel production deploys of #60 failed: daily deployment limit on the
+  free plan (too many branch pushes today). APKs rebuilt with the owner's logo and verified: C:/dev/BuildX/Sthiva.apk
+  (com.sthiva.app) and Sthiva-Partner.apk (com.sthiva.partner); bundles contain Sthiva and #F3B806.
