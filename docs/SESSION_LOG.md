@@ -3,23 +3,26 @@
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE (2026-11-04 21:30 IST)
-- Project lives at C:/dev/BuildX (moved out of OneDrive). Start Claude there. Libraries are not installed in this copy;
-  for mobile typecheck/builds use C:/bx/mobile (copy changed files there first, it has node_modules).
-- Live: buyer site https://buildx-vgud.vercel.app, seller site (Vercel buildx-48kc), ops console https://buildx-ops.vercel.app,
-  API https://buildx-api.onrender.com (Render free: sleeps when idle, ~1 min to wake).
-- Mobile app: Google sign-in (#52, #53) and full Hi-Vis redesign (#54) are merged to main.
-- Mobile builds: from C:/bx/mobile/android, foreground, see 2026-11-04 19:40 entry for the exact gradle command.
-- Open PRs: fix/ai-one-supplier (#55, AI assistant keeps a cart to one supplier) and feat/partner-app (two apps,
-  in-app alerts, API keep-alive). Both need the user to merge.
+## CURRENT STATE (2026-11-05 02:20 IST)
+- Brand is **Sthiva** (renamed from BuildX, PR #58 merged). Live and showing Sthiva: buyer https://buildx-vgud.vercel.app,
+  seller https://buildx-48kc.vercel.app, ops https://buildx-ops.vercel.app, API https://buildx-api.onrender.com.
+  Service ids keep "buildx" on purpose (see 2026-11-05 01:55 entry).
+- Project lives at C:/dev/BuildX (root has node_modules now). Mobile builds: C:/bx/mobile. Sync with
+  `cp -r app src assets scripts app.json app.config.ts /c/bx/mobile/` (robocopy via `cmd //c` silently copied NOTHING
+  once: always grep a renamed string in C:/bx/mobile before building, and grep the bundle in the APK after).
+- Two apps from one codebase: Sthiva (com.sthiva.app) and Sthiva Partner (com.sthiva.partner, APP_VARIANT=partner).
+  APKs in C:/dev/BuildX: Sthiva.apk, Sthiva-Partner.apk (old BuildX*.apk are obsolete).
+- API keep-alive: .github/workflows/keep-api-awake.yml (every 10 min).
 
 ## NEXT STEPS
-1. User merges fix/ai-one-supplier. Mobile only, goes out with the next APK.
-2. Not yet tested on the phone: buyer checkout contact-phone step (needs a buyer account), and a brand-new Google
-   account going through "How will you use BuildX?".
-3. Launch prep: NEXT_PUBLIC_SUPPORT_EMAIL / SUPPORT_PHONE / LEGAL_NAME (need the user's details), NEXT_PUBLIC_ALLOW_INDEXING=true.
-4. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
-5. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping (ask user).
+1. User installs Sthiva-Partner.apk (their Google account is a supplier) and Sthiva.apk, checks look and order alerts.
+2. User registers "Sthiva Private Limited" (backup Setuzo/Udvora), files trademark (class 35), buys sthiva.com.
+   Then follow DOMAIN PLAN below.
+3. User will send new MongoDB credentials: switch Render MONGODB_URI (keep dbName decision in mind).
+4. Government sign-in method later (user decides; likely DigiLocker). Google stays until then.
+5. Launch prep: support email / phone / legal name for the websites; NEXT_PUBLIC_ALLOW_INDEXING=true after the domain.
+6. Real SMS needs Firebase Blaze (money: user decides).
+7. Open old PRs #51 (launch prep) and #34 (README refresh) predate the rename: review/rebase or close.
 
 ## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
 Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
@@ -382,3 +385,6 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   - GitHub contributors: only Harishrs2006 and Shubb07; no Claude trailers on any remote branch. Old LOCAL backup
     branches (backup/local-main-old, backup/stash-main-lockfile, feat/pincode-lookup, feat/rn-mongodb-rewrite) contain
     Claude trailers but were never pushed; do not push them.
+- 2026-11-05 02:20 IST: User merged #58. Vercel (3 sites) and Render redeployed; all show Sthiva, CI green, API healthy.
+  Checked the live home page in Chrome: new S mark and "sthiva" wordmark render correctly. First Sthiva-Partner build
+  still said BuildX (copy to C:/bx failed silently); fixed copy, re-typechecked, rebuilt: bundle now has "Sthiva Partner".
