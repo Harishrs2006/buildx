@@ -8,6 +8,8 @@ import { useAuthStore } from '../src/store/auth.store';
 import { useRouter, useSegments, type Href } from 'expo-router';
 import { StyleSheet } from 'react-native';
 import { usePushNotifications } from '../src/hooks/usePushNotifications';
+import { useFonts } from 'expo-font';
+import { fontFiles } from '../src/constants/typography';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -63,6 +65,11 @@ function AuthGate() {
 }
 
 export default function RootLayout() {
+  // Brand fonts ship inside the app (assets/fonts): this is a local load, not a download.
+  // If one ever fails, the app still opens with the system font.
+  const [fontsLoaded, fontError] = useFonts(fontFiles);
+  if (!fontsLoaded && !fontError) return null;
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <QueryClientProvider client={queryClient}>

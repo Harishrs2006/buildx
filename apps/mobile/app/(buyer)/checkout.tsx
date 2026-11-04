@@ -1,19 +1,20 @@
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  TextInput, ActivityIndicator, Alert, KeyboardAvoidingView, Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { useCartStore } from '../../src/store/cart.store';
 import { useAuthStore } from '../../src/store/auth.store';
-import { useCreateOrder, useOrderQuote, cartItemsToOrderPayload, newIdempotencyKey } from '../../src/hooks/useOrders';
+import { useCreateOrder, useOrderQuote, cartItemsToOrderPayload, newIdempotencyKey, type OrderQuote } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { buildDeliveryAddress, type DeliveryAddressForm } from '../../src/lib/deliveryAddress';
+import { Button, Eyebrow, Icon, Notice, ScreenHeader } from '../../src/components/ui';
 
 // What the buyer types. Coordinates are not part of the form: the app has no location
 // provider, so none are ever sent (see src/lib/deliveryAddress.ts).
 type DeliveryAddress = DeliveryAddressForm;
+
+const rupees = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
 export default function CheckoutScreen() {
   const router = useRouter();
@@ -34,10 +35,12 @@ export default function CheckoutScreen() {
   });
   const [notes, setNotes] = useState('');
   const [step, setStep] = useState<'address' | 'summary'>('address');
+  const [triedNext, setTriedNext] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+  const addressOk = !!address.fullAddress.trim();
   const phoneOk = /^[6-9]\d{9}$/.test(address.contactPhone.trim());
-  const addressReady = !!address.fullAddress.trim() && phoneOk;
 
-  // Prices shown on the summary come from the server (GST-inclusive/exclusive, bulk tiers)
+  // Prices shown on the summary come from the server (GST-inclusive/exclusive, bulk tiers, delivery)
   const orderItems = cartItemsToOrderPayload(items);
   const quoteQuery = useOrderQuote(orderItems, step === 'summary');
   const quote = quoteQuery.data?.data;
@@ -45,8 +48,16 @@ export default function CheckoutScreen() {
 
   const supplierName = items[0]?.supplierName ?? 'Supplier';
 
+  function goToSummary() {
+    setTriedNext(true);
+    if (!addressOk || !phoneOk) return;
+    setOrderError(null);
+    setStep('summary');
+  }
+
   async function handlePlaceOrder() {
     if (!quote) return;
+    setOrderError(null);
     try {
       const res = await createOrder({
         items: orderItems,
@@ -63,7 +74,7 @@ export default function CheckoutScreen() {
         params: { orderNumber: res.data.orderNumber },
       } as never);
     } catch (err: any) {
-      Alert.alert('Order failed', err?.message ?? 'Something went wrong. Please try again.');
+      setOrderError(err?.message ?? 'Something went wrong. Please try again.');
       quoteQuery.refetch(); // stock or prices may have changed
     }
   }
@@ -71,99 +82,56 @@ export default function CheckoutScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => (step === 'summary' ? setStep('address') : router.back())}
-            style={styles.backBtn}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>
-            {step === 'address' ? 'Delivery Address' : 'Order Summary'}
-          </Text>
-          <View style={styles.steps}>
-            <View style={[styles.stepDot, styles.stepDotActive]} />
-            <View style={[styles.stepLine, step === 'summary' && styles.stepLineActive]} />
-            <View style={[styles.stepDot, step === 'summary' && styles.stepDotActive]} />
-          </View>
+        <ScreenHeader
+          eyebrow={step === 'address' ? 'Step 1 of 2' : 'Step 2 of 2'}
+          title={step === 'address' ? 'Delivery address' : 'Review and place'}
+          onBack={() => (step === 'summary' ? setStep('address') : router.back())}
+        />
+        <View style={styles.progress}>
+          <View style={[styles.progressBar, styles.progressOn]} />
+          <View style={[styles.progressBar, step === 'summary' && styles.progressOn]} />
         </View>
 
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {step === 'address' ? (
             <AddressForm
               address={address}
               onChange={setAddress}
               notes={notes}
               onNotesChange={setNotes}
+              addressError={triedNext && !addressOk}
+              phoneError={triedNext && !phoneOk}
             />
+          ) : quote ? (
+            <OrderSummaryView quote={quote} supplierName={supplierName} address={address} notes={notes} />
+          ) : quoteQuery.isError ? (
+            <Notice tone="error" title="We could not price your order">
+              <Text style={styles.noticeText}>{quoteQuery.error.message}</Text>
+              <Pressable onPress={() => quoteQuery.refetch()} hitSlop={8} accessibilityRole="button">
+                <Text style={styles.noticeLink}>Try again</Text>
+              </Pressable>
+            </Notice>
           ) : (
-            quote ? (
-              <OrderSummaryView
-                items={quote.items}
-                supplierName={supplierName}
-                address={address}
-                subtotal={quote.subtotal}
-                gstTotal={quote.gstAmount}
-                grandTotal={quote.total}
-                notes={notes}
-              />
-            ) : quoteQuery.isError ? (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Couldn't price your order</Text>
-                <Text style={styles.addressMeta}>{quoteQuery.error.message}</Text>
-                <TouchableOpacity onPress={() => quoteQuery.refetch()}>
-                  <Text style={[styles.addressMeta, { color: Colors.primary }]}>Try again</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <ActivityIndicator color={Colors.primary} style={{ marginTop: 32 }} />
-            )
+            <View style={styles.loading}>
+              <ActivityIndicator color={Colors.ink} />
+              <Text style={styles.loadingText}>Getting today's prices from the supplier…</Text>
+            </View>
           )}
-          <View style={{ height: 100 }} />
+          {orderError ? <Notice tone="error" title="Order not placed" style={styles.orderError}>{orderError}</Notice> : null}
+          <View style={styles.spacer} />
         </ScrollView>
 
-        {/* Sticky bottom bar */}
-        <View style={styles.stickyBar}>
+        <SafeAreaView edges={['bottom']} style={styles.stickyBar}>
           <View>
-            <Text style={styles.totalLabel}>Total payable</Text>
-            <Text style={styles.totalValue}>
-              ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-            </Text>
+            <Text style={styles.totalLabel}>{step === 'summary' && quote ? 'Pay on delivery' : 'Estimated'}</Text>
+            <Text style={styles.totalValue}>{rupees(grandTotal)}</Text>
           </View>
-
           {step === 'address' ? (
-            <TouchableOpacity
-              style={[styles.btn, !addressReady && styles.btnDisabled]}
-              onPress={() => {
-                if (!address.fullAddress.trim()) {
-                  Alert.alert('Required', 'Enter your delivery address before continuing');
-                  return;
-                }
-                if (!phoneOk) {
-                  Alert.alert('Required', 'Enter a 10-digit mobile number the driver can call');
-                  return;
-                }
-                setStep('summary');
-              }}
-              disabled={!addressReady}
-            >
-              <Text style={styles.btnText}>Review Order →</Text>
-            </TouchableOpacity>
+            <Button title="Review order" variant="lime" onPress={goToSummary} style={styles.cta} />
           ) : (
-            <TouchableOpacity
-              style={[styles.btn, (isPending || !quote) && styles.btnDisabled]}
-              onPress={handlePlaceOrder}
-              disabled={isPending || !quote}
-            >
-              {isPending ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.btnText}>Place Order (COD) →</Text>
-              )}
-            </TouchableOpacity>
+            <Button title="Place order" variant="lime" onPress={handlePlaceOrder} loading={isPending} disabled={!quote} style={styles.cta} />
           )}
-        </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -171,62 +139,74 @@ export default function CheckoutScreen() {
 
 // ─── Address form ─────────────────────────────────────────────────────────────
 
-function AddressForm({ address, onChange, notes, onNotesChange }: {
+function AddressForm({ address, onChange, notes, onNotesChange, addressError, phoneError }: {
   address: DeliveryAddress;
   onChange: (a: DeliveryAddress) => void;
   notes: string;
   onNotesChange: (n: string) => void;
+  addressError: boolean;
+  phoneError: boolean;
 }) {
   return (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>Where should we deliver?</Text>
-
-      <Text style={styles.label}>Address label</Text>
-      <View style={styles.labelChips}>
-        {['Site', 'Home', 'Office', 'Other'].map((lbl) => (
-          <TouchableOpacity
-            key={lbl}
-            style={[styles.chip, address.label === lbl && styles.chipActive]}
-            onPress={() => onChange({ ...address, label: lbl })}
-          >
-            <Text style={[styles.chipText, address.label === lbl && styles.chipTextActive]}>
-              {lbl}
-            </Text>
-          </TouchableOpacity>
-        ))}
+    <View>
+      <Text style={styles.label}>Deliver to</Text>
+      <View style={styles.chips}>
+        {['Site', 'Home', 'Office', 'Other'].map((lbl) => {
+          const on = address.label === lbl;
+          return (
+            <Pressable
+              key={lbl}
+              style={[styles.chip, on && styles.chipOn]}
+              onPress={() => onChange({ ...address, label: lbl })}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+            >
+              <Text style={[styles.chipText, on && styles.chipTextOn]}>{lbl}</Text>
+            </Pressable>
+          );
+        })}
       </View>
 
-      <Text style={styles.label}>Full address *</Text>
+      <Text style={styles.label}>Full address</Text>
       <TextInput
-        style={[styles.input, styles.inputMulti]}
+        style={[styles.input, styles.inputMulti, addressError && styles.inputError]}
         value={address.fullAddress}
         onChangeText={(v) => onChange({ ...address, fullAddress: v })}
-        placeholder="Door/plot number, street, area, city, PIN..."
-        placeholderTextColor={Colors.textMuted}
+        placeholder="Door or plot number, street, area, city, PIN"
+        placeholderTextColor={Colors.stoneLight}
         multiline
         numberOfLines={3}
+        accessibilityLabel="Full delivery address"
       />
+      {addressError ? <Text style={styles.fieldError}>Enter the address the driver should come to.</Text> : null}
 
-      <Text style={styles.label}>Contact number at delivery site</Text>
+      <Text style={styles.label}>Phone at the site</Text>
       <TextInput
-        style={styles.input}
+        style={[styles.input, phoneError && styles.inputError]}
         value={address.contactPhone}
         onChangeText={(v) => onChange({ ...address, contactPhone: v.replace(/\D/g, '') })}
         placeholder="10-digit mobile number"
-        placeholderTextColor={Colors.textMuted}
+        placeholderTextColor={Colors.stoneLight}
         keyboardType="phone-pad"
         maxLength={10}
+        accessibilityLabel="Phone number at the delivery site"
       />
+      {phoneError ? (
+        <Text style={styles.fieldError}>Enter a 10-digit mobile number the driver can call.</Text>
+      ) : (
+        <Text style={styles.hint}>The driver calls this number on arrival.</Text>
+      )}
 
-      <Text style={styles.label}>Delivery notes (optional)</Text>
+      <Text style={styles.label}>Notes for the driver (optional)</Text>
       <TextInput
         style={[styles.input, styles.inputMulti]}
         value={notes}
         onChangeText={onNotesChange}
-        placeholder="E.g. call before delivery, gate code, landmark..."
-        placeholderTextColor={Colors.textMuted}
+        placeholder="Landmark, gate, best time to call"
+        placeholderTextColor={Colors.stoneLight}
         multiline
         numberOfLines={2}
+        accessibilityLabel="Notes for the driver"
       />
     </View>
   );
@@ -234,162 +214,126 @@ function AddressForm({ address, onChange, notes, onNotesChange }: {
 
 // ─── Order summary ────────────────────────────────────────────────────────────
 
-function OrderSummaryView({ items, supplierName, address, subtotal, gstTotal, grandTotal, notes }: any) {
+function OrderSummaryView({ quote, supplierName, address, notes }: {
+  quote: OrderQuote;
+  supplierName: string;
+  address: DeliveryAddress;
+  notes: string;
+}) {
+  const outOfStock = quote.items.filter((i) => !i.inStock);
   return (
-    <View>
-      {/* Items */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Items from {supplierName}</Text>
-        {items.map((item: any) => (
-          <View key={item.productId} style={styles.orderItem}>
-            <View style={{ flex: 1 }}>
+    <View style={styles.summaryGap}>
+      {outOfStock.length > 0 ? (
+        <Notice tone="warning" title="Some items are short on stock">
+          {`${outOfStock.map((i) => i.name).join(', ')}: the supplier has less than you asked for. Go back to the cart to change the quantity.`}
+        </Notice>
+      ) : null}
+
+      <View style={styles.card}>
+        <Eyebrow>From {supplierName}</Eyebrow>
+        {quote.items.map((item) => (
+          <View key={item.productId} style={styles.itemRow}>
+            <View style={styles.flex}>
               <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
               <Text style={styles.itemMeta}>
-                {item.quantity} {item.unit} × ₹{item.pricePerUnit.toLocaleString('en-IN')}
-                {item.isGstInclusive ? ' (incl. GST)' : ''}
+                {item.quantity} {item.unit} × {rupees(item.pricePerUnit)}{item.isGstInclusive ? ' incl. GST' : ''}
               </Text>
             </View>
-            <Text style={styles.itemTotal}>
-              ₹{item.subtotal.toLocaleString('en-IN')}
-            </Text>
+            <Text style={styles.itemTotal}>{rupees(item.subtotal)}</Text>
           </View>
         ))}
       </View>
 
-      {/* Delivery address */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Delivering to</Text>
-        <View style={styles.addressCard}>
-          <Text style={styles.addressLabel}>{address.label}</Text>
-          <Text style={styles.addressFull}>{address.fullAddress}</Text>
-          {address.contactPhone ? (
-            <Text style={styles.addressMeta}>📞 {address.contactPhone}</Text>
-          ) : null}
-          {notes ? <Text style={styles.addressMeta}>📝 {notes}</Text> : null}
+      <View style={styles.card}>
+        <Eyebrow>Delivering to · {address.label}</Eyebrow>
+        <Text style={styles.addressFull}>{address.fullAddress}</Text>
+        <View style={styles.metaRow}>
+          <Icon name="phone-outline" size={16} color={Colors.stone} />
+          <Text style={styles.metaText}>{address.contactPhone}</Text>
+        </View>
+        {notes ? (
+          <View style={styles.metaRow}>
+            <Icon name="note-text-outline" size={16} color={Colors.stone} />
+            <Text style={styles.metaText}>{notes}</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={styles.card}>
+        <Eyebrow>Price</Eyebrow>
+        <PriceRow label="Subtotal" value={rupees(quote.subtotal)} />
+        <PriceRow label="GST" value={rupees(quote.gstAmount)} />
+        <PriceRow label="Delivery" value={quote.deliveryCharge > 0 ? rupees(quote.deliveryCharge) : 'No charge'} />
+        <View style={styles.totalRow}>
+          <Text style={styles.totalRowLabel}>Total</Text>
+          <Text style={styles.totalRowValue}>{rupees(quote.total)}</Text>
         </View>
       </View>
 
-      {/* Price breakdown */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Price Breakdown</Text>
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Subtotal</Text>
-          <Text style={styles.priceValue}>
-            ₹{subtotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>GST</Text>
-          <Text style={styles.priceValue}>
-            ₹{gstTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-        <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Delivery</Text>
-          <Text style={[styles.priceValue, { color: Colors.success }]}>FREE</Text>
-        </View>
-        <View style={[styles.priceRow, styles.priceRowTotal]}>
-          <Text style={styles.priceTotalLabel}>Total</Text>
-          <Text style={styles.priceTotalValue}>
-            ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
-          </Text>
-        </View>
-      </View>
-
-      {/* COD note */}
-      <View style={styles.codNote}>
-        <Text style={styles.codIcon}>💵</Text>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.codTitle}>Cash on Delivery</Text>
-          <Text style={styles.codSub}>
-            Pay ₹{grandTotal.toLocaleString('en-IN', { maximumFractionDigits: 2 })} in cash when
-            your materials arrive at the site.
-          </Text>
+      <View style={styles.cod}>
+        <Icon name="cash" size={24} color={Colors.ink} />
+        <View style={styles.flex}>
+          <Text style={styles.codTitle}>Cash on delivery</Text>
+          <Text style={styles.codSub}>Pay {rupees(quote.total)} when the materials reach the site.</Text>
         </View>
       </View>
     </View>
   );
 }
 
+function PriceRow({ label, value }: { label: string; value: string }) {
+  return (
+    <View style={styles.priceRow}>
+      <Text style={styles.priceLabel}>{label}</Text>
+      <Text style={styles.priceValue}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
+  safe: { flex: 1, backgroundColor: Colors.sand },
   flex: { flex: 1 },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border,
-  },
-  backBtn: { padding: 4, marginRight: 10 },
-  backIcon: { fontSize: 20, color: Colors.text },
-  headerTitle: { flex: 1, fontSize: 17, fontWeight: '700', color: Colors.text },
-  steps: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  stepDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: Colors.border },
-  stepDotActive: { backgroundColor: Colors.primary },
-  stepLine: { width: 20, height: 2, backgroundColor: Colors.border },
-  stepLineActive: { backgroundColor: Colors.primary },
-  scroll: { paddingHorizontal: 20, paddingTop: 20 },
-  section: { marginBottom: 24 },
-  sectionTitle: { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 14 },
-  label: { fontSize: 13, fontWeight: '600', color: Colors.textSecondary, marginBottom: 8, marginTop: 12 },
-  labelChips: { flexDirection: 'row', gap: 8, marginBottom: 4 },
-  chip: {
-    paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
-    borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.surfaceAlt,
-  },
-  chipActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  chipText: { fontSize: 13, color: Colors.textSecondary, fontWeight: '500' },
-  chipTextActive: { color: '#fff', fontWeight: '700' },
-  input: {
-    borderWidth: 1.5, borderColor: Colors.border, borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15,
-    color: Colors.text, backgroundColor: Colors.surfaceAlt,
-  },
-  inputMulti: { height: 80, textAlignVertical: 'top' },
-  orderItem: {
-    flexDirection: 'row', alignItems: 'flex-start',
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border, gap: 8,
-  },
-  itemName: { fontSize: 14, fontWeight: '600', color: Colors.text, lineHeight: 18 },
-  itemMeta: { fontSize: 12, color: Colors.textSecondary, marginTop: 3 },
-  itemTotal: { fontSize: 14, fontWeight: '700', color: Colors.text, minWidth: 70, textAlign: 'right' },
-  addressCard: {
-    padding: 14, backgroundColor: Colors.surfaceAlt,
-    borderRadius: 12, borderWidth: 1, borderColor: Colors.border,
-  },
-  addressLabel: {
-    fontSize: 11, fontWeight: '700', color: Colors.primary,
-    textTransform: 'uppercase', marginBottom: 4,
-  },
-  addressFull: { fontSize: 14, color: Colors.text, lineHeight: 20 },
-  addressMeta: { fontSize: 13, color: Colors.textSecondary, marginTop: 4 },
-  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  priceLabel: { fontSize: 14, color: Colors.textSecondary },
-  priceValue: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  priceRowTotal: {
-    borderTopWidth: 1, borderTopColor: Colors.border,
-    paddingTop: 12, marginTop: 4, marginBottom: 0,
-  },
-  priceTotalLabel: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  priceTotalValue: { fontSize: 18, fontWeight: '800', color: Colors.primary },
-  codNote: {
-    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
-    padding: 16, backgroundColor: Colors.warningLight,
-    borderRadius: 14, borderWidth: 1, borderColor: Colors.warning,
-    marginBottom: 8,
-  },
-  codIcon: { fontSize: 28 },
-  codTitle: { fontSize: 14, fontWeight: '700', color: Colors.text, marginBottom: 4 },
-  codSub: { fontSize: 13, color: Colors.textSecondary, lineHeight: 18 },
-  stickyBar: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20,
-    paddingVertical: 12, borderTopWidth: 1, borderTopColor: Colors.border,
-    backgroundColor: Colors.surface, gap: 16,
-  },
-  totalLabel: { fontSize: 11, color: Colors.textMuted },
-  totalValue: { fontSize: 18, fontWeight: '800', color: Colors.text },
-  btn: {
-    flex: 1, backgroundColor: Colors.primary, borderRadius: 14,
-    paddingVertical: 15, alignItems: 'center',
-  },
-  btnDisabled: { opacity: 0.5 },
-  btnText: { color: '#fff', fontWeight: '800', fontSize: 15 },
+  progress: { flexDirection: 'row', gap: 6, paddingHorizontal: 20, marginBottom: 8 },
+  progressBar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: Colors.sand4 },
+  progressOn: { backgroundColor: Colors.ink },
+  scroll: { paddingHorizontal: 20, paddingTop: 8 },
+  spacer: { height: 24 },
+  label: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink, marginTop: 18, marginBottom: 8 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { height: 40, paddingHorizontal: 16, borderRadius: 20, borderWidth: 1, borderColor: Colors.sand4, backgroundColor: Colors.sand2, justifyContent: 'center' },
+  chipOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  chipText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink },
+  chipTextOn: { color: Colors.sand },
+  input: { fontFamily: Font.regular, borderWidth: 1.5, borderColor: Colors.sand4, borderRadius: 16, backgroundColor: Colors.sand2, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: Colors.ink },
+  inputMulti: { minHeight: 88, textAlignVertical: 'top' },
+  inputError: { borderColor: Colors.error },
+  fieldError: { fontFamily: Font.regular, marginTop: 6, fontSize: 13, color: Colors.error },
+  hint: { fontFamily: Font.regular, marginTop: 6, fontSize: 13, color: Colors.stone },
+  loading: { alignItems: 'center', gap: 10, marginTop: 40 },
+  loadingText: { fontFamily: Font.regular, fontSize: 14, color: Colors.stone },
+  noticeText: { fontFamily: Font.regular, fontSize: 14, lineHeight: 20, color: Colors.ink },
+  noticeLink: { fontFamily: Font.bold, fontSize: 14, color: Colors.ink, textDecorationLine: 'underline', marginTop: 6 },
+  orderError: { marginTop: 16 },
+  summaryGap: { gap: 12 },
+  card: { padding: 16, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  itemRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 12 },
+  itemName: { fontFamily: Font.semiBold, fontSize: 15, lineHeight: 20, color: Colors.ink },
+  itemMeta: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 2 },
+  itemTotal: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  addressFull: { fontFamily: Font.regular, fontSize: 15, lineHeight: 21, color: Colors.ink, marginTop: 8 },
+  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  metaText: { fontFamily: Font.regular, fontSize: 14, color: Colors.stone, flex: 1 },
+  priceRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
+  priceLabel: { fontFamily: Font.regular, fontSize: 15, color: Colors.stone },
+  priceValue: { fontFamily: Font.semiBold, fontSize: 15, color: Colors.ink },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.sand4 },
+  totalRowLabel: { fontFamily: Font.bold, fontSize: 16, color: Colors.ink },
+  totalRowValue: { fontFamily: Font.display, fontSize: 22, color: Colors.ink },
+  cod: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 18, backgroundColor: Colors.lime },
+  codTitle: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  codSub: { fontFamily: Font.regular, fontSize: 14, lineHeight: 19, color: Colors.ink, marginTop: 2 },
+  stickyBar: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, backgroundColor: Colors.ink, borderTopLeftRadius: 24, borderTopRightRadius: 24 },
+  totalLabel: { fontFamily: Font.mono, fontSize: 11, letterSpacing: 1, color: 'rgba(242,239,231,0.6)', textTransform: 'uppercase' },
+  totalValue: { fontFamily: Font.display, fontSize: 22, color: Colors.sand },
+  cta: { flex: 1 },
 });

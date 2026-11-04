@@ -132,14 +132,15 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   DISPUTED:         'Disputed',
 };
 
+// Hi-Vis status colours: cobalt = new, amber = waiting on someone, lime = moving, green = done, red = problem
 export const ORDER_STATUS_COLORS: Record<OrderStatus, { bg: string; text: string }> = {
-  PENDING:          { bg: '#DBEAFE', text: '#1E40AF' },
-  CONFIRMED:        { bg: '#D1FAE5', text: '#065F46' },
-  READY_FOR_PICKUP: { bg: '#FEF3C7', text: '#92400E' },
-  ASSIGNED:         { bg: '#EDE9FE', text: '#5B21B6' },
-  PICKED_UP:        { bg: '#FEF3C7', text: '#92400E' },
-  IN_TRANSIT:       { bg: '#FEF3C7', text: '#92400E' },
-  DELIVERED:        { bg: '#D1FAE5', text: '#065F46' },
-  CANCELLED:        { bg: '#FEE2E2', text: '#991B1B' },
-  DISPUTED:         { bg: '#FEE2E2', text: '#991B1B' },
+  PENDING:          { bg: '#E3EAFF', text: '#1B3FB8' },
+  CONFIRMED:        { bg: '#E3EAFF', text: '#1B3FB8' },
+  READY_FOR_PICKUP: { bg: '#FFF4D6', text: '#8A5300' },
+  ASSIGNED:         { bg: '#EEFFC2', text: '#0B0C0A' },
+  PICKED_UP:        { bg: '#EEFFC2', text: '#0B0C0A' },
+  IN_TRANSIT:       { bg: '#C8FF3D', text: '#0B0C0A' },
+  DELIVERED:        { bg: '#E3F4E8', text: '#1F7A3A' },
+  CANCELLED:        { bg: '#FDE3E3', text: '#C8282E' },
+  DISPUTED:         { bg: '#FDE3E3', text: '#C8282E' },
 };

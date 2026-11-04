@@ -12,19 +12,19 @@ export default function BuyerLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{ tabBarIcon: ({ focused }) => <TabItem label="Home" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabItem label="Home" icon="home-variant-outline" focused={focused} /> }}
       />
       <Tabs.Screen
         name="orders"
-        options={{ tabBarIcon: ({ focused }) => <TabItem label="Orders" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabItem label="Orders" icon="clipboard-text-outline" focused={focused} /> }}
       />
       <Tabs.Screen
         name="ai-chat"
-        options={{ tabBarIcon: ({ focused }) => <TabItem label="AI Chat" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabItem label="AI Chat" icon="chat-processing-outline" focused={focused} /> }}
       />
       <Tabs.Screen
         name="profile"
-        options={{ tabBarIcon: ({ focused }) => <TabItem label="Profile" focused={focused} /> }}
+        options={{ tabBarIcon: ({ focused }) => <TabItem label="Profile" icon="account-circle-outline" focused={focused} /> }}
       />
       {/* Non-tab screens — hidden from tab bar */}
       <Tabs.Screen name="products" options={{ href: null }} />

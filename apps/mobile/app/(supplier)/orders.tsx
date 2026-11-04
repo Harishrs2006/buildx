@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Colors } from '../../src/constants/colors';
+import { Font } from '../../src/constants/typography';
 import { useSupplierOrders, useUpdateOrderStatus, useConfirmSupplierCod, type SupplierOrder } from '../../src/hooks/useSupplier';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../src/hooks/useOrders';
+import { ChoiceSheet, ConfirmSheet, EmptyState, Icon, Notice, Pill, type } from '../../src/components/ui';
 
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: '', label: 'All' },
@@ -15,194 +17,236 @@ const STATUS_TABS: { key: string; label: string }[] = [
 
 const REJECT_REASONS = ['Out of stock', "Can't deliver to this area", 'Price changed'];
 
-type Handlers = {
-  onUpdateStatus: (id: string, status: string, reason?: string) => void;
-  onConfirmCash: (id: string, amount: number) => void;
-};
+type SheetKind = 'dispatch' | 'takeover' | 'reject' | 'delivered' | 'cash';
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
-function OrderCard({ order, onUpdateStatus, onConfirmCash }: { order: SupplierOrder } & Handlers) {
+function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind: SheetKind, order: SupplierOrder) => void }) {
   const colors = ORDER_STATUS_COLORS[order.status];
-  const buyer = (order.buyerId as any);
+  const buyer = order.buyerId as any;
   const selfDelivery = order.deliveryMode === 'SUPPLIER';
 
-  function dispatch() {
-    Alert.alert('How will this order be delivered?', 'Choose who takes the material to the buyer.', [
-      { text: 'BuildX delivery partner', onPress: () => onUpdateStatus(order._id, 'READY_FOR_PICKUP') },
-      { text: 'My own vehicle', onPress: () => onUpdateStatus(order._id, 'IN_TRANSIT') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  }
-
-  function takeOver() {
-    Alert.alert('Deliver it yourself?', 'No delivery partner has accepted this order yet. Take it with your own vehicle?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Yes, I am delivering', onPress: () => onUpdateStatus(order._id, 'IN_TRANSIT') },
-    ]);
-  }
-
-  function reject() {
-    Alert.alert('Reject this order?', 'Stock will be returned and the buyer notified. Why are you rejecting it?', [
-      ...REJECT_REASONS.map((r) => ({ text: r, style: 'destructive' as const, onPress: () => onUpdateStatus(order._id, 'CANCELLED', r) })),
-      { text: 'Keep order', style: 'cancel' },
-    ]);
-  }
-
-  function markDelivered() {
-    Alert.alert('Mark delivered?', 'Confirm the buyer has received all the material.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delivered', onPress: () => onUpdateStatus(order._id, 'DELIVERED') },
-    ]);
-  }
-
-  function confirmCash() {
-    Alert.alert('Cash collected?', `Confirm you received exactly ${rupees(order.total)} in cash from the buyer.`, [
-      { text: 'Not yet', style: 'cancel' },
-      { text: 'Yes, collected', onPress: () => onConfirmCash(order._id, order.total) },
-    ]);
-  }
-
   // Delivery progress on BuildX-driver orders is updated by the assigned delivery partner
-  const actions: { label: string; onPress: () => void; tone?: 'danger' }[] = [];
-  if (order.status === 'CONFIRMED') actions.push({ label: 'Dispatch', onPress: dispatch });
-  if (order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Deliver myself', onPress: takeOver });
-  if (order.status === 'CONFIRMED' || order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Reject', onPress: reject, tone: 'danger' });
-  if (order.status === 'IN_TRANSIT' && selfDelivery) actions.push({ label: 'Mark Delivered', onPress: markDelivered });
+  const actions: { label: string; kind: SheetKind; tone: 'primary' | 'plain' | 'danger' }[] = [];
+  if (order.status === 'CONFIRMED') actions.push({ label: 'Dispatch', kind: 'dispatch', tone: 'primary' });
+  if (order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Deliver myself', kind: 'takeover', tone: 'plain' });
+  if (order.status === 'CONFIRMED' || order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Reject', kind: 'reject', tone: 'danger' });
+  if (order.status === 'IN_TRANSIT' && selfDelivery) actions.push({ label: 'Mark delivered', kind: 'delivered', tone: 'primary' });
   if (order.status === 'DELIVERED' && selfDelivery && order.paymentStatus === 'PENDING') {
-    actions.push({ label: `Confirm ${rupees(order.total)} cash`, onPress: confirmCash });
+    actions.push({ label: `Confirm ${rupees(order.total)} cash`, kind: 'cash', tone: 'primary' });
   }
 
   return (
     <View style={styles.card}>
       <View style={styles.cardTop}>
         <Text style={styles.orderNumber}>{order.orderNumber}</Text>
-        <View style={[styles.badge, { backgroundColor: colors.bg }]}>
-          <Text style={[styles.badgeText, { color: colors.text }]}>{ORDER_STATUS_LABELS[order.status]}</Text>
-        </View>
+        <Pill label={ORDER_STATUS_LABELS[order.status]} bg={colors.bg} color={colors.text} />
       </View>
 
-      <View style={styles.buyerRow}>
-        <Text style={styles.buyerName}>{buyer?.name ?? 'Buyer'}</Text>
-        <Text style={styles.buyerPhone}>{buyer?.phone}</Text>
+      <Text style={styles.buyer}>{buyer?.name ?? 'Buyer'}</Text>
+      <View style={styles.meta}>
+        <Icon name="map-marker-outline" size={16} color={Colors.stone} />
+        <Text style={styles.metaText} numberOfLines={2}>{order.deliveryAddress.fullAddress}</Text>
       </View>
-
-      <Text style={styles.address} numberOfLines={2}>{order.deliveryAddress.fullAddress}</Text>
-      <Text style={styles.contact}>Contact: {order.deliveryAddress.contactPhone}</Text>
+      <View style={styles.meta}>
+        <Icon name="phone-outline" size={16} color={Colors.stone} />
+        <Text style={styles.metaText}>{order.deliveryAddress.contactPhone || buyer?.phone || 'No phone given'}</Text>
+      </View>
       {order.deliveryMode ? (
-        <Text style={styles.contact}>{selfDelivery ? '🚚 Your vehicle' : '🛵 BuildX delivery partner'}</Text>
+        <View style={styles.meta}>
+          <Icon name={selfDelivery ? 'truck-outline' : 'moped-outline'} size={16} color={Colors.stone} />
+          <Text style={styles.metaText}>{selfDelivery ? 'Your vehicle' : 'BuildX delivery partner'}</Text>
+        </View>
       ) : null}
 
-      <View style={styles.itemsList}>
+      <View style={styles.items}>
         {order.items.map((item, i) => (
-          <Text key={i} style={styles.itemText}>{item.name} — {item.quantity} {item.unit}</Text>
+          <View key={i} style={styles.itemRow}>
+            <Text style={styles.itemName} numberOfLines={1}>{item.name}</Text>
+            <Text style={styles.itemQty}>{item.quantity} {item.unit}</Text>
+          </View>
         ))}
       </View>
 
       {order.notes ? <Text style={styles.notes}>Note: {order.notes}</Text> : null}
 
-      <View style={styles.cardBottom}>
-        <Text style={styles.total}>
-          {rupees(order.total)} COD{order.paymentStatus === 'CAPTURED' ? ' ✓ paid' : ''}
-        </Text>
-        <View style={styles.actionsRow}>
+      <View style={styles.totalRow}>
+        <Text style={styles.total}>{rupees(order.total)}</Text>
+        <Text style={styles.payment}>{order.paymentStatus === 'CAPTURED' ? 'Cash collected' : 'Cash on delivery'}</Text>
+      </View>
+
+      {actions.length > 0 ? (
+        <View style={styles.actions}>
           {actions.map((a) => (
-            <TouchableOpacity
+            <Pressable
               key={a.label}
-              style={[styles.actionBtn, a.tone === 'danger' && styles.actionBtnDanger]}
-              onPress={a.onPress}
+              style={[styles.action, a.tone === 'primary' && styles.actionPrimary, a.tone === 'danger' && styles.actionDanger]}
+              onPress={() => onAction(a.kind, order)}
+              accessibilityRole="button"
             >
-              <Text style={[styles.actionBtnText, a.tone === 'danger' && styles.actionBtnTextDanger]}>{a.label}</Text>
-            </TouchableOpacity>
+              <Text style={[styles.actionText, a.tone === 'danger' && styles.actionTextDanger]}>{a.label}</Text>
+            </Pressable>
           ))}
         </View>
-      </View>
+      ) : null}
     </View>
   );
 }
 
 export default function SupplierOrdersScreen() {
   const [activeTab, setActiveTab] = useState('');
-  const { data, isLoading, refetch, isRefetching } = useSupplierOrders(activeTab || undefined);
-  const { mutate: updateStatus } = useUpdateOrderStatus();
-  const { mutate: confirmCod } = useConfirmSupplierCod();
+  const { data, isLoading, isError, refetch, isRefetching } = useSupplierOrders(activeTab || undefined);
+  const { mutate: updateStatus, isPending: updating } = useUpdateOrderStatus();
+  const { mutate: confirmCod, isPending: confirming } = useConfirmSupplierCod();
+  const [sheet, setSheet] = useState<{ kind: SheetKind; order: SupplierOrder } | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const orders = data?.data ?? [];
+  const close = () => setSheet(null);
 
-  function handleUpdateStatus(id: string, status: string, reason?: string) {
-    updateStatus({ id, status, reason }, {
-      onError: (err) => Alert.alert('Could not update order', err.message),
-    });
+  // Choice sheets close at once (no double taps); confirm sheets stay open with a spinner
+  function setStatus(status: string, reason?: string, closeNow = false) {
+    if (!sheet) return;
+    const order = sheet.order;
+    setError(null);
+    if (closeNow) close();
+    updateStatus(
+      { id: order._id, status, reason },
+      { onSuccess: close, onError: (err) => { close(); setError(`Could not update ${order.orderNumber}: ${err.message}`); } }
+    );
   }
 
-  function handleConfirmCash(id: string, amount: number) {
-    confirmCod({ id, amount }, {
-      onError: (err) => Alert.alert('Could not confirm cash', err.message),
-    });
+  function confirmCash() {
+    if (!sheet) return;
+    setError(null);
+    confirmCod(
+      { id: sheet.order._id, amount: sheet.order.total },
+      { onSuccess: close, onError: (err) => { close(); setError(`Could not confirm cash: ${err.message}`); } }
+    );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Incoming Orders</Text>
+    <SafeAreaView edges={['top']} style={styles.safe}>
+      <Text style={[type.title, styles.title]}>Orders</Text>
 
-        <View style={styles.tabs}>
-          {STATUS_TABS.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
-            >
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>{tab.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {isLoading ? (
-          <ActivityIndicator color={Colors.primary} style={{ marginTop: 48 }} />
-        ) : (
-          <FlatList
-            data={orders}
-            keyExtractor={(o) => o._id}
-            renderItem={({ item }) => <OrderCard order={item} onUpdateStatus={handleUpdateStatus} onConfirmCash={handleConfirmCash} />}
-            contentContainerStyle={{ paddingBottom: 32 }}
-            refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />}
-            ListEmptyComponent={<Text style={styles.empty}>No orders{activeTab ? ` with status ${activeTab}` : ''}</Text>}
-          />
-        )}
+      <View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
+          {STATUS_TABS.map((tab) => {
+            const on = activeTab === tab.key;
+            return (
+              <Pressable key={tab.key} style={[styles.tab, on && styles.tabOn]} onPress={() => setActiveTab(tab.key)} accessibilityRole="tab" accessibilityState={{ selected: on }}>
+                <Text style={[styles.tabText, on && styles.tabTextOn]}>{tab.label}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
+
+      {error ? <Notice tone="error" onClose={() => setError(null)} style={styles.notice}>{error}</Notice> : null}
+
+      {isLoading ? (
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
+      ) : isError ? (
+        <Notice tone="error" title="We could not load your orders" style={styles.notice}>
+          <Pressable onPress={() => refetch()} hitSlop={8} accessibilityRole="button"><Text style={styles.link}>Try again</Text></Pressable>
+        </Notice>
+      ) : (
+        <FlatList
+          data={orders}
+          keyExtractor={(o) => o._id}
+          renderItem={({ item }) => <OrderCard order={item} onAction={(kind, order) => setSheet({ kind, order })} />}
+          contentContainerStyle={styles.list}
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
+          ListEmptyComponent={
+            <EmptyState
+              icon="clipboard-text-outline"
+              title={activeTab ? 'Nothing here' : 'No orders yet'}
+              body={activeTab ? 'No orders with this status right now.' : 'New orders from buyers show up here.'}
+            />
+          }
+        />
+      )}
+
+      <ChoiceSheet
+        visible={sheet?.kind === 'dispatch'}
+        title="Who delivers this order?"
+        body="Choose who takes the material to the buyer."
+        options={[
+          { label: 'BuildX delivery partner', hint: 'A BuildX driver picks it up from you.', icon: 'moped-outline', onPress: () => setStatus('READY_FOR_PICKUP', undefined, true) },
+          { label: 'My own vehicle', hint: 'You deliver and collect the cash.', icon: 'truck-outline', onPress: () => setStatus('IN_TRANSIT', undefined, true) },
+        ]}
+        onCancel={close}
+      />
+      <ChoiceSheet
+        visible={sheet?.kind === 'reject'}
+        title="Why are you rejecting it?"
+        body="The stock goes back to your listing and the buyer is told."
+        options={REJECT_REASONS.map((r) => ({ label: r, danger: true, onPress: () => setStatus('CANCELLED', r, true) }))}
+        cancelLabel="Keep the order"
+        onCancel={close}
+      />
+      <ConfirmSheet
+        visible={sheet?.kind === 'takeover'}
+        title="Deliver it yourself?"
+        body="No delivery partner has taken this order yet. You can deliver it with your own vehicle."
+        confirmLabel="Yes, I am delivering"
+        loading={updating}
+        onConfirm={() => setStatus('IN_TRANSIT')}
+        onCancel={close}
+      />
+      <ConfirmSheet
+        visible={sheet?.kind === 'delivered'}
+        title="Mark as delivered?"
+        body="Confirm the buyer has received all the material."
+        confirmLabel="Delivered"
+        loading={updating}
+        onConfirm={() => setStatus('DELIVERED')}
+        onCancel={close}
+      />
+      <ConfirmSheet
+        visible={sheet?.kind === 'cash'}
+        title="Cash collected?"
+        body={sheet ? `Confirm you received exactly ${rupees(sheet.order.total)} in cash from the buyer.` : undefined}
+        confirmLabel="Yes, collected"
+        cancelLabel="Not yet"
+        loading={confirming}
+        onConfirm={confirmCash}
+        onCancel={close}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surface },
-  container: { flex: 1, paddingHorizontal: 20, paddingTop: 24 },
-  title: { fontSize: 22, fontWeight: '700', color: Colors.text, marginBottom: 16 },
-  tabs: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 16, gap: 8 },
-  tab: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: Colors.surfaceAlt, borderWidth: 1, borderColor: Colors.border },
-  tabActive: { backgroundColor: Colors.primary, borderColor: Colors.primary },
-  tabText: { fontSize: 12, fontWeight: '600', color: Colors.textSecondary },
-  tabTextActive: { color: '#fff' },
-  card: { backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 2 },
-  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  orderNumber: { fontSize: 14, fontWeight: '700', color: Colors.text },
-  badge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  buyerRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  buyerName: { fontSize: 14, fontWeight: '600', color: Colors.text },
-  buyerPhone: { fontSize: 13, color: Colors.textSecondary },
-  address: { fontSize: 12, color: Colors.textSecondary, marginBottom: 2 },
-  contact: { fontSize: 12, color: Colors.textSecondary, marginBottom: 8 },
-  itemsList: { backgroundColor: Colors.surfaceAlt, borderRadius: 8, padding: 10, marginBottom: 8 },
-  itemText: { fontSize: 12, color: Colors.text, marginBottom: 2 },
-  notes: { fontSize: 12, color: Colors.textMuted, fontStyle: 'italic', marginBottom: 8 },
-  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Colors.border, paddingTop: 10 },
-  total: { fontSize: 15, fontWeight: '700', color: Colors.text },
-  actionsRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 8, flex: 1, marginLeft: 8 },
-  actionBtn: { backgroundColor: Colors.primary, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8 },
-  actionBtnDanger: { backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.error },
-  actionBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  actionBtnTextDanger: { color: Colors.error },
-  empty: { textAlign: 'center', color: Colors.textSecondary, marginTop: 80, fontSize: 15 },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  title: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12 },
+  tabs: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },
+  tab: { height: 38, paddingHorizontal: 16, borderRadius: 19, borderWidth: 1, borderColor: Colors.sand4, backgroundColor: Colors.sand2, justifyContent: 'center' },
+  tabOn: { backgroundColor: Colors.ink, borderColor: Colors.ink },
+  tabText: { fontFamily: Font.semiBold, fontSize: 14, color: Colors.ink },
+  tabTextOn: { color: Colors.sand },
+  notice: { marginHorizontal: 20, marginBottom: 10 },
+  link: { fontFamily: Font.bold, fontSize: 14, color: Colors.ink, textDecorationLine: 'underline', marginTop: 4 },
+  loading: { marginTop: 48 },
+  list: { paddingHorizontal: 20, paddingBottom: 32, gap: 12 },
+  card: { padding: 16, borderRadius: 20, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  orderNumber: { fontFamily: Font.monoBold, fontSize: 14, color: Colors.ink },
+  buyer: { fontFamily: Font.bold, fontSize: 17, color: Colors.ink, marginTop: 10 },
+  meta: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 6 },
+  metaText: { fontFamily: Font.regular, flex: 1, fontSize: 14, lineHeight: 19, color: Colors.stone },
+  items: { marginTop: 12, padding: 12, borderRadius: 14, backgroundColor: Colors.sand, gap: 6 },
+  itemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  itemName: { fontFamily: Font.medium, flex: 1, fontSize: 14, color: Colors.ink },
+  itemQty: { fontFamily: Font.monoBold, fontSize: 13, color: Colors.ink },
+  notes: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 10, fontStyle: 'italic' },
+  totalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 12 },
+  total: { fontFamily: Font.display, fontSize: 22, color: Colors.ink },
+  payment: { fontFamily: Font.semiBold, fontSize: 13, color: Colors.stone },
+  actions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 14 },
+  action: { flexGrow: 1, height: 46, paddingHorizontal: 16, borderRadius: 23, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(11,12,10,0.18)' },
+  actionPrimary: { backgroundColor: Colors.lime, borderColor: Colors.lime },
+  actionDanger: { backgroundColor: Colors.errorLight, borderColor: Colors.errorLight },
+  actionText: { fontFamily: Font.bold, fontSize: 15, color: Colors.ink },
+  actionTextDanger: { color: Colors.error },
 });

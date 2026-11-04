@@ -292,3 +292,33 @@ Times are IST.
   blocked by the permission classifier (not attempted further). New APK at Desktop/BuildX/BuildX-test.apk.
 - 2026-11-04 18:40 IST: User installed the 18:17 APK: sign-in works. Updated CURRENT STATE / NEXT STEPS.
 - 2026-11-04 18:45 IST: Found PR #52 was squash-merged at 17:19 before the 3 fixes; opened follow-up PR from origin/main.
+- 2026-11-04 IST: Mobile pass 2 started, branch feat/mobile-hivis-2. Foundation: brand fonts (Bricolage Grotesque,
+  Geist, Geist Mono, Instrument Serif italic; OFL, TTFs + licences in apps/mobile/assets/fonts, loaded in
+  app/_layout.tsx via useFonts under the names in src/constants/typography.ts `Font`), @expo/vector-icons
+  (MaterialCommunityIcons = Material family like the websites) and react-native-svg (needs native rebuild).
+  ui.tsx: Icon, BuildXMark (real roof logo), Notice (replaces error/success Alerts), ConfirmSheet (replaces confirm
+  Alerts), EmptyState, ScreenHeader, TabItem icons. Codemod: 419 StyleSheet text styles -> Font.* (fontWeight
+  dropped; Android ignores custom fonts with fontWeight). npm installs need --legacy-peer-deps (old react-dom peer clash).
+  Next: per-role screens (emoji -> Icon, Alert -> Notice/ConfirmSheet), then a phone test APK.
+- 2026-11-04 IST: Mobile pass 2, buyer side done on feat/mobile-hivis-2: cart, checkout, orders, order detail,
+  order placed, products, product detail, search, review, AI chat, buyer profile; shared Profile pieces for all 4
+  roles. Fixed along the way: hard-coded "Delivery FREE" (now the server's deliveryCharge), timeline missing
+  IN_TRANSIT, product min order qty ignored, "+GST" shown for GST-inclusive prices, description never shown,
+  "Add anyway" for a second supplier (API refuses mixed carts: now asks to start a new cart; cart warns and blocks
+  checkout when the AI assistant mixed suppliers), dead profile buttons removed, "Popular searches" -> "Try searching for".
+  Next: driver (available, deliveries, order), supplier (home, orders, products, add/edit, analytics), ops
+  (attention, orders, order, suppliers), onboarding role, OTP screen; then build a phone APK for the user.
+- 2026-11-04 19:10 IST: Mobile pass 2 code COMPLETE on feat/mobile-hivis-2 (all pushed): supplier (home, orders with
+  ChoiceSheet/ConfirmSheet, products with photos + plain status names, shared src/components/ProductForm.tsx for
+  add/edit matching API rules incl. GST 0%, draft, full fields on edit via GET /suppliers/me/products/:id, sales),
+  driver (pickups, deliveries, order: list now sends on-the-way/delivered/cash steps to the order screen so cash is
+  always recorded; Route component), ops (suppliers, order: Notice + cancel sheet, attention), onboarding (name
+  prefilled from Google, "Use a different account"), real logo on sign-in, app icons rendered from the logo vectors
+  (assets/icon.png, android-icon-foreground/monochrome.png, adaptive bg sand). Zero emojis and zero Alert.alert left.
+  Typecheck clean. Building a phone APK now (C:/bx/mobile, prebuild regenerated for icons/svg).
+  NEXT: user installs APK and checks; open PR feat/mobile-hivis-2 for the user to merge.
+- 2026-11-04 19:40 IST: Redesign APK built (PR #54 branch) and copied to Desktop/BuildX/BuildX-test.apk. Build notes:
+  run gradle in the foreground (the idle-memory reaper kills background builds), skip lint
+  (`-x lintVitalRelease -x lintVitalAnalyzeRelease`) and use -Xmx1536m -XX:MaxMetaspaceSize=640m (384m ran out).
+  Verified: live API URL, new screens and fonts in the bundle, signed with SHA-1 5e8f...f625.
+  NEXT: user installs and checks the redesign on their phone, then merges PR #54.
