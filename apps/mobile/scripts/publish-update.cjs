@@ -16,7 +16,9 @@ const env = {
 };
 if (variant === 'buyer') delete env.APP_VARIANT;
 const channel = variant === 'partner' ? 'partner-production' : 'buyer-production';
-const r = spawnSync('npx', ['eas-cli@latest', 'update', '--channel', channel, '--message', message, '--platform', 'android', '--non-interactive'], {
+// On Windows the command runs through a shell, so the message needs quotes to stay one argument
+const quoted = process.platform === 'win32' ? `"${message.replace(/"/g, "'")}"` : message;
+const r = spawnSync('npx', ['eas-cli@latest', 'update', '--channel', channel, '--message', quoted, '--platform', 'android', '--non-interactive'], {
   env, stdio: 'inherit', shell: process.platform === 'win32',
 });
 process.exit(r.status ?? 1);
