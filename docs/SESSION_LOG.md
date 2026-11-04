@@ -291,3 +291,8 @@ Times are IST.
   "Delete my account" with in-page confirm; public page /account-deletion (link it in the Play and App Store
   listings), linked from the footer, legal pages and sitemap. TODO: same button in seller-web and the mobile app
   (mobile is on the other session's branch feat/mobile-google-signin; add it after that merges).
+- 2026-11-04 IST: apps/mobile/eas.json (preview APK, production AAB with remote version numbers, live API URL)
+  and docs/LAUNCH.md (launch runbook: free owner steps, paid switches with prices, domain switch env vars,
+  Play Store steps incl. SHA fingerprints, google-services.json for EAS, data safety answers). PR opened for
+  feat/launch-ready. NEXT: user merges; then the paid switches in LAUNCH.md section 2 when the user says yes;
+  demo supplier removal needs the user's OK; delete-account button still missing in seller-web and mobile app.
