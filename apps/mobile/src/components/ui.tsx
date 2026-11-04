@@ -35,7 +35,7 @@ const tabStyles = StyleSheet.create({
   labelFocused: { color: Colors.ink, fontFamily: Font.bold },
 });
 
-type ButtonVariant = 'ink' | 'lime' | 'ghost' | 'danger';
+type ButtonVariant = 'ink' | 'lime' | 'ghost' | 'ghostLight' | 'danger';
 
 export function Button({
   title,
@@ -70,6 +70,7 @@ const BUTTON: Record<ButtonVariant, { box: ViewStyle; text: { color: string } }>
   ink: { box: { backgroundColor: Colors.ink }, text: { color: Colors.sand } },
   lime: { box: { backgroundColor: Colors.lime }, text: { color: Colors.ink } },
   ghost: { box: { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(11,12,10,0.18)' }, text: { color: Colors.ink } },
+  ghostLight: { box: { backgroundColor: 'transparent', borderWidth: 1, borderColor: 'rgba(242,239,231,0.25)' }, text: { color: Colors.sand } },
   danger: { box: { backgroundColor: Colors.errorLight }, text: { color: Colors.error } },
 };
 

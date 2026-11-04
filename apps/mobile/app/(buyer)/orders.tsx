@@ -1,94 +1,78 @@
-import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity,
-  ActivityIndicator, RefreshControl,
-} from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useOrders, ORDER_STATUS_LABELS, ORDER_STATUS_COLORS, type Order } from '../../src/hooks/useOrders';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
+import { Button, EmptyState, Eyebrow, Icon, Notice, Pill, type } from '../../src/components/ui';
 
 function OrderCard({ order }: { order: Order }) {
   const router = useRouter();
   const statusColor = ORDER_STATUS_COLORS[order.status];
   const itemCount = order.items.reduce((sum, i) => sum + i.quantity, 0);
-  const date = new Date(order.createdAt).toLocaleDateString('en-IN', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  });
+  const date = new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <TouchableOpacity
-      style={styles.card}
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
       onPress={() => router.push({ pathname: '/(buyer)/order/[id]', params: { id: order._id } } as never)}
-      activeOpacity={0.8}
+      accessibilityRole="button"
+      accessibilityLabel={`Order ${order.orderNumber}, ${ORDER_STATUS_LABELS[order.status]}`}
     >
-      <View style={styles.cardHeader}>
+      <View style={styles.cardTop}>
         <View>
           <Text style={styles.orderNum}>{order.orderNumber}</Text>
           <Text style={styles.orderDate}>{date}</Text>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: statusColor.bg }]}>
-          <Text style={[styles.statusText, { color: statusColor.text }]}>
-            {ORDER_STATUS_LABELS[order.status]}
-          </Text>
+        <Pill label={ORDER_STATUS_LABELS[order.status]} bg={statusColor.bg} color={statusColor.text} />
+      </View>
+      <Text style={styles.items} numberOfLines={2}>{order.items.map((i) => i.name).join(', ')}</Text>
+      <View style={styles.cardBottom}>
+        <Text style={styles.itemCount}>{itemCount} item{itemCount !== 1 ? 's' : ''}</Text>
+        <View style={styles.totalWrap}>
+          <Text style={styles.total}>₹{order.total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</Text>
+          <Icon name="chevron-right" size={20} color={Colors.stone} />
         </View>
       </View>
-
-      <View style={styles.cardDivider} />
-
-      <View style={styles.cardBody}>
-        <Text style={styles.itemSummary} numberOfLines={1}>
-          {order.items.map((i) => i.name).join(', ')}
-        </Text>
-        <Text style={styles.itemCount}>{itemCount} item{itemCount !== 1 ? 's' : ''}</Text>
-      </View>
-
-      <View style={styles.cardFooter}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>
-          ₹{order.total.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
-        </Text>
-      </View>
-    </TouchableOpacity>
+    </Pressable>
   );
 }
 
 export default function OrdersScreen() {
   const router = useRouter();
-  const { data, isLoading, isRefetching, refetch } = useOrders();
+  const { data, isLoading, isError, isRefetching, refetch } = useOrders();
   const orders: Order[] = data?.data ?? [];
+  const active = orders.filter((o) => !['DELIVERED', 'CANCELLED'].includes(o.status)).length;
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView edges={['top']} style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Orders</Text>
+        <Eyebrow>{active > 0 ? `${active} in progress` : 'Your orders'}</Eyebrow>
+        <Text style={[type.title, styles.title]}>Orders</Text>
       </View>
 
       {isLoading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={Colors.primary} />
-        </View>
+        <ActivityIndicator color={Colors.ink} style={styles.loading} />
+      ) : isError ? (
+        <Notice tone="error" title="We could not load your orders" style={styles.notice}>
+          <Pressable onPress={() => refetch()} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.link}>Try again</Text>
+          </Pressable>
+        </Notice>
       ) : orders.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={{ fontSize: 52, marginBottom: 16 }}>📦</Text>
-          <Text style={styles.emptyTitle}>No orders yet</Text>
-          <Text style={styles.emptySub}>Browse materials and place your first order!</Text>
-          <TouchableOpacity style={styles.browseBtn} onPress={() => router.replace('/(buyer)/home' as never)}>
-            <Text style={styles.browseBtnText}>Browse products</Text>
-          </TouchableOpacity>
-        </View>
+        <EmptyState
+          icon="clipboard-text-outline"
+          title="No orders yet"
+          body="When you place an order, you can follow every step here."
+          action={<Button title="Browse materials" onPress={() => router.replace('/(buyer)/home' as never)} />}
+        />
       ) : (
         <FlatList
           data={orders}
           keyExtractor={(item) => item._id}
           renderItem={({ item }) => <OrderCard order={item} />}
           contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.primary} />
-          }
+          refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
         />
       )}
     </SafeAreaView>
@@ -96,36 +80,21 @@ export default function OrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.surfaceAlt },
-  header: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16,
-    paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.border,
-    backgroundColor: Colors.surface,
-  },
-  backBtn: { padding: 4, marginRight: 8 },
-  backIcon: { fontFamily: Font.regular, fontSize: 20, color: Colors.text },
-  headerTitle: { fontFamily: Font.bold, flex: 1, fontSize: 17, color: Colors.text },
-  list: { padding: 16, gap: 12 },
-  card: {
-    backgroundColor: Colors.surface, borderRadius: 16,
-    borderWidth: 1, borderColor: Colors.border,
-    padding: 16, gap: 12,
-  },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  orderNum: { fontFamily: Font.bold, fontSize: 14, color: Colors.text },
-  orderDate: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted, marginTop: 2 },
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  statusText: { fontFamily: Font.bold, fontSize: 11 },
-  cardDivider: { height: 1, backgroundColor: Colors.border },
-  cardBody: { gap: 3 },
-  itemSummary: { fontFamily: Font.medium, fontSize: 13, color: Colors.text },
-  itemCount: { fontFamily: Font.regular, fontSize: 12, color: Colors.textMuted },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  totalLabel: { fontFamily: Font.regular, fontSize: 13, color: Colors.textSecondary },
-  totalValue: { fontFamily: Font.bold, fontSize: 16, color: Colors.primary },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 },
-  emptyTitle: { fontFamily: Font.bold, fontSize: 18, color: Colors.text, marginBottom: 8 },
-  emptySub: { fontFamily: Font.regular, fontSize: 14, color: Colors.textSecondary, textAlign: 'center', marginBottom: 28 },
-  browseBtn: { backgroundColor: Colors.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
-  browseBtnText: { fontFamily: Font.bold, color: '#fff', fontSize: 15 },
+  safe: { flex: 1, backgroundColor: Colors.sand },
+  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8 },
+  title: { marginTop: 6 },
+  loading: { marginTop: 40 },
+  notice: { marginHorizontal: 20, marginTop: 12 },
+  link: { fontFamily: Font.bold, fontSize: 14, color: Colors.ink, textDecorationLine: 'underline', marginTop: 4 },
+  list: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 24, gap: 10 },
+  card: { padding: 16, borderRadius: 18, backgroundColor: Colors.sand2, borderWidth: 1, borderColor: Colors.sand4 },
+  cardPressed: { borderColor: Colors.ink, transform: [{ scale: 0.99 }] },
+  cardTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 },
+  orderNum: { fontFamily: Font.monoBold, fontSize: 14, letterSpacing: 0.5, color: Colors.ink },
+  orderDate: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 2 },
+  items: { fontFamily: Font.medium, fontSize: 15, lineHeight: 20, color: Colors.ink, marginTop: 12 },
+  cardBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Colors.sand4 },
+  itemCount: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone },
+  totalWrap: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  total: { fontFamily: Font.display, fontSize: 18, color: Colors.ink },
 });
