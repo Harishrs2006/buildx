@@ -3,43 +3,24 @@
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE (2026-10-28 18:20 IST)
-- Redesign is LIVE on https://buildx-vgud.vercel.app (PR #25 squash-merged to main as 1b8fa24, Vercel buildx9/buildx-vgud).
-- Local repo: Desktop/BuildX/buildx on branch main. Old local main saved as backup/local-main-old.
-- Preview tooling: `node <scratchpad>/shot.mjs <url> <w> <h> <out.png> [full] [scrollY]` (CDP, real mobile widths).
-  Recreate it if the scratchpad is gone (headless Chrome + Emulation.setDeviceMetricsOverride).
+## CURRENT STATE (2026-11-04 18:40 IST)
+- Live: buyer site https://buildx-vgud.vercel.app, seller site (Vercel buildx-48kc), ops console https://buildx-ops.vercel.app,
+  API https://buildx-api.onrender.com (Render free: sleeps when idle, ~1 min to wake). Google sign-in on both websites.
+- Mobile app Google sign-in: PR #52 (branch feat/mobile-google-signin), user confirmed it works on their phone
+  2026-11-04. Waiting for the user to merge.
+- Mobile builds: OneDrive breaks Gradle, so build from the copy at C:/bx/mobile (robocopy app/ and src/ there first).
+  Phone APK: `cd C:/bx/mobile/android && EXPO_PUBLIC_API_URL=https://buildx-api.onrender.com ./gradlew assembleRelease
+  --max-workers=2 -PreactNativeArchitectures=arm64-v8a`, copy to Desktop/BuildX/BuildX-test.apk (not in git).
+  Emulator is too heavy for this laptop for Google sign-in tests; use the user's phone.
 
 ## NEXT STEPS
-0. Landing story: photo version live (PR #31). All 9 chapters have photos after PR feat/landing-all-chapters
-   (user merges). Figma scratch file 'BuildX landing photos' in the user's Figma drafts holds the 4 Figma images.
-0b. Pending user decision: free sign-in alternative (Google sign-in via Firebase recommended; SMS is never free).
-1. DONE 2026-10-28 (Chrome session): Firebase web app 'BuildX Web' registered in project buildx-15494; the 4
-   NEXT_PUBLIC_FIREBASE_* vars are in Vercel buildx-vgud (Production, type Config); buildx-vgud.vercel.app added to
-   Firebase Auth authorized domains (via Identity Toolkit admin API, the console form kept rejecting it). Production
-   redeploy triggered by pushing to main (manual Vercel redeploy needs an email-code re-auth). VERIFIED live: /signin
-   shows the phone form + reCAPTCHA. BLOCKER: real SMS fails with auth/billing-not-enabled. Firebase needs the Blaze
-   (billing) plan to send SMS; only the 2 test numbers (+917019282018/19, code 123456) work. User decision 2026-10-28: stay on
-   test numbers for now (no billing). Revisit Blaze before public launch.
-2. Optional env: NEXT_PUBLIC_SUPPORT_EMAIL, NEXT_PUBLIC_SUPPORT_PHONE, NEXT_PUBLIC_LEGAL_NAME, NEXT_PUBLIC_SELLER_PORTAL_URL
-   (footer/legal/supplier CTA show them only when set). NEXT_PUBLIC_ALLOW_INDEXING=true at public launch.
-3. DONE: user chose to keep PRD + images LOCAL in Desktop/BuildX/user-brief (not GitHub). Save new user files there.
-   (Do not push them; repo is public.)
-4. DONE (PR feat/buyer-pages-restyle): Hi-Vis cart, checkout (3 steps + dark summary with GST/delivery from quote),
-   orders list, order detail (dark header, timeline, in-page cancel confirm instead of window.confirm), profile.
-   Shared: components/account/AccountUI.tsx + OrderRow.tsx, lib/format.ts. Signed-in screens not screenshot-tested
-   (need login); user can check with test number 70192 82018 / code 123456.
-5. Seller-web Hi-Vis DONE (#37). Mobile pass 1 on branch feat/mobile-hivis (palette, tab bars, auth, buyer home).
-   Mobile pass 2 TODO: remaining ~30 screens (58 Alert/emoji uses), fonts (needs expo-font = native rebuild, ask user).
-6. Add a strict CSP only together with an end-to-end OTP test.
-9. PARKED by user 2026-10-30: real SMS / Blaze / Google sign-in decision. Mobile app pass 2 also not started.
-8. DONE 2026-10-29: ops console LIVE at https://buildx-ops.vercel.app (Vercel buildx-ops). Was: needs a Vercel project (root apps/web, 4 NEXT_PUBLIC_FIREBASE_* +
-   NEXT_PUBLIC_API_URL), its domain in Firebase authorized domains + API CORS, and an ops account via
-   `npm run grant-role --workspace=apps/api -- --phone <n> --role ADMIN`. Mobile app still has the old logo
-   (needs react-native-svg or new icon PNGs = native rebuild, ask first).
-7. Supplier onboarding (branch feat/supplier-onboarding, PR for user to merge): OTP sign-in -> business setup
-   (/setup: type, GSTIN, address, WhatsApp) -> delivery PINs -> categories + brands -> only then List a product
-   (brand chips limited to chosen brands) -> /stock page. Backend guide: docs/BACKEND.md. After merge, check
-   buildx-48kc deploys, then sign in with test number and walk the flow.
+1. User merges PR #52. Nothing to deploy for it (mobile app is installed from the APK; websites unaffected).
+2. Not yet tested on the phone: buyer checkout contact-phone step (needs a buyer account; the user's Google account is
+   a seller), and a brand-new Google account going through "Who are you on BuildX?".
+3. Mobile pass 2 (remaining ~30 screens to the Hi-Vis look, new logo/fonts; native rebuild is fine now, see above).
+4. Launch prep: NEXT_PUBLIC_SUPPORT_EMAIL / SUPPORT_PHONE / LEGAL_NAME (need the user's details), NEXT_PUBLIC_ALLOW_INDEXING=true.
+5. Real SMS needs Firebase Blaze (money: user decides). Strict CSP together with an end-to-end sign-in test.
+6. Render free host sleeps: first request after idle takes ~1 min. Paid plan or a keep-alive ping would fix (ask user).
 
 ## RULES (also in ~/.claude/CLAUDE.md and buildx/CLAUDE.md)
 - No Claude co-author / contributor lines, ever.
@@ -309,3 +290,4 @@ Times are IST.
   set-up accounts stayed on the sign-in screen after both Google and OTP sign-in. Fixed: route each role to its home
   whenever it is outside its group (also removed the 2 old typed-route TS errors). Reading the user's DB record was
   blocked by the permission classifier (not attempted further). New APK at Desktop/BuildX/BuildX-test.apk.
+- 2026-11-04 18:40 IST: User installed the 18:17 APK: sign-in works. Updated CURRENT STATE / NEXT STEPS.
