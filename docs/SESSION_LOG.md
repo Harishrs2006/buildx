@@ -10,7 +10,8 @@ Times are IST.
   API https://buildx-api.onrender.com (Render free: sleeps when idle, ~1 min to wake).
 - Mobile app: Google sign-in (#52, #53) and full Hi-Vis redesign (#54) are merged to main.
 - Mobile builds: from C:/bx/mobile/android, foreground, see 2026-11-04 19:40 entry for the exact gradle command.
-- Open PR: fix/ai-one-supplier (AI assistant no longer fills a cart from several suppliers). Needs the user to merge.
+- Open PRs: fix/ai-one-supplier (#55, AI assistant keeps a cart to one supplier) and feat/partner-app (two apps,
+  in-app alerts, API keep-alive). Both need the user to merge.
 
 ## NEXT STEPS
 1. User merges fix/ai-one-supplier. Mobile only, goes out with the next APK.
@@ -325,3 +326,19 @@ Times are IST.
   Fix on branch fix/ai-one-supplier: AI price list pre-selects the supplier covering most items; "Add selected to
   cart" refuses picks from several suppliers or a cart holding another supplier, with a plain explanation.
   Typecheck clean (in C:/bx/mobile).
+- 2026-11-04 22:55 IST: User: do everything that is free; DB credentials and a government sign-in method come later;
+  they will buy a domain; asked about separate buyer and seller apps. Decided: one codebase, two apps (Swiggy/Zomato
+  pattern): "BuildX" com.buildx.app (buyers) and "BuildX Partner" com.buildx.partner (suppliers, delivery partners,
+  ops). Branch feat/partner-app:
+  - apps/mobile/app.config.ts picks the variant from APP_VARIANT=partner (name, package, scheme, icon, extra.appVariant).
+    src/lib/appVariant.ts: IS_PARTNER, roleBelongsHere(). AuthGate sends an account opened in the wrong app to
+    (auth)/other-app ("Please use BuildX Partner" + Use a different account). Onboarding shows only this app's roles.
+  - Firebase: registered Android app com.buildx.partner (1:1054722710633:android:2ced70d7255ece14b696f8) with debug
+    SHA-1 5e8f...f625; new google-services.json holds both packages (gitignored; copy in buildx-secrets/firebase/
+    and C:/bx/mobile). iOS partner build would need its own GoogleService-Info.plist (not done, no iOS builds yet).
+  - Push: Android 13 notification permission requested; notifications that arrive while the app is open now show an
+    in-app banner (src/components/AlertBanner.tsx), they were silently dropped before; taps open the order screen.
+  - API push texts: emojis and em dash removed.
+  - .github/workflows/keep-api-awake.yml pings /health every 10 min (free; Render gives 750 h/month).
+  - Partner icons: ink background, sand mark, lime bar (assets/partner, make-icons.cjs needs sharp).
+  Build: in C:/bx/mobile run `APP_VARIANT=partner npx expo prebuild -p android --clean --no-install` then gradle.

@@ -183,8 +183,8 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
         const driverUserIds = drivers.map((d) => d.userId.toString());
         return notifyUsers(driverUserIds, {
-          title: '📦 Order Ready for Pickup',
-          body: `Order ${order.orderNumber} is ready · ₹${order.total.toLocaleString('en-IN')} COD`,
+          title: 'Order ready for pickup',
+          body: `Order ${order.orderNumber} is ready. ₹${order.total.toLocaleString('en-IN')}, cash on delivery.`,
           data: { screen: 'driver_available', orderId: order._id.toString() },
         });
       }).catch((err) => {
@@ -192,19 +192,19 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
       });
     } else if (status === 'IN_TRANSIT') {
       notifyUser(order.buyerId.toString(), {
-        title: '🚚 On the way',
+        title: 'On the way',
         body: `${profile.businessName} is delivering your order ${order.orderNumber}.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     } else if (status === 'DELIVERED') {
       notifyUser(order.buyerId.toString(), {
-        title: '✅ Delivered!',
+        title: 'Order delivered',
         body: `Order ${order.orderNumber} delivered. Please pay ₹${order.total.toLocaleString('en-IN')} cash to ${profile.businessName}.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });
     } else if (status === 'CANCELLED') {
       notifyUser(order.buyerId.toString(), {
-        title: '❌ Order Cancelled',
+        title: 'Order cancelled',
         body: `Your order ${order.orderNumber} has been cancelled by the supplier.`,
         data: { screen: 'buyer_orders', orderId: order._id.toString() },
       });

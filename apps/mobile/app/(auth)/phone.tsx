@@ -8,6 +8,7 @@ import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
 import { BuildXMark, Button, Eyebrow, type } from '../../src/components/ui';
 import { signInWithGoogle, signOutEverywhere } from '../../src/lib/googleAuth';
+import { IS_PARTNER } from '../../src/lib/appVariant';
 
 export default function PhoneScreen() {
   const router = useRouter();
@@ -79,11 +80,11 @@ export default function PhoneScreen() {
       <SafeAreaView edges={['top']} style={styles.hero}>
         <View style={styles.brandRow}>
           <BuildXMark size={40} tile />
-          <Text style={styles.brand}>BuildX</Text>
+          <Text style={styles.brand}>{IS_PARTNER ? 'BuildX Partner' : 'BuildX'}</Text>
         </View>
         <Text style={styles.heroTitle}>
-          Order for the site,{'\n'}
-          <Text style={styles.heroAccent}>not the queue.</Text>
+          {IS_PARTNER ? 'Orders in,' : 'Order for the site,'}{'\n'}
+          <Text style={styles.heroAccent}>{IS_PARTNER ? 'trucks out.' : 'not the queue.'}</Text>
         </Text>
       </SafeAreaView>
 
@@ -91,7 +92,11 @@ export default function PhoneScreen() {
         <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
           <Eyebrow>Welcome</Eyebrow>
           <Text style={[type.title, styles.heading]}>Sign in or create an account</Text>
-          <Text style={type.body}>Use your Google account. It is free and takes one tap.</Text>
+          <Text style={type.body}>
+            {IS_PARTNER
+              ? 'For suppliers and delivery partners. Get an alert on your phone the moment an order comes in.'
+              : 'Use your Google account. It is free and takes one tap.'}
+          </Text>
 
           {syncError ? (
             <View style={styles.syncBox} accessibilityLiveRegion="polite">

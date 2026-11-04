@@ -150,7 +150,7 @@ export async function cancel(req: Request, res: Response, next: NextFunction) {
     if (changed) {
       await withOpsNote(id, req, `Cancelled (${restock ?? true ? 'restocked' : 'not restocked'}): ${reason}`);
       notifyUser(order.buyerId.toString(), {
-        title: '❌ Order Cancelled',
+        title: 'Order cancelled',
         body: `Your order ${order.orderNumber} was cancelled by BuildX support.`,
         data: { screen: 'buyer_orders', orderId: id },
       });
@@ -225,12 +225,12 @@ export async function assign(req: Request, res: Response, next: NextFunction) {
     if (changed) {
       await withOpsNote(id, req, `Assigned to driver ${driverUserId}${note ? `: ${note}` : ''}`);
       notifyUser(driverUserId, {
-        title: '📦 New delivery assigned',
+        title: 'New delivery assigned',
         body: `BuildX support assigned order ${order.orderNumber} to you.`,
         data: { screen: 'driver_available', orderId: id },
       });
       notifyUser(order.buyerId.toString(), {
-        title: '🚚 Driver Assigned',
+        title: 'Driver assigned',
         body: `A driver is on the way to pick up your order ${order.orderNumber}.`,
         data: { screen: 'buyer_orders', orderId: id },
       });

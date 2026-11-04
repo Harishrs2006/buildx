@@ -10,6 +10,8 @@ import { StyleSheet } from 'react-native';
 import { usePushNotifications } from '../src/hooks/usePushNotifications';
 import { useFonts } from 'expo-font';
 import { fontFiles } from '../src/constants/typography';
+import { roleBelongsHere } from '../src/lib/appVariant';
+import { AlertBanner } from '../src/components/AlertBanner';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,12 +44,18 @@ function AuthGate() {
     const inOnboarding = segments[0] === '(onboarding)';
 
     if (!user) {
-      if (!inAuth) router.replace('/(auth)/phone');
+      if (!inAuth || (segments as string[])[1] === 'other-app') router.replace('/(auth)/phone');
       return;
     }
 
     if (!user.onboardingComplete) {
       if (!inOnboarding) router.replace('/(onboarding)/role');
+      return;
+    }
+
+    // Buyers use BuildX, everyone else uses BuildX Partner: explain instead of opening the wrong screens
+    if (!roleBelongsHere(user.role)) {
+      if ((segments as string[])[1] !== 'other-app') router.replace('/(auth)/other-app' as Href);
       return;
     }
 
@@ -82,6 +90,7 @@ export default function RootLayout() {
           <Stack.Screen name="(driver)" />
           <Stack.Screen name="(ops)" />
         </Stack>
+        <AlertBanner />
         <StatusBar style="dark" />
       </QueryClientProvider>
     </GestureHandlerRootView>
