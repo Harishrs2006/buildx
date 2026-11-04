@@ -12,7 +12,8 @@ and terminal chat history is lost; this log is the only memory.
   supplier coverage or statistics. Sample data must be labelled as sample.
 - Backend (apps/api) is authoritative for prices, stock, roles and order status.
 - Auth is Firebase phone OTP, plus Google sign-in on the seller and buyer websites (user decision
-  2026-10-31: free, SMS needs the paid Firebase plan). Ops console and mobile app stay phone OTP.
+  2026-10-31: free, SMS needs the paid Firebase plan) and in the mobile app (user decision 2026-11-04;
+  phone form stays as the second option there). Ops console stays phone OTP.
   Do not add any other auth provider.
 - Every asset (images, logos, fonts, animations) lives in the repo and is pushed.
 

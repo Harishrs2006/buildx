@@ -270,3 +270,10 @@ Times are IST.
   "not a buyer account" screen (session from a seller/admin account), which had no way out. Added a Sign out button
   and account-neutral copy to wrong-role screens on buyer (signin + RequireAuth) and seller (RequireSupplier).
   Firebase has 1 Google user so far. Branch fix/wrong-role-signout.
+- 2026-11-04 IST: User chose NEXT STEP "mobile app Google sign-in". Branch feat/mobile-google-signin. Firebase Android
+  app already had the debug keystore SHA-1 (5e8f...f625); downloaded fresh google-services.json and
+  GoogleService-Info.plist via Firebase Management API with gcloud (both gitignored, local only). Added
+  @react-native-google-signin/google-signin 17 (Firebase-mode config plugin), src/lib/googleAuth.ts (web client
+  5ibngc...), sign-in screen: Continue with Google first, "Use mobile number instead" second (billing-not-enabled
+  mapped to a clear message), sign-out also signs out of Google, profiles show email when no phone, checkout
+  requires a contact phone. Needs a native rebuild (expo run:android). Claude in Chrome was not connected.
