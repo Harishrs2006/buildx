@@ -293,3 +293,9 @@ Times are IST.
   option opens, a real number shows "Text message codes are not available yet..." (Android sends BILLING_NOT_ENABLED
   inside auth/internal-error, now handled). NOT checked: finishing a Google sign-in (needs the user's Google account on
   the emulator) and the checkout phone step. PR opened for the user to merge.
+- 2026-11-04 18:00 IST: Emulator too heavy for this laptop (Google sign-in page stuck rendering, ~1.7 GB free). Built a
+  standalone release APK for real phones instead: in C:/bx/mobile/android, `EXPO_PUBLIC_API_URL=https://buildx-api.onrender.com
+  ./gradlew assembleRelease --max-workers=2 -PreactNativeArchitectures=arm64-v8a` (apps/mobile/.env points at
+  10.0.2.2:4000 = emulator-local API, so the env var override matters). Verified: bundle has the live API URL and new
+  sign-in screen, signed with SHA-1 5e8f...f625 (registered in Firebase). Copied to Desktop/BuildX/BuildX-test.apk
+  (not in git). Waiting for the user to install it on their Android phone and try Continue with Google.
