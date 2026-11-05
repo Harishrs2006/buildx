@@ -6,6 +6,8 @@ import { Order } from '../../infrastructure/database/models/Order.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { Category } from '../../infrastructure/database/models/Category.model';
+import { CatalogItem } from '../../infrastructure/database/models/CatalogItem.model';
+import { createCatalogItem, findMatchingItem } from '../catalog/catalog.service';
 import { bulkPricingProblem } from './product-rules';
 import { ORDER_STATUSES } from '../ops/ops.schemas';
 import { ok } from '@sthiva/shared';
@@ -284,11 +286,34 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
     const profile = await getSupplierProfile(req.auth!.userId);
 
     // Body is checked by createProductSchema (supplier.routes.ts)
-    const { name, categoryId, description, shortDescription, unit, basePrice, gstRate, isGstInclusive,
+    const { catalogItemId, brand, description, shortDescription, basePrice, gstRate, isGstInclusive,
       stockQuantity, minOrderQuantity, deliveryDays, lowStockAlert, tags, specifications, images, bulkPricing,
       status } = req.body;
+    let { name, categoryId, unit } = req.body;
 
-    if (!(await Category.exists({ _id: categoryId }))) throw AppError.badRequest('That category does not exist');
+    // Selling an item already in the Sthiva catalog: its name, category and unit win, so every
+    // supplier's listing of it is comparable. Otherwise this listing starts a new catalog item.
+    let itemId;
+    if (catalogItemId) {
+      const item = await CatalogItem.findOne({ _id: catalogItemId, status: 'ACTIVE' }).lean();
+      if (!item) throw AppError.badRequest('That catalog item is not available. Search again or add it as new.');
+      if (await Product.exists({ supplierId: profile._id, catalogItemId: item._id })) {
+        throw AppError.conflict('You already list this item. Edit your existing listing instead.');
+      }
+      ({ name, unit } = item);
+      categoryId = item.categoryId.toString();
+      itemId = item._id;
+    } else {
+      if (!(await Category.exists({ _id: categoryId }))) throw AppError.badRequest('That category does not exist');
+      // Same name, category and unit as an existing item: it is that item
+      const same = await findMatchingItem(name, categoryId, unit);
+      if (same) {
+        if (await Product.exists({ supplierId: profile._id, catalogItemId: same._id })) {
+          throw AppError.conflict('You already list this item. Edit your existing listing instead.');
+        }
+        itemId = same._id;
+      }
+    }
 
     const baseSlug = slugify(name);
     let slug = baseSlug;
@@ -298,28 +323,45 @@ export async function createProduct(req: Request, res: Response, next: NextFunct
       slug = `${baseSlug}-${counter}`;
     }
 
-    const product = await Product.create({
-      supplierId: profile._id,
-      categoryId,
-      name,
-      slug,
-      description,
-      shortDescription,
-      unit,
-      basePrice,
-      gstRate: gstRate ?? 18,
-      isGstInclusive: isGstInclusive ?? true,
-      stockQuantity: stockQuantity ?? 0,
-      minOrderQuantity: minOrderQuantity ?? 1,
-      deliveryDays: deliveryDays ?? 2,
-      tags: tags ?? [],
-      specifications: specifications ?? {},
-      images: images ?? [],
-      bulkPricing: [...(bulkPricing ?? [])].sort((a: { minQty: number }, b: { minQty: number }) => a.minQty - b.minQty),
-      ...(lowStockAlert !== undefined ? { lowStockAlert } : {}),
-      // Drafts stay hidden; anything published with no stock shows as out of stock, not live
-      status: status === 'DRAFT' ? 'DRAFT' : (stockQuantity ?? 0) > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
-    });
+    let newItemId;
+    if (!itemId) {
+      const item = await createCatalogItem(
+        { name, categoryId, unit, brand: brand ?? specifications?.Brand, description, images, specifications, gstRate: gstRate ?? 18 },
+        { role: 'SUPPLIER', userId: profile.userId }
+      );
+      itemId = newItemId = item._id;
+    }
+
+    let product;
+    try {
+      product = await Product.create({
+        supplierId: profile._id,
+        catalogItemId: itemId,
+        categoryId,
+        name,
+        slug,
+        description,
+        shortDescription,
+        unit,
+        basePrice,
+        gstRate: gstRate ?? 18,
+        isGstInclusive: isGstInclusive ?? true,
+        stockQuantity: stockQuantity ?? 0,
+        minOrderQuantity: minOrderQuantity ?? 1,
+        deliveryDays: deliveryDays ?? 2,
+        tags: tags ?? [],
+        specifications: specifications ?? {},
+        images: images ?? [],
+        bulkPricing: [...(bulkPricing ?? [])].sort((a: { minQty: number }, b: { minQty: number }) => a.minQty - b.minQty),
+        ...(lowStockAlert !== undefined ? { lowStockAlert } : {}),
+        // Drafts stay hidden; anything published with no stock shows as out of stock, not live
+        status: status === 'DRAFT' ? 'DRAFT' : (stockQuantity ?? 0) > 0 ? 'ACTIVE' : 'OUT_OF_STOCK',
+      });
+    } catch (err) {
+      // Don't leave behind a catalog item made only for this failed listing
+      if (newItemId) await CatalogItem.deleteOne({ _id: newItemId });
+      throw err;
+    }
 
     // Same shape as the list and GET responses: the web portal validates it
     await product.populate('categoryId', 'name slug');
@@ -334,7 +376,7 @@ export async function updateProduct(req: Request, res: Response, next: NextFunct
     const profile = await getSupplierProfile(req.auth!.userId);
 
     const editable = ['name', 'description', 'shortDescription', 'basePrice', 'gstRate', 'isGstInclusive',
-      'stockQuantity', 'minOrderQuantity', 'deliveryDays', 'tags', 'specifications', 'status', 'unit', 'images',
+      'stockQuantity', 'minOrderQuantity', 'deliveryDays', 'tags', 'specifications', 'status', 'images',
       'lowStockAlert', 'bulkPricing'];
     const update: Record<string, unknown> = {};
     for (const key of editable) {

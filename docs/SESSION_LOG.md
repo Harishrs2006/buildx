@@ -26,7 +26,8 @@ User decisions 2026-11-05 07:40 IST:
   that fits; admin can override.
 - Claude's working rule (user can change): buyer price for a PIN = lowest supplier price serving it + commission;
   auto-offers only to suppliers whose price is not higher, so commission never shrinks; others via admin.
-Phase 1 (admin settings) = PR docs/platform-plan. Next: Phase 2 (catalog items linking supplier listings).
+Phase 1 (admin settings) merged as #66. Phase 2 (Sthiva catalog) = PR feat/catalog-items. Next: Phase 3 (supplier
+  offers: accept/reject, next supplier, timeout) and Phase 4 (buyer sees catalog items at one price).
 0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
    Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
    projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
@@ -477,3 +478,10 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
 - 2026-11-05 07:20 IST: GitHub sidebar still listed "claude" as contributor (stale cache; API and history are clean).
   Toggled default branch main -> tmp-refresh -> main to force a recount; added local commit-msg hook that blocks
   Claude/AI co-author lines. If still shown, user asks GitHub Support to refresh the contributors cache.
+- 2026-11-05 08:20 IST: User merged #66. Phase 2 on feat/catalog-items: CatalogItem model (name, brand, category, unit,
+  weightKgPerUnit, needsReview, mergedInto); Product.catalogItemId (one listing per item per supplier, partial unique
+  index). Supplier create: pick catalogItemId, or auto-match by normalised name + category + unit, or a new item
+  (needsReview). Startup linkUnlinkedProducts() links old listings. API: GET /suppliers/me/catalog; ops GET/POST
+  /ops/catalog, GET/PATCH /ops/catalog/:id, POST /ops/catalog/:id/merge. SupplierProfile.canDeliver. Seller web:
+  "Already on Sthiva" suggestions in the product form, delivery choice in setup; ops console: Catalog tab.
+  316 API tests pass (12 new), both sites build. Note: Python here defaults to cp1252: always pass encoding='utf-8'.

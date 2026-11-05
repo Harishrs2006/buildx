@@ -158,6 +158,36 @@ export const settingsApi = {
     send(c, 'PATCH', '/ops/settings/general', { offerTimeoutMinutes }, z.object({ offerTimeoutMinutes: z.number().nullable() })),
 };
 
+// Sthiva catalog (ops). Shapes mirror catalog.controller.ts.
+export const UNITS = ['BAG', 'TON', 'KG', 'PIECE', 'BUNDLE', 'CUBIC_METER', 'SQUARE_METER', 'LITER', 'METER'] as const;
+export const catalogItemSchema = z
+  .object({
+    _id: z.string(),
+    name: z.string(),
+    brand: z.string().optional(),
+    unit: z.string(),
+    weightKgPerUnit: z.number().optional(),
+    status: z.enum(['ACTIVE', 'INACTIVE']),
+    needsReview: z.boolean(),
+    categoryId: ref(z.object({ _id: z.string(), name: z.string() }).passthrough()),
+    createdBy: z.object({ role: z.string() }).passthrough().optional(),
+    listings: z.number().optional(),
+    liveListings: z.number().optional(),
+    createdAt: z.string().optional(),
+  })
+  .passthrough();
+export type OpsCatalogItem = z.infer<typeof catalogItemSchema>;
+export type CatalogEdit = Partial<{ name: string; brand: string | null; weightKgPerUnit: number | null; status: 'ACTIVE' | 'INACTIVE'; needsReview: boolean }>;
+
+export const catalogApi = {
+  list: (c: ApiClient, q: Query): Promise<{ data: OpsCatalogItem[]; meta: PaginationMeta }> =>
+    c.requestPage('/ops/catalog', { auth: true, envelope: true, schema: z.array(catalogItemSchema), query: q }),
+  update: (c: ApiClient, id: string, body: CatalogEdit) => send(c, 'PATCH', `/ops/catalog/${id}`, body, catalogItemSchema),
+  create: (c: ApiClient, body: { name: string; categoryId: string; unit: string; brand?: string; weightKgPerUnit?: number }) =>
+    send(c, 'POST', '/ops/catalog', body, catalogItemSchema),
+  merge: (c: ApiClient, id: string, intoId: string) => send(c, 'POST', `/ops/catalog/${id}/merge`, { intoId }, z.object({ moved: z.number() }).passthrough()),
+};
+
 export type Load<T> = { status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; error: unknown };
 
 // Fetches on mount and whenever `deps` change. `reload` refetches without flashing a skeleton.

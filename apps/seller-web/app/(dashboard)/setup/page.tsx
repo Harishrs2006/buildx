@@ -69,6 +69,7 @@ export default function SetupPage() {
   const [gstin, setGstin] = useState('');
   const [address, setAddress] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
+  const [canDeliver, setCanDeliver] = useState(false);
   // step 2
   const [pinInput, setPinInput] = useState('');
   // step 3
@@ -84,6 +85,7 @@ export default function SetupPage() {
     setGstin(p.gstin ?? '');
     setAddress(p.address ?? '');
     setWhatsapp((p.whatsappNumber ?? '').replace(/^\+91/, ''));
+    setCanDeliver(p.canDeliver ?? false);
     setCats(p.categories ?? []);
     setBrands(p.brands ?? []);
     setSeeded(true);
@@ -125,7 +127,7 @@ export default function SetupPage() {
       if (!businessType) throw new Error('Choose what kind of business you are.');
       if (!gstinValid) throw new Error('Check the GSTIN: it has 15 characters, like 29ABCDE1234F1Z5.');
       if (!/^[6-9]\d{9}$/.test(whatsapp)) throw new Error('Enter a 10-digit WhatsApp number.');
-      profile.replace(await updateSupplierProfile(client, { businessType, gstin, address: address.trim(), whatsappNumber: whatsapp }));
+      profile.replace(await updateSupplierProfile(client, { businessType, gstin, address: address.trim(), whatsappNumber: whatsapp, canDeliver }));
       setStep(1);
     });
 
@@ -198,6 +200,28 @@ export default function SetupPage() {
                 </button>
               ))}
             </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="text-[15px] font-semibold">Who delivers your orders?</legend>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {[
+                { v: true, label: 'We deliver ourselves', hint: 'You have your own vehicle. Sthiva charges a lower commission on these orders.' },
+                { v: false, label: 'Sthiva delivers', hint: 'A Sthiva delivery partner picks up from your shop or yard.' },
+              ].map((o) => (
+                <button
+                  key={String(o.v)}
+                  type="button"
+                  aria-pressed={canDeliver === o.v}
+                  onClick={() => setCanDeliver(o.v)}
+                  className={`rounded-xl border p-4 text-left transition-colors ${canDeliver === o.v ? 'border-ink bg-ink text-sand' : 'border-sand-4 bg-sand hover:border-ink'}`}
+                >
+                  <span className="block text-[15px] font-semibold">{o.label}</span>
+                  <span className={`mt-1 block text-[13px] ${canDeliver === o.v ? 'text-sand/70' : 'text-stone'}`}>{o.hint}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[13px] text-stone">You can still choose per order when you dispatch it.</p>
           </fieldset>
 
           <label className="flex flex-col gap-2">

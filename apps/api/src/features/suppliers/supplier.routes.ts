@@ -13,6 +13,7 @@ import {
 } from '../serviceability/service-pincodes.controller';
 import { MAX_PINCODES_PER_REQUEST } from '../serviceability/serviceability.service';
 import { bulkPricingProblem } from './product-rules';
+import { supplierSearch } from '../catalog/catalog.controller';
 
 // Strings are format-checked per item in the controller so each bad entry gets its own reason
 const addPincodesSchema = z.object({
@@ -35,6 +36,7 @@ export const updateProfileSchema = z
     address: z.string().trim().max(300),
     categories: z.array(z.string().trim().regex(/^[a-z0-9-]{2,60}$/)).max(20),
     brands: z.array(z.string().trim().min(1).max(60)).max(60),
+    canDeliver: z.boolean(),
   })
   .partial()
   .strict();
@@ -45,6 +47,9 @@ export const PRODUCT_UNITS = ['KG', 'TON', 'PIECE', 'BAG', 'BUNDLE', 'CUBIC_METE
 const objectId = z.string().regex(/^[a-f\d]{24}$/i, 'Invalid ID');
 
 const productFields = {
+  // Pick an item from the Sthiva catalog; without it a new catalog item is created from this listing
+  catalogItemId: objectId,
+  brand: z.string().trim().min(1).max(60),
   name: z.string().trim().min(3, 'Name is too short').max(150),
   categoryId: objectId,
   description: z.string().trim().min(10, 'Describe the product in at least 10 characters').max(3000),
@@ -81,7 +86,7 @@ export const createProductSchema = z
     // A new listing is either published or kept as a draft; the server decides live vs out of stock
     status: z.enum(['DRAFT', 'ACTIVE']),
   })
-  .partial({ shortDescription: true, gstRate: true, isGstInclusive: true, stockQuantity: true, minOrderQuantity: true,
+  .partial({ catalogItemId: true, brand: true, shortDescription: true, gstRate: true, isGstInclusive: true, stockQuantity: true, minOrderQuantity: true,
     deliveryDays: true, lowStockAlert: true, tags: true, specifications: true, images: true, bulkPricing: true, status: true })
   .strict()
   .superRefine((v, ctx) => {
@@ -89,7 +94,8 @@ export const createProductSchema = z
     if (problem) ctx.addIssue({ code: 'custom', path: ['bulkPricing'], message: problem });
   });
 
-export const updateProductSchema = z.object(productFields).omit({ categoryId: true }).partial().strict();
+// Category, catalog item and brand are fixed once listed (ops can re-link or merge items)
+export const updateProductSchema = z.object(productFields).omit({ categoryId: true, catalogItemId: true, brand: true }).partial().strict();
 
 const router = Router();
 
@@ -104,6 +110,9 @@ router.get('/me/analytics', getAnalytics);
 router.get('/me/orders', listSupplierOrders);
 router.patch('/me/orders/:id/status', validate(supplierStatusSchema), updateOrderStatus);
 router.post('/me/orders/:id/cod', validate(codCollectedSchema), confirmCodCollected);
+
+// Sthiva catalog search, to list an existing item instead of creating a duplicate
+router.get('/me/catalog', supplierSearch);
 
 router.get('/me/products', listSupplierProducts);
 router.get('/me/products/:id', getSupplierProduct);

@@ -32,6 +32,8 @@ export const supplierProductSchema = z
 export type SupplierProduct = z.infer<typeof supplierProductSchema>;
 
 export type ProductInput = {
+  // An item already on Sthiva; without it the server matches by name or starts a new item
+  catalogItemId?: string;
   name: string;
   categoryId: string;
   description: string;
@@ -62,6 +64,18 @@ export async function fetchSupplierProducts(
 
 export async function fetchSupplierProduct(client: ApiClient, id: string): Promise<SupplierProduct> {
   return client.request(`/suppliers/me/products/${id}`, { auth: true, envelope: true, schema: supplierProductSchema });
+}
+
+// Items on Sthiva a supplier can sell (shared across suppliers); myListingId = they already list it
+export const sthivaItemSchema = z
+  .object({ _id: z.string(), name: z.string(), brand: z.string().optional(), unit: z.string(), myListingId: z.string().nullable() })
+  .passthrough();
+export type SthivaItem = z.infer<typeof sthivaItemSchema>;
+
+export async function searchSthivaItems(client: ApiClient, q: string, categoryId?: string): Promise<SthivaItem[]> {
+  return client.request('/suppliers/me/catalog', {
+    auth: true, envelope: true, schema: z.array(sthivaItemSchema), query: { q, ...(categoryId ? { categoryId } : {}) },
+  });
 }
 
 export async function createSupplierProduct(client: ApiClient, input: ProductInput & { status?: 'DRAFT' | 'ACTIVE' }): Promise<SupplierProduct> {

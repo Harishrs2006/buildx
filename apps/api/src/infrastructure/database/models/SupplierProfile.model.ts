@@ -12,6 +12,8 @@ export interface ISupplierProfile extends Document {
   categories: string[]; // category slugs the supplier sells in
   brands: string[]; // brands the supplier deals in (dealership / stockist)
   deliveryRadiusKm: number;
+  // Has their own vehicle and can deliver orders themselves (else Sthiva's delivery partners do)
+  canDeliver: boolean;
   serviceAreas: string[];   // free-text town names, display only (mobile shows them)
   // PIN codes this supplier delivers to; each validated against the India Post directory when
   // added (features/serviceability). Empty = serves nowhere — never "everywhere".
@@ -45,6 +47,7 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
     categories: [{ type: String }],
     brands: { type: [{ type: String, trim: true, maxlength: 60 }], default: [] },
     deliveryRadiusKm: { type: Number, default: 30 },
+    canDeliver: { type: Boolean, default: false },
     serviceAreas: [String],
     servicePincodes: {
       type: [{ type: String, match: /^[1-9]\d{5}$/ }],

@@ -116,8 +116,9 @@ describe('product rules (create and edit)', () => {
     const category = await Category.create({ name: 'Cement & Concrete', slug: 'cement-concrete' });
     const url = '/api/v1/suppliers/me/products';
     const withStock = await request(app).post(url).set(headers).send({ ...base(category.id), stockQuantity: 200 });
-    const noStock = await request(app).post(url).set(headers).send(base(category.id));
-    const draft = await request(app).post(url).set(headers).send({ ...base(category.id), stockQuantity: 50, status: 'DRAFT' });
+    // One listing per item per supplier, so each case is a different product
+    const noStock = await request(app).post(url).set(headers).send({ ...base(category.id), name: 'UltraTech PPC cement' });
+    const draft = await request(app).post(url).set(headers).send({ ...base(category.id), name: 'ACC OPC 43 cement', stockQuantity: 50, status: 'DRAFT' });
     expect([withStock.body.data.status, noStock.body.data.status, draft.body.data.status]).toEqual(['ACTIVE', 'OUT_OF_STOCK', 'DRAFT']);
   });
 
