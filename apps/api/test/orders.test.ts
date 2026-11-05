@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vites
 import request from 'supertest';
 import mongoose from 'mongoose';
 import {
-  seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
+  acceptOffer, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
   startDb, stopDb, clearDb, makeApp,
 } from './helpers';
 import { Order } from '../src/infrastructure/database/models/Order.model';
@@ -52,6 +52,7 @@ async function placedOrder(qty = 10, productExtra: Record<string, unknown> = {})
   const product = await seedProduct(supplier.profile._id, productExtra);
   const res = await place(buyer, [{ productId: product._id.toString(), quantity: qty }]);
   expect(res.status).toBe(201);
+  await acceptOffer(app, supplier, res.body.data.orderId);
   return { product, orderId: res.body.data.orderId as string, res };
 }
 
@@ -73,7 +74,7 @@ describe('order creation and stock', () => {
       body: { total: 1, subtotal: 1, gstAmount: 0 },
     });
     expect(res.status).toBe(201);
-    expect(res.body.data).toMatchObject({ subtotal: 4000, gstAmount: 1120, total: 5120, status: 'CONFIRMED', replayed: false });
+    expect(res.body.data).toMatchObject({ subtotal: 4000, gstAmount: 1120, total: 5120, status: 'PENDING', replayed: false });
     expect(await stockOf(product._id)).toBe(90);
     const order = await Order.findById(res.body.data.orderId).lean();
     expect(order).toMatchObject({ inventoryState: 'DEDUCTED', paymentStatus: 'PENDING', paymentMethod: 'COD' });
@@ -419,7 +420,7 @@ describe('order state machine', () => {
     results.forEach((r) => expect(r.status).toBe(200));
     expect((await DeliveryPartner.findById(driver.profile._id).lean())!.totalDeliveries).toBe(before + 1);
     const order = await Order.findById(orderId).lean();
-    expect(order!.statusHistory.map((h) => h.status)).toEqual(['CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'DELIVERED']);
+    expect(order!.statusHistory.map((h) => h.status)).toEqual(['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'DELIVERED']);
   });
 
   it('only the owning supplier and assigned driver can update', async () => {

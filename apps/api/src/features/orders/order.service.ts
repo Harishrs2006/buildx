@@ -10,6 +10,7 @@ import {
 } from './order-state';
 import type { CartItemsInput, CreateOrderInput } from './order.schemas';
 import { env } from '../../config/env';
+import { offerExpiry } from './allocation.service';
 import { checkSupplier, notServiceable, resolveDestination, type Destination } from '../serviceability/serviceability.service';
 
 /**
@@ -57,7 +58,7 @@ async function inTransaction<T>(fn: (session: ClientSession) => Promise<T>): Pro
 type LeanProduct = Pick<
   IProduct,
   'supplierId' | 'name' | 'unit' | 'basePrice' | 'bulkPricing' | 'gstRate' | 'isGstInclusive'
-  | 'minOrderQuantity' | 'stockQuantity' | 'status' | 'images'
+  | 'minOrderQuantity' | 'stockQuantity' | 'status' | 'images' | 'catalogItemId'
 > & { _id: Types.ObjectId };
 
 type PricedCart = {
@@ -91,6 +92,7 @@ async function priceCart(items: CartItemsInput, session?: ClientSession): Promis
 function lineView(p: PricedCart['products'][number], line: PricedOrder['lines'][number]) {
   return {
     productId: p._id,
+    catalogItemId: p.catalogItemId,
     name: p.name,
     imageUrl: p.images?.find((img) => img.isPrimary)?.url ?? p.images?.[0]?.url ?? '',
     unit: p.unit,
@@ -192,6 +194,7 @@ export async function createOrder(params: {
       }
 
       const now = new Date();
+      const expiresAt = await offerExpiry(now);
       const [created] = await Order.create(
         [
           {
@@ -211,12 +214,17 @@ export async function createOrder(params: {
             notes: input.notes,
             paymentMethod: 'COD',
             paymentStatus: 'PENDING',
-            status: 'CONFIRMED',
-            confirmedAt: now,
+            // Waits for the supplier to accept (allocation.service.ts)
+            status: 'PENDING',
+            allocation: {
+              state: 'OFFERED',
+              ...(expiresAt ? { expiresAt } : {}),
+              attempts: [{ supplierId, offeredAt: now }],
+            },
             inventoryState: 'DEDUCTED',
             idempotencyKey,
             requestHash,
-            statusHistory: [{ status: 'CONFIRMED', at: now, byRole: 'BUYER', byUserId: buyerId }],
+            statusHistory: [{ status: 'PENDING', at: now, byRole: 'BUYER', byUserId: buyerId }],
           },
         ],
         { session }
@@ -314,7 +322,7 @@ export async function cancelOrder(params: {
   const sources = cancelSources(actor);
 
   const cancelled = await inTransaction(async (session) => {
-    const order = await Order.findOneAndUpdate(
+    const before = await Order.findOneAndUpdate(
       { $and: [filter, guard, { status: { $in: sources }, inventoryState: { $nin: ['RESTORED', 'NOT_RESTORED'] } }] },
       {
         $set: {
@@ -326,11 +334,13 @@ export async function cancelOrder(params: {
         },
         $push: { statusHistory: historyEntry('CANCELLED', historyRole, userId, reason) },
       },
-      { new: true, session }
+      { new: false, session }
     ).lean<LeanOrder>();
-    if (!order) return null;
+    if (!before) return null;
+    const order = (await Order.findById(before._id).session(session).lean<LeanOrder>())!;
 
-    if (restock && order.items.length > 0) {
+    // NONE: the order was waiting for a supplier, so nobody holds stock for it
+    if (restock && before.inventoryState !== 'NONE' && order.items.length > 0) {
       await Product.bulkWrite(
         order.items.map((item) => ({
           updateOne: {

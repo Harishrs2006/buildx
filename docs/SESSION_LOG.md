@@ -26,8 +26,9 @@ User decisions 2026-11-05 07:40 IST:
   that fits; admin can override.
 - Claude's working rule (user can change): buyer price for a PIN = lowest supplier price serving it + commission;
   auto-offers only to suppliers whose price is not higher, so commission never shrinks; others via admin.
-Phase 1 (admin settings) merged as #66. Phase 2 (Sthiva catalog) = PR feat/catalog-items. Next: Phase 3 (supplier
-  offers: accept/reject, next supplier, timeout) and Phase 4 (buyer sees catalog items at one price).
+Phase 1 (admin settings) merged as #66. Phase 2 merged as #67. Phase 3 (supplier offers) = PR feat/supplier-offers.
+  After merge: user publishes OTA updates (partner + buyer) so the apps show Accept/Reject and the new label.
+  Next: Phase 4 (buyer sees catalog items at one price + commission + supplier payout).
 0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
    Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
    projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
@@ -485,3 +486,11 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   /ops/catalog, GET/PATCH /ops/catalog/:id, POST /ops/catalog/:id/merge. SupplierProfile.canDeliver. Seller web:
   "Already on Sthiva" suggestions in the product form, delivery choice in setup; ops console: Catalog tab.
   316 API tests pass (12 new), both sites build. Note: Python here defaults to cp1252: always pass encoding='utf-8'.
+- 2026-11-05 08:25 IST: User merged #67. Phase 3 on feat/supplier-offers: new orders are PENDING with
+  allocation {state OFFERED|ACCEPTED|NEEDS_OPS, expiresAt, attempts[]}; order items carry catalogItemId.
+  allocation.service.ts: acceptOffer, rejectOffer (reason), expireOverdueOffers (60 s sweeper in server.ts, uses
+  admin offerTimeoutMinutes; off = never expires), opsOfferTo (any supplier with stock, no price rule), opsFindNext.
+  Next supplier = verified/active, serves PIN, lists every item with stock, not tried before, line price <= buyer
+  line price; cheapest first. Stock moves with the offer; NEEDS_OPS holds none (inventoryState NONE). Buyer view
+  hides allocation + supplier reasons. Seller web + Partner app: Accept/Reject; ops: Needs a supplier queue and
+  supplier options panel. 324 API tests pass (8 new); 3 sites build; mobile typechecks.

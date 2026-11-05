@@ -16,8 +16,9 @@
 //   - buyer or supplier: CONFIRMED or READY_FOR_PICKUP only (never once a driver/vehicle has it)
 //   - ops: any status before DELIVERED
 //
-// CANCELLED and DELIVERED are terminal. PENDING and DISPUTED exist in the schema but nothing
-// transitions into them yet.
+// New orders start PENDING: offered to one supplier at a time (allocation.service.ts). Accepting
+// makes them CONFIRMED; buyer or ops may cancel while PENDING.
+// CANCELLED and DELIVERED are terminal. DISPUTED exists in the schema but nothing moves into it yet.
 //
 // Payment (Order.paymentStatus) is independent of fulfilment. COD stays PENDING through
 // delivery; it becomes CAPTURED only when whoever delivered (assigned driver, or the supplier
@@ -38,8 +39,12 @@ type Table = Partial<Record<OrderStatus, Partial<Record<OrderStatus, Actor[]>>>>
 
 const CANCEL_EARLY: Actor[] = ['SUPPLIER', 'BUYER', 'OPS'];
 
+// PENDING = offered to a supplier, not yet accepted (allocation.service.ts moves it on accept/reject)
+const PENDING_CANCEL: Actor[] = ['BUYER', 'OPS'];
+
 const TRANSITIONS: Record<DeliveryMode, Table> = {
   PLATFORM: {
+    PENDING: { CANCELLED: PENDING_CANCEL },
     CONFIRMED: { READY_FOR_PICKUP: ['SUPPLIER'], CANCELLED: CANCEL_EARLY },
     READY_FOR_PICKUP: { ASSIGNED: ['DELIVERY_PARTNER', 'OPS'], CANCELLED: CANCEL_EARLY },
     ASSIGNED: { PICKED_UP: ['DELIVERY_PARTNER'], READY_FOR_PICKUP: ['OPS'], CANCELLED: ['OPS'] },
@@ -47,6 +52,7 @@ const TRANSITIONS: Record<DeliveryMode, Table> = {
     IN_TRANSIT: { DELIVERED: ['DELIVERY_PARTNER'], CANCELLED: ['OPS'] },
   },
   SUPPLIER: {
+    PENDING: { CANCELLED: PENDING_CANCEL },
     CONFIRMED: { IN_TRANSIT: ['SUPPLIER'], CANCELLED: CANCEL_EARLY },
     READY_FOR_PICKUP: { IN_TRANSIT: ['SUPPLIER'], CANCELLED: CANCEL_EARLY },
     IN_TRANSIT: { DELIVERED: ['SUPPLIER'], CANCELLED: ['OPS'] },
@@ -54,7 +60,7 @@ const TRANSITIONS: Record<DeliveryMode, Table> = {
 };
 
 // Before dispatch an order has no committed delivery mode; after it, the mode decides who acts.
-export const PRE_DISPATCH: OrderStatus[] = ['CONFIRMED', 'READY_FOR_PICKUP'];
+export const PRE_DISPATCH: OrderStatus[] = ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'];
 
 /** Statuses from which `actor` may move an order to `to` in the given mode. Empty = never. */
 export function allowedSources(to: OrderStatus, actor: Actor, mode: DeliveryMode): OrderStatus[] {

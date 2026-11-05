@@ -4,10 +4,11 @@ import { validate } from '../../shared/middleware/validate.middleware';
 import {
   summary, listOrders, getOrder, cancel, unassign, assign, recordCod, addNote,
   listDrivers, listSuppliers, setSupplierVerification, setUserActive,
+  offerToSupplier, nextSupplier, supplierOptions,
 } from './ops.controller';
 import {
   listOrdersQuery, opsCancelSchema, opsUnassignSchema, opsAssignSchema, opsCodSchema, opsNoteSchema,
-  supplierListQuery, supplierVerificationSchema, userActiveSchema,
+  supplierListQuery, supplierVerificationSchema, userActiveSchema, opsOfferSchema, opsUnassignSchema as opsReasonSchema,
 } from './ops.schemas';
 import { opsList, opsGet, opsCreate, opsUpdate, opsMerge } from '../catalog/catalog.controller';
 import { catalogCreateSchema, catalogUpdateSchema, catalogMergeSchema } from '../catalog/catalog.schemas';
@@ -29,6 +30,10 @@ router.post('/orders/:id/unassign', validate(opsUnassignSchema), unassign);
 router.post('/orders/:id/assign', validate(opsAssignSchema), assign);
 router.post('/orders/:id/cod', validate(opsCodSchema), recordCod);
 router.post('/orders/:id/notes', validate(opsNoteSchema), addNote);
+// Supplier allocation for orders still waiting for a supplier
+router.get('/orders/:id/supplier-options', supplierOptions);
+router.post('/orders/:id/offer', validate(opsOfferSchema), offerToSupplier);
+router.post('/orders/:id/next-supplier', validate(opsReasonSchema), nextSupplier);
 
 router.get('/drivers', listDrivers);
 router.get('/suppliers', validate(supplierListQuery, 'query'), listSuppliers);

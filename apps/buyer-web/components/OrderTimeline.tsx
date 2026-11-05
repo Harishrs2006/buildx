@@ -1,7 +1,7 @@
 import type { BuyerOrder } from '../lib/orders';
 
 const STEP_LABELS: Record<string, string> = {
-  PENDING: 'Order placed',
+  PENDING: 'Waiting for the supplier to confirm',
   CONFIRMED: 'Confirmed by supplier',
   READY_FOR_PICKUP: 'Ready for pickup',
   ASSIGNED: 'Driver assigned',

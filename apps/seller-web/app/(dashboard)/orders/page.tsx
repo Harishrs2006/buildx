@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useApiClient } from '@sthiva/web-core';
 import {
-  confirmCashCollected, useSupplierOrders, updateSupplierOrderStatus, type SupplierOrder, type SupplierOrderAction,
+  acceptSupplierOrder, rejectSupplierOrder, confirmCashCollected, useSupplierOrders, updateSupplierOrderStatus, type SupplierOrder, type SupplierOrderAction,
 } from '../../../lib/orders';
 import { productErrorText } from '../../../lib/products';
 import { Chip, ChipRow, EmptyState, ErrorNote, ORDER_STATUS, PageHead, Pager, Pill, rupees, shortDate, unitLabel } from '../../../components/ui';
@@ -11,7 +11,8 @@ import { Chip, ChipRow, EmptyState, ErrorNote, ORDER_STATUS, PageHead, Pager, Pi
 // Tabs follow what the seller has to do next, not the raw status names
 type Tab = { key: string; label: string; status?: string; cashPending?: boolean; empty: string };
 const TABS: Tab[] = [
-  { key: 'todo', label: 'To dispatch', status: 'CONFIRMED', empty: 'Nothing to dispatch. New orders land here first.' },
+  { key: 'offers', label: 'New: accept or reject', status: 'PENDING', empty: 'No new orders waiting for your answer.' },
+  { key: 'todo', label: 'To dispatch', status: 'CONFIRMED', empty: 'Nothing to dispatch. Orders you accept land here.' },
   { key: 'cash', label: 'Cash to confirm', cashPending: true, empty: 'No cash waiting. Orders you deliver yourself show here until you confirm the cash.' },
   { key: 'driver', label: 'With Sthiva driver', status: 'READY_FOR_PICKUP,ASSIGNED,PICKED_UP', empty: 'No orders waiting for or with a Sthiva driver.' },
   { key: 'road', label: 'On the way', status: 'IN_TRANSIT', empty: 'Nothing on the road right now.' },
@@ -20,6 +21,7 @@ const TABS: Tab[] = [
   { key: 'all', label: 'All', empty: 'When buyers order from your listings, the orders appear here.' },
 ];
 
+const REJECT_REASONS = ['Out of stock', 'Can’t deliver to this area', 'Can’t deliver in time', 'Price changed'];
 const CANCEL_REASONS = ['Out of stock', 'Can’t deliver to this address', 'Buyer asked to cancel', 'Vehicle not available'];
 
 const waNumber = (n: string) => {
@@ -27,7 +29,13 @@ const waNumber = (n: string) => {
   return d.length === 10 ? `91${d}` : d;
 };
 
-type Confirming = null | 'cancel' | 'delivered' | 'cash';
+type Confirming = null | 'cancel' | 'delivered' | 'cash' | 'reject';
+
+function timeLeft(iso?: string) {
+  if (!iso) return null;
+  const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  return m <= 0 ? 'Time is up' : m < 60 ? `${m} min left to answer` : `${Math.floor(m / 60)} h ${m % 60} min left to answer`;
+}
 
 function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void }) {
   const client = useApiClient();
@@ -46,6 +54,8 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
   const canDispatch = order.status === 'CONFIRMED';
   const canTakeOver = order.status === 'READY_FOR_PICKUP' && !driver;
   const canCancel = order.status === 'CONFIRMED' || canTakeOver;
+  const isOffer = order.status === 'PENDING' && order.allocation?.state === 'OFFERED';
+  const left = isOffer ? timeLeft(order.allocation?.expiresAt) : null;
 
   async function run(fn: () => Promise<unknown>) {
     setBusy(true);
@@ -63,11 +73,11 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
   const move = (to: SupplierOrderAction, why?: string) => run(() => updateSupplierOrderStatus(client, order._id, to, why));
 
   return (
-    <article className={`card overflow-hidden ${order.status === 'CONFIRMED' || cashDue ? 'ring-2 ring-lime' : ''}`}>
+    <article className={`card overflow-hidden ${isOffer || order.status === 'CONFIRMED' || cashDue ? 'ring-2 ring-lime' : ''}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-sand-4 px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-[15px] font-medium">{order.orderNumber}</span>
-          <Pill tone={status.tone} pulse={order.status === 'CONFIRMED'}>{order.status === 'CONFIRMED' ? 'New, to dispatch' : status.label}</Pill>
+          <Pill tone={status.tone} pulse={isOffer || order.status === 'CONFIRMED'}>{order.status === 'CONFIRMED' ? 'New, to dispatch' : status.label}</Pill>
           {cod && order.paymentStatus === 'CAPTURED' && <Pill tone="done">Cash collected</Pill>}
           {cashDue && <Pill tone="wait">Confirm cash</Pill>}
         </div>
@@ -116,11 +126,43 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
         </div>
       </div>
 
-      {(canDispatch || canTakeOver || (order.status === 'IN_TRANSIT' && own) || cashDue || error) && (
+      {(isOffer || canDispatch || canTakeOver || (order.status === 'IN_TRANSIT' && own) || cashDue || error) && (
         <div className="flex flex-col gap-3 border-t border-sand-4 bg-sand px-5 py-4">
           {error && <p role="alert" className="text-[14px] text-error">{error}</p>}
 
-          {confirming === null && (
+          {confirming === null && isOffer && (
+            <div className="flex flex-col gap-2">
+              <p className="text-[14px] text-stone">
+                Sthiva offered you this order. Accept only if you can supply every item at this quantity.{left ? ` ${left}.` : ''}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" disabled={busy} onClick={() => run(() => acceptSupplierOrder(client, order._id))} className="btn-lime">
+                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">check</span>
+                  Accept order
+                </button>
+                <button type="button" disabled={busy} onClick={() => setConfirming('reject')} className="btn-ghost">Reject</button>
+              </div>
+            </div>
+          )}
+
+          {confirming === 'reject' && (
+            <div role="alertdialog" aria-label="Reject this order?" className="flex flex-col gap-3">
+              <p className="text-[15px]"><span className="font-semibold">Reject {order.orderNumber}?</span> Sthiva offers it to another supplier. The buyer isn&apos;t told your reason.</p>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Reason">
+                {REJECT_REASONS.map((r) => (
+                  <button key={r} type="button" role="radio" aria-checked={reason === r} onClick={() => setReason(r)} className={`min-h-[40px] rounded-full border px-3.5 text-[14px] font-medium ${reason === r ? 'border-ink bg-ink text-sand' : 'border-sand-4 bg-sand-2 hover:border-ink'}`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" disabled={busy || !reason} onClick={() => run(() => rejectSupplierOrder(client, order._id, reason))} className="btn bg-error text-white hover:bg-[#A51F24] disabled:opacity-50">Yes, reject</button>
+                <button type="button" disabled={busy} onClick={() => { setConfirming(null); setReason(''); }} className="btn-ghost">Back</button>
+              </div>
+            </div>
+          )}
+
+          {confirming === null && !isOffer && (
             <div className="flex flex-wrap gap-2">
               {canDispatch && (
                 <>

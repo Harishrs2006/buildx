@@ -116,7 +116,7 @@ export const PRODUCT_STATUS: Record<string, { label: string; tone: Tone }> = {
 };
 
 export const ORDER_STATUS: Record<string, { label: string; tone: Tone }> = {
-  PENDING: { label: 'New', tone: 'wait' },
+  PENDING: { label: 'Waiting for supplier', tone: 'wait' },
   CONFIRMED: { label: 'Confirmed', tone: 'active' },
   READY_FOR_PICKUP: { label: 'Ready for pickup', tone: 'active' },
   ASSIGNED: { label: 'Driver assigned', tone: 'active' },

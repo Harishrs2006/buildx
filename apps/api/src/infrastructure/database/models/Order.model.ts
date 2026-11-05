@@ -1,7 +1,8 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export interface IOrderItem {
-  productId: Types.ObjectId;
+  productId: Types.ObjectId;   // the listing of the supplier currently holding the order
+  catalogItemId?: Types.ObjectId; // what the buyer ordered (lets the order move to another supplier)
   name: string;
   imageUrl: string;
   unit: string;
@@ -25,6 +26,23 @@ export type OrderStatusEvent = {
   note?: string;
 };
 
+// Who has been offered the order and what they said. The order stays PENDING until a supplier accepts.
+export type OfferAttempt = {
+  supplierId: Types.ObjectId;
+  offeredAt: Date;
+  outcome?: 'ACCEPTED' | 'REJECTED' | 'EXPIRED' | 'WITHDRAWN';
+  at?: Date;
+  reason?: string;
+  byOps?: boolean;
+};
+export type Allocation = {
+  // OFFERED: waiting for supplierId to answer. ACCEPTED: supplier confirmed.
+  // NEEDS_OPS: no suitable supplier left; ops must offer it by hand or cancel.
+  state: 'OFFERED' | 'ACCEPTED' | 'NEEDS_OPS';
+  expiresAt?: Date;
+  attempts: OfferAttempt[];
+};
+
 export type OpsNote = { at: Date; byUserId: Types.ObjectId; byRole: 'OPERATOR' | 'ADMIN'; note: string };
 
 export interface IOrder extends Document {
@@ -46,6 +64,7 @@ export interface IOrder extends Document {
   // VERIFIED: supplier coverage checked for deliveryAddress.pincode inside the order transaction.
   // SKIPPED_NO_PINCODE: legacy client sent no PIN (see ORDERS_REQUIRE_DELIVERY_PINCODE).
   serviceabilityCheck?: 'VERIFIED' | 'SKIPPED_NO_PINCODE';
+  allocation?: Allocation;
   deliveryMethod: 'STANDARD' | 'EXPRESS';
   deliveryCharge: number;
   subtotal: number;        // Σ taxable value
@@ -70,7 +89,8 @@ export interface IOrder extends Document {
   cancelledBy?: 'BUYER' | 'SUPPLIER' | 'OPS' | 'SYSTEM';
   // DEDUCTED: stock taken at creation. RESTORED: given back on cancel (exactly once).
   // NOT_RESTORED: cancelled by ops after dispatch with goods not returned to stock.
-  inventoryState: 'DEDUCTED' | 'RESTORED' | 'NOT_RESTORED';
+  // NONE: no supplier holds stock for it right now (order waiting for ops to find a supplier)
+  inventoryState: 'DEDUCTED' | 'RESTORED' | 'NOT_RESTORED' | 'NONE';
   idempotencyKey?: string;
   requestHash?: string;
   codAmountCollected?: number;
@@ -91,6 +111,7 @@ const orderSchema = new Schema<IOrder>(
     items: [
       {
         productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+        catalogItemId: { type: Schema.Types.ObjectId, ref: 'CatalogItem' },
         name: String,
         imageUrl: String,
         unit: String,
@@ -117,6 +138,21 @@ const orderSchema = new Schema<IOrder>(
       state: String,
     },
     serviceabilityCheck: { type: String, enum: ['VERIFIED', 'SKIPPED_NO_PINCODE'] },
+    allocation: {
+      state: { type: String, enum: ['OFFERED', 'ACCEPTED', 'NEEDS_OPS'] },
+      expiresAt: Date,
+      attempts: [
+        {
+          _id: false,
+          supplierId: { type: Schema.Types.ObjectId, ref: 'SupplierProfile' },
+          offeredAt: Date,
+          outcome: { type: String, enum: ['ACCEPTED', 'REJECTED', 'EXPIRED', 'WITHDRAWN'] },
+          at: Date,
+          reason: String,
+          byOps: Boolean,
+        },
+      ],
+    },
     deliveryMethod: { type: String, enum: ['STANDARD', 'EXPRESS'], default: 'STANDARD' },
     deliveryCharge: { type: Number, default: 0 },
     subtotal: { type: Number, required: true },
@@ -148,7 +184,7 @@ const orderSchema = new Schema<IOrder>(
     cancellationReason: String,
     cancelledBy: { type: String, enum: ['BUYER', 'SUPPLIER', 'OPS', 'SYSTEM'] },
     // Orders created before this field existed had stock deducted at creation too
-    inventoryState: { type: String, enum: ['DEDUCTED', 'RESTORED', 'NOT_RESTORED'], default: 'DEDUCTED' },
+    inventoryState: { type: String, enum: ['DEDUCTED', 'RESTORED', 'NOT_RESTORED', 'NONE'], default: 'DEDUCTED' },
     idempotencyKey: String,
     requestHash: String,
     codAmountCollected: Number,
@@ -185,6 +221,8 @@ const orderSchema = new Schema<IOrder>(
 
 // Ops "needs attention" queues filter on status + age
 orderSchema.index({ status: 1, updatedAt: 1 });
+// Offer timeout sweep
+orderSchema.index({ 'allocation.state': 1, 'allocation.expiresAt': 1 });
 
 // One order per (buyer, Idempotency-Key): a retried or double-tapped checkout can't create a second order
 orderSchema.index(

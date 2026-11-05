@@ -3,21 +3,29 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
-import { useSupplierOrders, useUpdateOrderStatus, useConfirmSupplierCod, type SupplierOrder } from '../../src/hooks/useSupplier';
+import { useSupplierOrders, useUpdateOrderStatus, useConfirmSupplierCod, useAnswerOffer, type SupplierOrder } from '../../src/hooks/useSupplier';
 import { ORDER_STATUS_COLORS, ORDER_STATUS_LABELS } from '../../src/hooks/useOrders';
 import { ChoiceSheet, ConfirmSheet, EmptyState, Icon, Notice, Pill, type } from '../../src/components/ui';
 
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: '', label: 'All' },
-  { key: 'CONFIRMED', label: 'New' },
+  { key: 'PENDING', label: 'New' },
+  { key: 'CONFIRMED', label: 'To dispatch' },
   { key: 'READY_FOR_PICKUP', label: 'Ready' },
   { key: 'IN_TRANSIT', label: 'On the way' },
   { key: 'DELIVERED', label: 'Delivered' },
 ];
 
 const REJECT_REASONS = ['Out of stock', "Can't deliver to this area", 'Price changed'];
+const DECLINE_REASONS = ['Out of stock', "Can't deliver to this area", "Can't deliver in time", 'Price changed'];
 
-type SheetKind = 'dispatch' | 'takeover' | 'reject' | 'delivered' | 'cash';
+type SheetKind = 'accept' | 'decline' | 'dispatch' | 'takeover' | 'reject' | 'delivered' | 'cash';
+
+function timeLeft(iso?: string) {
+  if (!iso) return null;
+  const m = Math.round((new Date(iso).getTime() - Date.now()) / 60000);
+  return m <= 0 ? 'Time is up' : `${m} min left to answer`;
+}
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
@@ -28,9 +36,14 @@ function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind:
 
   // Delivery progress on Sthiva-driver orders is updated by the assigned delivery partner
   const actions: { label: string; kind: SheetKind; tone: 'primary' | 'plain' | 'danger' }[] = [];
+  const isOffer = order.status === 'PENDING' && order.allocation?.state === 'OFFERED';
+  if (isOffer) {
+    actions.push({ label: 'Accept', kind: 'accept', tone: 'primary' });
+    actions.push({ label: 'Reject', kind: 'decline', tone: 'danger' });
+  }
   if (order.status === 'CONFIRMED') actions.push({ label: 'Dispatch', kind: 'dispatch', tone: 'primary' });
   if (order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Deliver myself', kind: 'takeover', tone: 'plain' });
-  if (order.status === 'CONFIRMED' || order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Reject', kind: 'reject', tone: 'danger' });
+  if (order.status === 'CONFIRMED' || order.status === 'READY_FOR_PICKUP') actions.push({ label: 'Cancel order', kind: 'reject', tone: 'danger' });
   if (order.status === 'IN_TRANSIT' && selfDelivery) actions.push({ label: 'Mark delivered', kind: 'delivered', tone: 'primary' });
   if (order.status === 'DELIVERED' && selfDelivery && order.paymentStatus === 'PENDING') {
     actions.push({ label: `Confirm ${rupees(order.total)} cash`, kind: 'cash', tone: 'primary' });
@@ -68,6 +81,11 @@ function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind:
         ))}
       </View>
 
+      {isOffer ? (
+        <Text style={styles.notes}>
+          Sthiva offered you this order. Accept only if you can supply every item.{timeLeft(order.allocation?.expiresAt) ? ` ${timeLeft(order.allocation?.expiresAt)}.` : ''}
+        </Text>
+      ) : null}
       {order.notes ? <Text style={styles.notes}>Note: {order.notes}</Text> : null}
 
       <View style={styles.totalRow}>
@@ -98,6 +116,7 @@ export default function SupplierOrdersScreen() {
   const { data, isLoading, isError, refetch, isRefetching } = useSupplierOrders(activeTab || undefined);
   const { mutate: updateStatus, isPending: updating } = useUpdateOrderStatus();
   const { mutate: confirmCod, isPending: confirming } = useConfirmSupplierCod();
+  const { mutate: answerOffer, isPending: answering } = useAnswerOffer();
   const [sheet, setSheet] = useState<{ kind: SheetKind; order: SupplierOrder } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -113,6 +132,17 @@ export default function SupplierOrdersScreen() {
     updateStatus(
       { id: order._id, status, reason },
       { onSuccess: close, onError: (err) => { close(); setError(`Could not update ${order.orderNumber}: ${err.message}`); } }
+    );
+  }
+
+  function answer(accept: boolean, reason?: string) {
+    if (!sheet) return;
+    const order = sheet.order;
+    setError(null);
+    if (!accept) close();
+    answerOffer(
+      { id: order._id, accept, reason },
+      { onSuccess: close, onError: (err) => { close(); setError(`Could not answer ${order.orderNumber}: ${err.message}`); } }
     );
   }
 
@@ -167,6 +197,23 @@ export default function SupplierOrdersScreen() {
         />
       )}
 
+      <ConfirmSheet
+        visible={sheet?.kind === 'accept'}
+        title="Accept this order?"
+        body="You confirm you can supply every item at this quantity. The buyer is told it is confirmed."
+        confirmLabel="Yes, accept"
+        loading={answering}
+        onConfirm={() => answer(true)}
+        onCancel={close}
+      />
+      <ChoiceSheet
+        visible={sheet?.kind === 'decline'}
+        title="Why can't you take it?"
+        body="Sthiva offers it to another supplier. The buyer is not told your reason."
+        options={DECLINE_REASONS.map((r) => ({ label: r, danger: true, onPress: () => answer(false, r) }))}
+        cancelLabel="Back"
+        onCancel={close}
+      />
       <ChoiceSheet
         visible={sheet?.kind === 'dispatch'}
         title="Who delivers this order?"
@@ -179,7 +226,7 @@ export default function SupplierOrdersScreen() {
       />
       <ChoiceSheet
         visible={sheet?.kind === 'reject'}
-        title="Why are you rejecting it?"
+        title="Why are you cancelling it?"
         body="The stock goes back to your listing and the buyer is told."
         options={REJECT_REASONS.map((r) => ({ label: r, danger: true, onPress: () => setStatus('CANCELLED', r, true) }))}
         cancelLabel="Keep the order"

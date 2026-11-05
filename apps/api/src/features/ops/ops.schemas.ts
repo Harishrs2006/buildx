@@ -26,6 +26,7 @@ export const opsCancelSchema = z.object({
 export const opsUnassignSchema = z.object({ reason });
 export const opsAssignSchema = z.object({ driverUserId: objectId, note: z.string().trim().max(500).optional() });
 export const opsCodSchema = z.object({ amount: z.number().finite().positive(), note: reason });
+export const opsOfferSchema = z.object({ supplierId: objectId, reason });
 export const opsNoteSchema = z.object({ note: z.string().trim().min(1).max(1000) });
 
 export const supplierListQuery = z.object({

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useApiClient } from '@sthiva/web-core';
 import { ErrorNote, ORDER_STATUS, Pill, UNIT, rupees, shortDate } from '../../../../components/ui';
-import { errorText, opsApi, populated, useLoad, type OrderDetail } from '../../../../lib/ops';
+import { errorText, opsApi, populated, useLoad, type OrderDetail, type SupplierOption } from '../../../../lib/ops';
 
 const PAYMENT: Record<string, string> = {
   PENDING: 'Not paid yet', PARTIAL: 'Part paid', CAPTURED: 'Paid', RELEASED: 'Released', REFUNDED: 'Refunded',
@@ -180,6 +180,76 @@ function Actions({ order, reload }: { order: OrderDetail; reload: () => void }) 
   );
 }
 
+const TRIED: Record<string, string> = { REJECTED: 'said no', EXPIRED: 'did not answer', WITHDRAWN: 'moved by Sthiva', ACCEPTED: 'accepted', OFFERED: 'has the offer' };
+
+// While an order waits for a supplier: who has it, and who else could take it
+function SupplierChoice({ order, reload }: { order: OrderDetail; reload: () => void }) {
+  const client = useApiClient();
+  const options = useLoad((c) => opsApi.supplierOptions(c, order._id), [order._id, order.updatedAt]);
+  const [picked, setPicked] = useState<SupplierOption | null>(null);
+  const waiting = order.allocation?.state === 'NEEDS_OPS';
+  const expires = order.allocation?.expiresAt;
+
+  return (
+    <Panel title={waiting ? 'Needs a supplier' : 'Waiting for the supplier to accept'}>
+      <p className="text-[15px] text-stone">
+        {waiting
+          ? 'No supplier left who stocks everything at or below the buyer’s price. Call one below, then offer it to them, or cancel the order.'
+          : `Offered to ${populated(order.supplierId)?.businessName ?? 'the supplier'}${expires ? `, answer by ${shortDate.format(new Date(expires))}` : ''}.`}
+      </p>
+      {options.state.status === 'loading' && <div className="skeleton mt-3 h-20" />}
+      {options.state.status === 'error' && <p className="mt-3 text-[14px] text-error">{errorText(options.state.error, 'Couldn’t load suppliers.')}</p>}
+      {options.state.status === 'success' && (
+        options.state.data.length === 0 ? (
+          <p className="mt-3 text-[14px] text-stone">No supplier lists these items yet (or the order predates the Sthiva catalog).</p>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-2">
+            {options.state.data.map((s) => {
+              const usable = s.allItems && s.enoughStock && !s.current;
+              return (
+                <li key={s.supplier._id} className="flex flex-wrap items-center gap-2 rounded-xl border border-sand-4 px-3 py-2 text-[14px]">
+                  <span className="min-w-[10rem] flex-1">
+                    <span className="font-semibold">{s.supplier.businessName}</span>
+                    {s.supplier.whatsappNumber && <> · <a className="font-mono text-cobalt hover:underline" href={`tel:${s.supplier.whatsappNumber}`}>{s.supplier.whatsappNumber}</a></>}
+                    <span className="block text-stone">
+                      {s.lines.map((l) => `${rupees.format(l.basePrice)} / ${UNIT[l.unit] ?? l.unit}, ${l.stockQuantity} in stock`).join('; ')}
+                      {!s.allItems && ' · does not list every item'}
+                      {s.allItems && !s.enoughStock && ' · not enough stock'}
+                      {s.servesPincode === false && ' · PIN not in their delivery area'}
+                      {s.tried.length > 0 && ` · ${s.tried.map((t) => TRIED[t] ?? t).join(', ')}`}
+                    </span>
+                  </span>
+                  {s.current ? <Pill tone="active">Has the offer</Pill> : usable && (
+                    <button type="button" onClick={() => setPicked(s)} className="btn-ghost">Offer to them</button>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )
+      )}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {picked && (
+          <Action
+            label={`Offer to ${picked.supplier.businessName}`}
+            hint="They get a notification to accept or reject. The buyer’s price does not change."
+            placeholder="Reason, e.g. called them, they have stock today"
+            onRun={async (reason) => { await opsApi.offer(client, order._id, picked.supplier._id, reason); setPicked(null); reload(); }}
+          />
+        )}
+        {!waiting && (
+          <Action
+            label="Move to the next supplier now"
+            hint="Sthiva picks the next suitable supplier, as if this one said no."
+            placeholder="Reason, e.g. supplier said on the phone they can't"
+            onRun={async (reason) => { await opsApi.nextSupplier(client, order._id, reason); reload(); }}
+          />
+        )}
+      </div>
+    </Panel>
+  );
+}
+
 export default function OrderPage() {
   const { id } = useParams<{ id: string }>();
   const { state, reload } = useLoad((c) => opsApi.order(c, id), [id]);
@@ -221,6 +291,7 @@ export default function OrderPage() {
         </p>
       )}
 
+      {o.status === 'PENDING' && o.allocation && <SupplierChoice order={o} reload={reload} />}
       <Actions order={o} reload={reload} />
 
       <div className="grid gap-6 lg:grid-cols-2">

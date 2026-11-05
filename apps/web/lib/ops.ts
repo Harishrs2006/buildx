@@ -21,6 +21,7 @@ export const orderSummarySchema = z
     status: z.enum(ORDER_STATUSES),
     total: z.number(),
     deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
+    allocation: z.object({ state: z.enum(['OFFERED', 'ACCEPTED', 'NEEDS_OPS']), expiresAt: z.string().optional() }).passthrough().optional(),
     paymentStatus: z.string(),
     paymentMethod: z.string().optional(),
     createdAt: z.string(),
@@ -58,7 +59,7 @@ export const summarySchema = z.object({
   counts: z.record(z.string(), z.number()),
   todayOrders: z.number(),
   thresholds: z.object({ CONFIRMED_MINUTES: z.number(), READY_UNASSIGNED_MINUTES: z.number(), ASSIGNED_MINUTES: z.number(), IN_DELIVERY_MINUTES: z.number() }),
-  attention: z.object({ notDispatched: queue, unassigned: queue, notPickedUp: queue, longInDelivery: queue, codPending: queue, uncheckedDestination: queue }),
+  attention: z.object({ needsSupplier: queue, notDispatched: queue, unassigned: queue, notPickedUp: queue, longInDelivery: queue, codPending: queue, uncheckedDestination: queue }),
 });
 export type OpsSummary = z.infer<typeof summarySchema>;
 
@@ -98,6 +99,20 @@ export const driverSchema = z
   .passthrough();
 export type OpsDriver = z.infer<typeof driverSchema>;
 
+// Suppliers who list items of an order (GET /ops/orders/:id/supplier-options)
+export const supplierOptionSchema = z
+  .object({
+    supplier: z.object({ _id: z.string(), businessName: z.string(), whatsappNumber: z.string().optional(), verificationStatus: z.string().optional() }).passthrough(),
+    lines: z.array(z.object({ basePrice: z.number(), stockQuantity: z.number(), unit: z.string() }).passthrough()),
+    allItems: z.boolean(),
+    enoughStock: z.boolean(),
+    servesPincode: z.boolean().nullable(),
+    current: z.boolean(),
+    tried: z.array(z.string()),
+  })
+  .passthrough();
+export type SupplierOption = z.infer<typeof supplierOptionSchema>;
+
 // Populated refs come back as objects; anything else is an unpopulated id
 export function populated<T extends object>(v: T | string | null | undefined): T | null {
   return v && typeof v === 'object' ? v : null;
@@ -120,6 +135,9 @@ export const opsApi = {
     send(c, 'POST', `/ops/orders/${id}/assign`, { driverUserId, ...(note ? { note } : {}) }, z.unknown()),
   recordCod: (c: ApiClient, id: string, amount: number, note: string) => send(c, 'POST', `/ops/orders/${id}/cod`, { amount, note }, z.unknown()),
   addNote: (c: ApiClient, id: string, note: string) => send(c, 'POST', `/ops/orders/${id}/notes`, { note }, z.unknown()),
+  supplierOptions: (c: ApiClient, id: string) => get(c, `/ops/orders/${id}/supplier-options`, z.array(supplierOptionSchema)),
+  offer: (c: ApiClient, id: string, supplierId: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/offer`, { supplierId, reason }, z.unknown()),
+  nextSupplier: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/next-supplier`, { reason }, z.unknown()),
   drivers: (c: ApiClient) => get(c, '/ops/drivers', z.array(driverSchema)),
   suppliers: (c: ApiClient, verification?: Verification) => get(c, '/ops/suppliers', z.array(supplierSchema), { verification }),
   verify: (c: ApiClient, id: string, status: 'VERIFIED' | 'REJECTED', note?: string) =>

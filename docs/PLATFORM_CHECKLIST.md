@@ -42,7 +42,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Delivery options (own vehicle or Sthiva) | DONE | Profile setting (canDeliver) plus choice per order at dispatch |
 | Weekly availability (product, qty, supply price, delivery, areas) | TODO | Core gap |
 | Incoming order notification | DONE | Push |
-| Accept / reject order | TODO | Orders arrive already confirmed |
+| Accept / reject order | DONE | Phase 3: offers, next supplier on reject or timeout |
 | Order view: distance, Sthiva commission, expected payout | TODO | Needs commission model |
 | Fulfil, dispatch, deliver | DONE | |
 
@@ -84,7 +84,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Buyers and drivers lists, driver verification | PART | Drivers list only |
 | Categories and catalog management | PART | Catalog items: review, edit, merge, add (phase 2). Categories still seeded |
 | Commission and delivery rate settings | DONE | Phase 1 (Settings tab) |
-| Supplier reassignment after rejection | TODO | |
+| Supplier reassignment after rejection | DONE | Phase 3: automatic, plus ops offer / move to next supplier |
 | Vehicle selection, delivery charge override | TODO | |
 | Failed delivery handling | TODO | |
 | Refunds | TODO | Only after online payment exists |
