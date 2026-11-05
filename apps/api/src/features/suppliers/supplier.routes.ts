@@ -6,6 +6,7 @@ import {
   getProfile, updateProfile, getStats, getAnalytics,
   listSupplierOrders, updateOrderStatus, confirmCodCollected,
   listSupplierProducts, getSupplierProduct, createProduct, updateProduct, deleteProduct,
+  acceptOrder, rejectOrder,
 } from './supplier.controller';
 import { z } from 'zod';
 import {
@@ -108,6 +109,10 @@ router.get('/me/stats', getStats);
 router.get('/me/analytics', getAnalytics);
 
 router.get('/me/orders', listSupplierOrders);
+// Orders are offered to one supplier at a time: accept, or reject so the next supplier gets it
+const rejectSchema = z.object({ reason: z.string().trim().min(3, 'Tell us why (at least 3 characters)').max(300) });
+router.post('/me/orders/:id/accept', acceptOrder);
+router.post('/me/orders/:id/reject', validate(rejectSchema), rejectOrder);
 router.patch('/me/orders/:id/status', validate(supplierStatusSchema), updateOrderStatus);
 router.post('/me/orders/:id/cod', validate(codCollectedSchema), confirmCodCollected);
 

@@ -5,10 +5,12 @@ import { Order } from '../../infrastructure/database/models/Order.model';
 import { User } from '../../infrastructure/database/models/User.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
+import { Product } from '../../infrastructure/database/models/Product.model';
 import { AppError } from '../../shared/errors/AppError';
 import { logger } from '../../shared/logger/logger';
 import { notifyUser } from '../../shared/services/notification.service';
 import { cancelOrder, transitionOrder, recordCodByOps } from '../orders/order.service';
+import { opsOfferTo, opsFindNext } from '../orders/allocation.service';
 import { modeFilter } from '../orders/order-state';
 
 type OpsRole = 'OPERATOR' | 'ADMIN';
@@ -45,7 +47,7 @@ export const ATTENTION = {
 };
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
-const summaryFields = 'orderNumber status total deliveryMode paymentStatus createdAt updatedAt supplierId buyerId driverId';
+const summaryFields = 'orderNumber status total deliveryMode paymentStatus createdAt updatedAt supplierId buyerId driverId allocation.state allocation.expiresAt';
 
 // GET /ops/summary — counts by status plus the queues that need a human
 export async function summary(_req: Request, res: Response, next: NextFunction) {
@@ -61,23 +63,25 @@ export async function summary(_req: Request, res: Response, next: NextFunction) 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const [byStatus, todayOrders, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination] = await Promise.all([
+    const [byStatus, todayOrders, needsSupplier, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination] = await Promise.all([
       Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
       Order.countDocuments({ createdAt: { $gte: startOfDay } }),
+      // Every supplier said no or didn't answer: someone has to find one by hand
+      queue({ status: 'PENDING', 'allocation.state': 'NEEDS_OPS' }),
       queue({ status: 'CONFIRMED', updatedAt: { $lt: minutesAgo(ATTENTION.CONFIRMED_MINUTES) } }),
       queue({ status: 'READY_FOR_PICKUP', updatedAt: { $lt: minutesAgo(ATTENTION.READY_UNASSIGNED_MINUTES) } }),
       queue({ status: 'ASSIGNED', updatedAt: { $lt: minutesAgo(ATTENTION.ASSIGNED_MINUTES) } }),
       queue({ status: { $in: ['PICKED_UP', 'IN_TRANSIT'] }, updatedAt: { $lt: minutesAgo(ATTENTION.IN_DELIVERY_MINUTES) } }),
       queue({ status: 'DELIVERED', paymentMethod: 'COD', paymentStatus: { $in: ['PENDING', 'PARTIAL'] } }),
       // Legacy app orders without a PIN: coverage was never checked — confirm with the supplier
-      queue({ serviceabilityCheck: 'SKIPPED_NO_PINCODE', status: { $in: ['CONFIRMED', 'READY_FOR_PICKUP'] } }),
+      queue({ serviceabilityCheck: 'SKIPPED_NO_PINCODE', status: { $in: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP'] } }),
     ]);
 
     res.json(ok({
       counts: Object.fromEntries(byStatus.map((b) => [b._id, b.count])),
       todayOrders,
       thresholds: ATTENTION,
-      attention: { notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination },
+      attention: { needsSupplier, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination },
     }));
   } catch (err) { next(err); }
 }
@@ -332,5 +336,65 @@ export async function setUserActive(req: Request, res: Response, next: NextFunct
     if (!user) throw AppError.notFound('User (or user is an admin)');
     logger.info('[ops] user active changed', { adminUserId: req.auth!.userId, userId: id, isActive, reason });
     res.json(ok(user));
+  } catch (err) { next(err); }
+}
+
+// POST /ops/orders/:id/offer { supplierId, reason } — offer a waiting order to a chosen supplier
+export async function offerToSupplier(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = orderId(req);
+    const { supplierId, reason } = req.body as { supplierId: string; reason: string };
+    const { userId, role } = opsActor(req);
+    await opsOfferTo({ orderId: id, supplierProfileId: supplierId, opsUserId: userId, role, reason });
+    res.json(ok(await withOpsNote(id, req, `Offered to supplier ${supplierId}: ${reason}`)));
+  } catch (err) { next(err); }
+}
+
+// POST /ops/orders/:id/next-supplier { reason } — let the system pick the next supplier now
+export async function nextSupplier(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = orderId(req);
+    const { reason } = req.body as { reason: string };
+    const { userId, role } = opsActor(req);
+    await opsFindNext({ orderId: id, opsUserId: userId, role, reason });
+    res.json(ok(await withOpsNote(id, req, `Moved to next supplier: ${reason}`)));
+  } catch (err) { next(err); }
+}
+
+// GET /ops/orders/:id/supplier-options — suppliers listing every item of this order, with stock and price
+export async function supplierOptions(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = orderId(req);
+    const order = await Order.findById(id).select('items supplierId allocation deliveryAddress').lean();
+    if (!order) throw AppError.notFound('Order');
+    const itemIds = order.items.map((i) => i.catalogItemId).filter(Boolean);
+    if (itemIds.length !== order.items.length) return res.json(ok([]));
+    const listings = await Product.find({ catalogItemId: { $in: itemIds }, status: 'ACTIVE' })
+      .select('supplierId catalogItemId basePrice stockQuantity unit')
+      .populate('supplierId', 'businessName whatsappNumber verificationStatus isActive servicePincodes')
+      .lean();
+    const bySupplier = new Map<string, { supplier: unknown; lines: unknown[]; covers: number; enoughStock: boolean }>();
+    for (const l of listings) {
+      const sp = l.supplierId as unknown as { _id: Types.ObjectId; servicePincodes?: string[] };
+      const key = sp._id.toString();
+      const want = order.items.find((i) => i.catalogItemId?.equals(l.catalogItemId!));
+      const entry = bySupplier.get(key) ?? { supplier: sp, lines: [], covers: 0, enoughStock: true };
+      entry.lines.push({ catalogItemId: l.catalogItemId, basePrice: l.basePrice, stockQuantity: l.stockQuantity, unit: l.unit });
+      entry.covers += 1;
+      if (!want || l.stockQuantity < want.quantity) entry.enoughStock = false;
+      bySupplier.set(key, entry);
+    }
+    const tried = (order.allocation?.attempts ?? []).map((a) => ({ supplierId: a.supplierId.toString(), outcome: a.outcome }));
+    const pin = order.deliveryAddress?.pincode;
+    res.json(ok([...bySupplier.values()].map((e) => {
+      const sp = e.supplier as { _id: Types.ObjectId; servicePincodes?: string[] };
+      return {
+        ...e,
+        servesPincode: pin ? (sp.servicePincodes ?? []).includes(pin) : null,
+        allItems: e.covers === order.items.length,
+        current: sp._id.equals(order.supplierId),
+        tried: tried.filter((t) => t.supplierId === sp._id.toString()).map((t) => t.outcome ?? 'OFFERED'),
+      };
+    })));
   } catch (err) { next(err); }
 }

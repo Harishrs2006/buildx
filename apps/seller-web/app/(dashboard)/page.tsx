@@ -31,8 +31,8 @@ export default function DashboardPage() {
   const client = useApiClient();
   const { user } = useAuth();
   const stats = useSupplierStats();
-  // Same as the 'New orders waiting' number: to dispatch, or on the road with your own vehicle
-  const pending = useSupplierOrders(1, 'CONFIRMED,IN_TRANSIT');
+  // Same as the 'Orders to act on' number: offers to answer, to dispatch, or on the road with your own vehicle
+  const pending = useSupplierOrders(1, 'PENDING,CONFIRMED,IN_TRANSIT');
   const [profile, setProfile] = useState<SupplierProfile | null>(null);
 
   useEffect(() => {

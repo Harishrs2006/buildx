@@ -39,6 +39,8 @@ export type SupplierOrder = {
   paymentMethod: 'COD';
   paymentStatus: PaymentStatus;
   deliveryMode?: 'PLATFORM' | 'SUPPLIER';
+  // While PENDING: Sthiva offered it to this supplier; answer before expiresAt (if set)
+  allocation?: { state: 'OFFERED' | 'ACCEPTED' | 'NEEDS_OPS'; expiresAt?: string };
   notes?: string;
   createdAt: string;
   deliveredAt?: string;
@@ -122,6 +124,19 @@ export function useUpdateOrderStatus() {
   return useMutation<unknown, Error, { id: string; status: string; reason?: string }>({
     mutationFn: ({ id, status, reason }) =>
       api.patch(`/suppliers/me/orders/${id}/status`, { status, reason }).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['supplier-orders'] });
+      qc.invalidateQueries({ queryKey: ['supplier-stats'] });
+    },
+  });
+}
+
+// Supplier answers an order Sthiva offered them: accept it, or reject so the next supplier gets it
+export function useAnswerOffer() {
+  const qc = useQueryClient();
+  return useMutation<unknown, Error, { id: string; accept: boolean; reason?: string }>({
+    mutationFn: ({ id, accept, reason }) =>
+      api.post(`/suppliers/me/orders/${id}/${accept ? 'accept' : 'reject'}`, accept ? {} : { reason }).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['supplier-orders'] });
       qc.invalidateQueries({ queryKey: ['supplier-stats'] });

@@ -210,3 +210,11 @@ export const SITE = {
   lng: 77.1,
   contactPhone: '+919876500000',
 };
+
+/** The supplier accepts an order offered to them (new orders start PENDING). */
+export async function acceptOffer(app: Application, who: { headers: Record<string, string> }, orderId: string) {
+  const { default: request } = await import('supertest');
+  const res = await request(app).post(`/api/v1/suppliers/me/orders/${orderId}/accept`).set(who.headers);
+  if (res.status !== 200) throw new Error(`accept failed: ${res.status} ${JSON.stringify(res.body)}`);
+  return res;
+}

@@ -121,7 +121,7 @@ export function cartItemsToOrderPayload(
 }
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING:          'Pending',
+  PENDING:          'Waiting for supplier',
   CONFIRMED:        'Confirmed',
   READY_FOR_PICKUP: 'Ready for Pickup',
   ASSIGNED:         'Driver Assigned',

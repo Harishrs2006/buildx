@@ -7,6 +7,7 @@ import { ok } from '@sthiva/shared';
 import { notifyUser } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
 import { createOrder as createOrderTx, quoteOrder, cancelOrder as cancelOrderTx } from './order.service';
+import { announceNewOrder } from './allocation.service';
 import { IDEMPOTENCY_KEY, type CreateOrderInput } from './order.schemas';
 
 function notifySupplier(supplierProfileId: unknown, payload: Parameters<typeof notifyUser>[1]) {
@@ -15,6 +16,15 @@ function notifySupplier(supplierProfileId: unknown, payload: Parameters<typeof n
   }).catch((err) => {
     logger.error('Supplier notification lookup failed', { supplierProfileId: String(supplierProfileId), error: err?.message });
   });
+}
+
+// What a buyer sees of an order: which suppliers were offered it, and why they said no, stays internal
+export function buyerView<T extends { allocation?: unknown; statusHistory?: { status: string; note?: string }[] }>(order: T) {
+  const { allocation: _internal, ...rest } = order;
+  const history = (order.statusHistory ?? [])
+    .filter((h, i) => h.status !== 'PENDING' || i === 0)
+    .map((h) => (h.status === 'PENDING' ? { ...h, note: undefined } : h));
+  return { ...rest, statusHistory: history };
 }
 
 // POST /orders/quote — server-priced summary for the checkout screen
@@ -41,11 +51,8 @@ export async function createOrder(req: Request, res: Response, next: NextFunctio
     });
 
     if (!replayed) {
-      notifySupplier(order.supplierId, {
-        title: 'New order',
-        body: `Order ${order.orderNumber}: ₹${order.total.toLocaleString('en-IN')}, ${order.items.length} item${order.items.length > 1 ? 's' : ''}`,
-        data: { screen: 'supplier_orders', orderId: order._id.toString() },
-      });
+      // The supplier must accept or reject the offer
+      announceNewOrder(order);
     }
 
     res.status(replayed ? 200 : 201).json(
@@ -102,7 +109,7 @@ export async function listOrders(req: Request, res: Response, next: NextFunction
     ]);
 
     res.json(
-      ok(orders, {
+      ok(orders.map(buyerView), {
         total,
         page,
         limit,
@@ -123,7 +130,7 @@ export async function getOrder(req: Request, res: Response, next: NextFunction) 
     const order = await Order.findOne({ _id: req.params.id, buyerId: req.auth!.userId }).lean();
     if (!order) throw AppError.notFound('Order');
 
-    res.json(ok(order));
+    res.json(ok(buyerView(order)));
   } catch (err) {
     next(err);
   }

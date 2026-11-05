@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import {
-  seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
+  acceptOffer, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
   startDb, stopDb, clearDb, makeApp,
 } from './helpers';
 import { Order } from '../src/infrastructure/database/models/Order.model';
@@ -46,6 +46,7 @@ async function placeOrder(qty = 10) {
     .set('Idempotency-Key', newKey())
     .send({ items: [{ productId: product._id.toString(), quantity: qty }], deliveryAddress: SITE });
   expect(res.status).toBe(201);
+  await acceptOffer(app, supplier, res.body.data.orderId);
   return { product, id: res.body.data.orderId as string, total: res.body.data.total as number };
 }
 
@@ -65,7 +66,7 @@ describe('supplier self-delivery (SUPPLIER mode)', () => {
     const cod = await supplierCod(supplier, id, total);
     expect(cod.status).toBe(200);
     expect(cod.body.data).toMatchObject({ paymentStatus: 'CAPTURED', codCollectedByRole: 'SUPPLIER' });
-    expect((await getOrder(id))!.statusHistory.map((h) => h.status)).toEqual(['CONFIRMED', 'IN_TRANSIT', 'DELIVERED']);
+    expect((await getOrder(id))!.statusHistory.map((h) => h.status)).toEqual(['PENDING', 'CONFIRMED', 'IN_TRANSIT', 'DELIVERED']);
   });
 
   it('repeated dispatch/deliver requests are idempotent', async () => {
@@ -74,7 +75,7 @@ describe('supplier self-delivery (SUPPLIER mode)', () => {
     expect((await supplierStatus(supplier, id, 'IN_TRANSIT')).status).toBe(200);
     expect((await supplierStatus(supplier, id, 'DELIVERED')).status).toBe(200);
     expect((await supplierStatus(supplier, id, 'DELIVERED')).status).toBe(200);
-    expect((await getOrder(id))!.statusHistory).toHaveLength(3);
+    expect((await getOrder(id))!.statusHistory).toHaveLength(4);
   });
 
   it('cash cannot be confirmed before delivery', async () => {

@@ -47,7 +47,7 @@ export function ErrorNote({ children }: { children: ReactNode }) {
 }
 
 const STATUS: Record<BuyerOrder['status'], { label: string; tone: 'active' | 'done' | 'bad' | 'wait' }> = {
-  PENDING: { label: 'Placed', tone: 'wait' },
+  PENDING: { label: 'Waiting for supplier', tone: 'wait' },
   CONFIRMED: { label: 'Confirmed', tone: 'active' },
   READY_FOR_PICKUP: { label: 'Ready for pickup', tone: 'active' },
   ASSIGNED: { label: 'Driver assigned', tone: 'active' },

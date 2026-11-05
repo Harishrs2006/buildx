@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import {
-  seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
+  acceptOffer, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
   startDb, stopDb, clearDb, makeApp,
 } from './helpers';
 import { Order } from '../src/infrastructure/database/models/Order.model';
@@ -55,6 +55,7 @@ async function placeOrder(qty = 10) {
     .set('Idempotency-Key', newKey())
     .send({ items: [{ productId: product._id.toString(), quantity: qty }], deliveryAddress: SITE });
   expect(res.status).toBe(201);
+  await acceptOffer(app, supplier, res.body.data.orderId);
   return { product, id: res.body.data.orderId as string, total: res.body.data.total as number };
 }
 

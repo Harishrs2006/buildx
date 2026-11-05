@@ -14,6 +14,7 @@ import { ok } from '@sthiva/shared';
 import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
 import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
+import { acceptOffer, rejectOffer } from '../orders/allocation.service';
 
 async function getSupplierProfile(userId: string) {
   const profile = await SupplierProfile.findOne({ userId }).lean();
@@ -60,7 +61,7 @@ export async function getStats(req: Request, res: Response, next: NextFunction) 
 
     const [todayOrders, pendingOrders, activeProducts, revenueResult] = await Promise.all([
       Order.countDocuments({ supplierId, createdAt: { $gte: today } }),
-      Order.countDocuments({ supplierId, status: { $in: ['CONFIRMED', 'IN_TRANSIT'] } }),
+      Order.countDocuments({ supplierId, $or: [{ status: { $in: ['CONFIRMED', 'IN_TRANSIT'] } }, { status: 'PENDING', 'allocation.state': 'OFFERED' }] }),
       Product.countDocuments({ supplierId, status: 'ACTIVE' }),
       Order.aggregate([
         { $match: { supplierId, status: 'DELIVERED' } },
@@ -130,7 +131,8 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
     const statuses = String(req.query.status ?? '').split(',').filter((s) => ORDER_STATUSES.includes(s as never));
     const cashPending = req.query.cashPending === '1';
 
-    const filter: Record<string, unknown> = { supplierId: profile._id };
+    // An order nobody could take (waiting for Sthiva ops) is no longer this supplier's
+    const filter: Record<string, unknown> = { supplierId: profile._id, $nor: [{ status: 'PENDING', 'allocation.state': 'NEEDS_OPS' }] };
     if (statuses.length) filter.status = { $in: statuses };
     if (cashPending) Object.assign(filter, { status: 'DELIVERED', deliveryMode: 'SUPPLIER', paymentMethod: 'COD', paymentStatus: 'PENDING' });
 
@@ -425,5 +427,25 @@ export async function deleteProduct(req: Request, res: Response, next: NextFunct
     ).lean();
     if (!product) throw AppError.notFound('Product');
     res.json(ok({ message: 'Product discontinued' }));
+  } catch (err) { next(err); }
+}
+
+// POST /suppliers/me/orders/:id/accept — take an order offered to you
+export async function acceptOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    const profile = await getSupplierProfile(req.auth!.userId);
+    const { order } = await acceptOffer({ orderId: String(req.params.id), supplierProfileId: profile._id.toString(), userId: req.auth!.userId });
+    res.json(ok(order));
+  } catch (err) { next(err); }
+}
+
+// POST /suppliers/me/orders/:id/reject { reason } — Sthiva offers it to the next supplier
+export async function rejectOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    const profile = await getSupplierProfile(req.auth!.userId);
+    await rejectOffer({ orderId: String(req.params.id), supplierProfileId: profile._id.toString(), userId: req.auth!.userId, reason: req.body.reason });
+    res.json(ok({ rejected: true }));
   } catch (err) { next(err); }
 }

@@ -28,6 +28,8 @@ export const supplierOrderSchema = z
     total: z.number(),
     status: z.enum(['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DISPUTED']),
     deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
+    // While PENDING: offered to this supplier, answer by expiresAt (if Sthiva set an answer time)
+    allocation: z.object({ state: z.string(), expiresAt: z.string().optional() }).passthrough().optional(),
     createdAt: z.string(),
   })
   .passthrough();
@@ -63,6 +65,16 @@ export async function updateSupplierOrderStatus(
 }
 
 // Own-vehicle COD: the supplier confirms the exact total once the cash is in hand
+/** Take an order Sthiva offered you. */
+export async function acceptSupplierOrder(client: ApiClient, id: string): Promise<unknown> {
+  return client.request(`/suppliers/me/orders/${id}/accept`, { method: 'POST', auth: true, envelope: true, schema: z.unknown() });
+}
+
+/** Turn an offer down; Sthiva offers it to the next supplier. */
+export async function rejectSupplierOrder(client: ApiClient, id: string, reason: string): Promise<unknown> {
+  return client.request(`/suppliers/me/orders/${id}/reject`, { method: 'POST', auth: true, envelope: true, schema: z.unknown(), body: { reason } });
+}
+
 export async function confirmCashCollected(client: ApiClient, id: string, amount: number): Promise<SupplierOrder> {
   return client.request(`/suppliers/me/orders/${id}/cod`, {
     method: 'POST',

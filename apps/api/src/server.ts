@@ -1,4 +1,5 @@
 ﻿import { linkUnlinkedProducts } from './features/catalog/catalog.service';
+import { startOfferSweeper } from './features/orders/allocation.service';
 import "./config/env";
 import { initFirebase } from "./config/firebase";
 import { createApp } from "./app";
@@ -24,12 +25,16 @@ async function bootstrap(): Promise<void> {
   await linkUnlinkedProducts().catch((err) => logger.error('Could not link listings to catalog items', { error: err?.message }));
   await connectRedis();
 
+  // Moves supplier offers whose answer time ran out to the next supplier
+  const sweeper = startOfferSweeper();
+
   const server = app.listen(env.API_PORT, () => {
     logger.info(`Sthiva API running on port ${env.API_PORT} [${env.NODE_ENV}]`);
   });
 
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received — shutting down`);
+    clearInterval(sweeper);
     server.close(async () => {
       await disconnectDatabase();
       await redis.quit();

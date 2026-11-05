@@ -11,6 +11,7 @@ type QueueKey = keyof OpsSummary['attention'];
 function queues(t: OpsSummary['thresholds']): { key: QueueKey; title: string; hint: string }[] {
   const hrs = (m: number) => (m % 60 === 0 ? `${m / 60} h` : `${m} min`);
   return [
+    { key: 'needsSupplier', title: 'Needs a supplier', hint: 'Every supplier said no or did not answer. Open the order and offer it to a supplier.' },
     { key: 'unassigned', title: 'No driver yet', hint: `Ready for pickup for over ${hrs(t.READY_UNASSIGNED_MINUTES)}. Assign a driver.` },
     { key: 'notPickedUp', title: 'Driver has not picked up', hint: `Assigned for over ${hrs(t.ASSIGNED_MINUTES)}. Call the driver or reassign.` },
     { key: 'notDispatched', title: 'Supplier has not dispatched', hint: `Confirmed for over ${hrs(t.CONFIRMED_MINUTES)}. Call the supplier.` },
@@ -20,7 +21,7 @@ function queues(t: OpsSummary['thresholds']): { key: QueueKey; title: string; hi
   ];
 }
 
-const FLOW = ['CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'] as const;
+const FLOW = ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'] as const;
 
 export default function TodayPage() {
   const { state } = useLoad(opsApi.summary, []);
