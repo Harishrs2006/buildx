@@ -11,7 +11,7 @@ import { Font } from '../../src/constants/typography';
 import { Button, Eyebrow, type } from '../../src/components/ui';
 
 // Category photos are the same ones the website uses (apps/buyer-web/public/categories)
-const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://buildx-vgud.vercel.app';
+const WEB_URL = process.env.EXPO_PUBLIC_WEB_URL ?? 'https://www.sthiva.com';
 const categoryPhoto = (slug: string) => `${WEB_URL}/categories/${slug}.jpg`;
 
 export default function BuyerHome() {

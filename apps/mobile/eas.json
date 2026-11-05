@@ -6,8 +6,8 @@
   "build": {
     "base": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://buildx-api.onrender.com",
-        "EXPO_PUBLIC_WEB_URL": "https://buildx-vgud.vercel.app"
+        "EXPO_PUBLIC_API_URL": "https://api.sthiva.com",
+        "EXPO_PUBLIC_WEB_URL": "https://www.sthiva.com"
       }
     },
     "preview": {
