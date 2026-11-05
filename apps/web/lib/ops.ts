@@ -224,6 +224,34 @@ export const catalogApi = {
   merge: (c: ApiClient, id: string, intoId: string) => send(c, 'POST', `/ops/catalog/${id}/merge`, { intoId }, z.object({ moved: z.number() }).passthrough()),
 };
 
+// Settlements with suppliers and drivers. Shapes mirror settlement.service.ts.
+export type Party = 'SUPPLIER' | 'DRIVER';
+export const balanceSchema = z.object({
+  party: z.enum(['SUPPLIER', 'DRIVER']), partyId: z.string(), partyName: z.string(),
+  orders: z.number(), earned: z.number(), cashHeld: z.number(), net: z.number(), waitingForCash: z.number(),
+});
+export type Balance = z.infer<typeof balanceSchema>;
+export const settlementSchema = z
+  .object({
+    _id: z.string(), number: z.string(), party: z.enum(['SUPPLIER', 'DRIVER']), partyName: z.string(),
+    orders: z.array(z.object({ orderId: z.string(), orderNumber: z.string(), deliveredAt: z.string().optional(), earned: z.number(), cashHeld: z.number() })),
+    earned: z.number(), cashHeld: z.number(), net: z.number(),
+    status: z.enum(['PENDING', 'PAID', 'CANCELLED']),
+    reference: z.string().optional(), note: z.string().optional(), cancelReason: z.string().optional(),
+    paidAt: z.string().optional(), createdAt: z.string(),
+  })
+  .passthrough();
+export type Settlement = z.infer<typeof settlementSchema>;
+
+export const settlementApi = {
+  balances: (c: ApiClient, party: Party) => get(c, '/ops/settlements/balances', z.array(balanceSchema), { party }),
+  list: (c: ApiClient, q: Query) => get(c, '/ops/settlements', z.array(settlementSchema), q),
+  create: (c: ApiClient, party: Party, partyId: string) => send(c, 'POST', '/ops/settlements', { party, partyId }, settlementSchema),
+  markPaid: (c: ApiClient, id: string, reference: string, note?: string) =>
+    send(c, 'POST', `/ops/settlements/${id}/paid`, { reference, ...(note ? { note } : {}) }, settlementSchema),
+  cancel: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/settlements/${id}/cancel`, { reason }, settlementSchema),
+};
+
 export type Load<T> = { status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; error: unknown };
 
 // Fetches on mount and whenever `deps` change. `reload` refetches without flashing a skeleton.

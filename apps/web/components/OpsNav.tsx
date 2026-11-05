@@ -11,6 +11,7 @@ const TABS = [
   { href: '/suppliers', label: 'Suppliers', icon: 'storefront' },
   { href: '/drivers', label: 'Drivers', icon: 'local_shipping' },
   { href: '/catalog', label: 'Catalog', icon: 'inventory_2' },
+  { href: '/payouts', label: 'Payouts', icon: 'payments' },
   { href: '/settings', label: 'Settings', icon: 'tune' },
 ] as const;
 
