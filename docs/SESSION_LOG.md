@@ -558,3 +558,12 @@ Original plan:
   - UI: ops console Payouts tab; seller website Payouts tab; Sthiva Partner app Payouts tab (supplier and driver).
   - No payment schedule invented: an admin settles whenever they choose. 355 API tests pass (6 new); ops and
     seller sites build; mobile tsc clean.
+- 2026-11-05 22:45 IST: PHASE 7 admin analytics + people (branch feat/admin-analytics, stacked on feat/settlements #74).
+  - GET /ops/analytics?days=7|30|90 (IST days): placed, cancelled (by who), delivered, sales, supplier and driver
+    earnings, Sthiva share (sales - partner earnings, via settlement orderAmounts), daily series, top 10 items,
+    supplier and driver offer answers (offers/took/rejected/no answer, accept %) and deliveries.
+  - GET /ops/users?role&q&page: every account (deleted hidden), regex-safe search on name/email/phone, buyer order counts.
+    Suspend/reinstate uses the existing ADMIN-only PATCH /ops/users/:id/active (reason required).
+  - Ops console: Insights tab (stat tiles, sales-per-day bar chart with hover + table view, top items, supplier and
+    driver tables) and People tab. Desktop tabs show icons only below xl; phone tab bar scrolls.
+  - 359 API tests pass (4 new); ops site builds. Not yet seen in a browser with real data (needs ops sign-in).

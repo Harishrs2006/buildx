@@ -10,8 +10,10 @@ const TABS = [
   { href: '/orders', label: 'Orders', icon: 'receipt_long' },
   { href: '/suppliers', label: 'Suppliers', icon: 'storefront' },
   { href: '/drivers', label: 'Drivers', icon: 'local_shipping' },
+  { href: '/people', label: 'People', icon: 'group' },
   { href: '/catalog', label: 'Catalog', icon: 'inventory_2' },
   { href: '/payouts', label: 'Payouts', icon: 'payments' },
+  { href: '/insights', label: 'Insights', icon: 'monitoring' },
   { href: '/settings', label: 'Settings', icon: 'tune' },
 ] as const;
 
@@ -39,12 +41,13 @@ export function OpsNav() {
                   key={tab.href}
                   href={tab.href}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex h-10 items-center gap-2 rounded-full px-4 text-[14px] font-medium transition-colors ${
+                  title={tab.label}
+                  className={`flex h-10 items-center gap-2 rounded-full px-3 xl:px-4 text-[14px] font-medium transition-colors ${
                     active ? 'bg-lime text-ink' : 'text-sand/70 hover:bg-white/10 hover:text-sand'
                   }`}
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">{tab.icon}</span>
-                  {tab.label}
+                  <span className="sr-only xl:not-sr-only">{tab.label}</span>
                 </Link>
               );
             })}
@@ -69,7 +72,7 @@ export function OpsNav() {
       </header>
 
       {/* phone: floating pill tab bar, same as the storefront */}
-      <nav className="on-ink fixed inset-x-3 bottom-3 z-50 flex items-center justify-between rounded-full bg-ink p-1.5 shadow-[0_20px_50px_-20px_rgba(11,12,10,0.6)] sm:hidden" aria-label="Main">
+      <nav className="on-ink fixed inset-x-3 bottom-3 z-50 flex items-center justify-between overflow-x-auto rounded-full bg-ink p-1.5 shadow-[0_20px_50px_-20px_rgba(11,12,10,0.6)] sm:hidden" aria-label="Main">
         {TABS.map((tab) => {
           const active = isActive(pathname, tab.href);
           return (
@@ -77,7 +80,7 @@ export function OpsNav() {
               key={tab.href}
               href={tab.href}
               aria-current={active ? 'page' : undefined}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded-full py-2 transition-colors ${active ? 'bg-lime text-ink' : 'text-sand/70'}`}
+              className={`flex min-w-[64px] flex-1 flex-col items-center gap-0.5 rounded-full py-2 transition-colors ${active ? 'bg-lime text-ink' : 'text-sand/70'}`}
             >
               <span className="material-symbols-outlined text-[22px]" aria-hidden="true">{tab.icon}</span>
               <span className="text-[11px] font-semibold">{tab.label}</span>
