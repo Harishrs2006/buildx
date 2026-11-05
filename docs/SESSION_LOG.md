@@ -627,3 +627,4 @@ Original plan:
   isActive=false and its 10 listings DISCONTINUED (soft, reversible; no open orders). Live /products now 0.
   Owner chose to show their name until the company exists: Vercel sthiva-shop NEXT_PUBLIC_LEGAL_NAME =
   "Sthiva, operated by Harish R S" (live after the next shop deploy). Support phone/email still to come from owner.
+- 2026-11-06 IST: Support email: Zoho free plan not offered (paid only). Owner chose free Cloudflare Email Routing: support@sthiva.com -> harishrs21082006@gmail.com (MX route1-3.mx.cloudflare.net, DKIM cf2024-1, SPF includes Cloudflare + Google, DMARC p=none). NEXT: owner sets Gmail 'Send mail as' support@sthiva.com (smtp.gmail.com, app password); add NEXT_PUBLIC_SUPPORT_EMAIL=support@sthiva.com on sthiva-shop + Vultr .env; test mail in/out. Empty Zoho org 'sthiva' left unused (no plan bought).
