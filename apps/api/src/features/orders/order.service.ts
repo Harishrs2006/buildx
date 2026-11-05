@@ -11,7 +11,8 @@ import {
 import type { CartItemsInput, CreateOrderInput } from './order.schemas';
 import { env } from '../../config/env';
 import { offerExpiry } from './allocation.service';
-import { checkSupplier, notServiceable, resolveDestination, type Destination } from '../serviceability/serviceability.service';
+import { ratesFor, buyerProduct, type Rates } from './commission';
+import { checkSupplier, eligibleSupplierIds, notServiceable, resolveDestination, type Destination } from '../serviceability/serviceability.service';
 
 /**
  * Destination step shared by quote and order: with a PIN, validate it and check the supplier
@@ -58,16 +59,65 @@ async function inTransaction<T>(fn: (session: ClientSession) => Promise<T>): Pro
 type LeanProduct = Pick<
   IProduct,
   'supplierId' | 'name' | 'unit' | 'basePrice' | 'bulkPricing' | 'gstRate' | 'isGstInclusive'
-  | 'minOrderQuantity' | 'stockQuantity' | 'status' | 'images' | 'catalogItemId'
+  | 'minOrderQuantity' | 'stockQuantity' | 'status' | 'images' | 'catalogItemId' | 'categoryId'
 > & { _id: Types.ObjectId };
 
 type PricedCart = {
   supplierId: Types.ObjectId;
-  products: LeanProduct[];
-  priced: PricedOrder;
+  products: LeanProduct[];   // the chosen supplier's listing for each cart line
+  priced: PricedOrder;       // what the buyer pays (supplier price + commission)
+  supplierPriced: PricedOrder; // what the supplier's own prices come to
+  rates: Rates[];
 };
 
-async function priceCart(items: CartItemsInput, session?: ClientSession): Promise<PricedCart> {
+type Plan = { listings: LeanProduct[]; rates: Rates[]; priced: PricedOrder; supplierPriced: PricedOrder };
+
+function planFor(items: CartItemsInput, listings: LeanProduct[], rateMap: Map<string, Rates>): Plan {
+  const rates = listings.map((l) => {
+    const r = rateMap.get(l.categoryId.toString());
+    if (!r) throw AppError.conflict(`${l.name} isn't on sale yet. Please check back soon.`);
+    return r;
+  });
+  const priced = priceOrder(items.map((i, idx) => ({ product: buyerProduct(listings[idx], rates[idx].platform), quantity: i.quantity })));
+  const supplierPriced = priceOrder(items.map((i, idx) => ({ product: listings[idx], quantity: i.quantity })));
+  return { listings, rates, priced, supplierPriced };
+}
+
+/**
+ * Sthiva picks the supplier: among verified suppliers who serve the PIN and list every cart item
+ * (same catalog items) with enough stock, the cheapest for the buyer. The listings the buyer added
+ * are just a way to name the items. Carts with items outside the catalog keep their own supplier.
+ */
+async function chooseListings(items: CartItemsInput, asAdded: LeanProduct[], pincode: string | undefined, session?: ClientSession) {
+  const itemIds = asAdded.map((p) => p.catalogItemId);
+  if (itemIds.some((id) => !id)) return null;
+  const eligible = await eligibleSupplierIds(pincode);
+  const listings = await Product.find({
+    catalogItemId: { $in: itemIds },
+    status: 'ACTIVE',
+    supplierId: { $in: eligible },
+  }).session(session ?? null).lean<LeanProduct[]>();
+
+  const bySupplier = new Map<string, LeanProduct[]>();
+  for (const l of listings) bySupplier.set(l.supplierId.toString(), [...(bySupplier.get(l.supplierId.toString()) ?? []), l]);
+  const rateMap = await ratesFor(listings.map((l) => l.categoryId));
+
+  let best: Plan | null = null;
+  for (const own of bySupplier.values()) {
+    const lines = items.map((it, idx) => own.find((l) => l.catalogItemId!.equals(itemIds[idx]!) && l.stockQuantity >= it.quantity));
+    if (lines.some((l) => !l)) continue;
+    try {
+      const plan = planFor(items, lines as LeanProduct[], rateMap);
+      if (!best || plan.priced.totalPaise < best.priced.totalPaise) best = plan;
+    } catch (err) {
+      if (err instanceof PricingError || err instanceof AppError) continue; // this supplier can't sell this cart
+      throw err;
+    }
+  }
+  return best;
+}
+
+async function priceCart(items: CartItemsInput, session?: ClientSession, pincode?: string): Promise<PricedCart> {
   const ids = items.map((i) => i.productId);
   const found = await Product.find({ _id: { $in: ids } }).session(session ?? null).lean<LeanProduct[]>();
   const byId = new Map(found.map((p) => [p._id.toString(), p]));
@@ -78,12 +128,17 @@ async function priceCart(items: CartItemsInput, session?: ClientSession): Promis
     return p;
   });
 
-  const supplierIds = new Set(products.map((p) => p.supplierId.toString()));
-  if (supplierIds.size > 1) throw AppError.badRequest('All items in one order must be from the same supplier');
+  const chosen = await chooseListings(items, products, pincode, session);
+  if (chosen) return { supplierId: chosen.listings[0].supplierId, products: chosen.listings, ...chosen };
 
+  // Nobody can supply the whole cart: with one supplier's items, let the usual checks explain why
+  const supplierIds = new Set(products.map((p) => p.supplierId.toString()));
+  if (supplierIds.size > 1) {
+    throw AppError.conflict('No single supplier can deliver all these items here. Please order them separately.');
+  }
   try {
-    const priced = priceOrder(items.map((i, idx) => ({ product: products[idx], quantity: i.quantity })));
-    return { supplierId: products[0].supplierId, products, priced };
+    const plan = planFor(items, products, await ratesFor(products.map((p) => p.categoryId)));
+    return { supplierId: products[0].supplierId, products, ...plan };
   } catch (err) {
     throw pricingToAppError(err);
   }
@@ -112,7 +167,7 @@ function lineView(p: PricedCart['products'][number], line: PricedOrder['lines'][
 // POST /orders/quote — same pricing as order creation, no writes
 export async function quoteOrder(items: CartItemsInput, deliveryPincode?: string) {
   const destination = deliveryPincode !== undefined ? await resolveDestination(deliveryPincode) : null;
-  const { supplierId, products, priced } = await priceCart(items);
+  const { supplierId, products, priced } = await priceCart(items, undefined, destination?.pincode);
   await assertSupplierCanServe(supplierId, destination);
   return {
     supplierId,
@@ -171,7 +226,7 @@ export async function createOrder(params: {
 
   try {
     const order = await inTransaction(async (session) => {
-      const { supplierId, products, priced } = await priceCart(input.items, session);
+      const { supplierId, products, priced, supplierPriced, rates } = await priceCart(input.items, session, destination?.pincode);
 
       // Re-checked here, inside the transaction, regardless of any earlier quote: a supplier
       // who dropped this PIN since the quote makes the whole order (and stock change) roll back
@@ -201,7 +256,16 @@ export async function createOrder(params: {
             orderNumber: generateOrderNumber(),
             buyerId,
             supplierId,
-            items: products.map((p, i) => lineView(p, priced.lines[i])),
+            items: products.map((p, i) => ({
+              ...lineView(p, priced.lines[i]),
+              // The supplier's side of the line, and the commission rates in force when ordered
+              supplierUnitPrice: paiseToRupees(supplierPriced.lines[i].unitPricePaise),
+              supplierLineTotal: paiseToRupees(supplierPriced.lines[i].totalPaise),
+              commissionPercent: rates[i].platform,
+              ...(rates[i].supplier !== null ? { supplierDeliveryPercent: rates[i].supplier } : {}),
+            })),
+            supplierTotal: paiseToRupees(supplierPriced.totalPaise),
+            commissionTotal: paiseToRupees(priced.totalPaise - supplierPriced.totalPaise),
             deliveryAddress: destination
               ? { ...input.deliveryAddress, district: destination.district, state: destination.state }
               : input.deliveryAddress,

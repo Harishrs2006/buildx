@@ -41,6 +41,8 @@ export type SupplierOrder = {
   deliveryMode?: 'PLATFORM' | 'SUPPLIER';
   // While PENDING: Sthiva offered it to this supplier; answer before expiresAt (if set)
   allocation?: { state: 'OFFERED' | 'ACCEPTED' | 'NEEDS_OPS'; expiresAt?: string };
+  // What the supplier earns (after Sthiva's commission), both ways the order can be delivered
+  earnings?: { orderValue: number; payoutIfSthivaDelivers: number; payoutIfYouDeliver: number; expectedPayout: number | null };
   notes?: string;
   createdAt: string;
   deliveredAt?: string;

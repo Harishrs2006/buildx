@@ -142,7 +142,7 @@ describe('order creation and stock', () => {
     expect((await place(buyer, [
       { productId: mine._id.toString(), quantity: 1 },
       { productId: theirs._id.toString(), quantity: 1 },
-    ])).status).toBe(400);
+    ])).status).toBe(409); // no single supplier has both
     expect((await place(buyer, [
       { productId: mine._id.toString(), quantity: 1 },
       { productId: mine._id.toString(), quantity: 2 },

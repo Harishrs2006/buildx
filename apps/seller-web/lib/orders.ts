@@ -30,6 +30,15 @@ export const supplierOrderSchema = z
     deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
     // While PENDING: offered to this supplier, answer by expiresAt (if Sthiva set an answer time)
     allocation: z.object({ state: z.string(), expiresAt: z.string().optional() }).passthrough().optional(),
+    // What you earn: Sthiva commission and your payout, both ways the order can be delivered
+    earnings: z.object({
+      orderValue: z.number(),
+      payoutIfSthivaDelivers: z.number(),
+      commissionIfSthivaDelivers: z.number(),
+      payoutIfYouDeliver: z.number(),
+      commissionIfYouDeliver: z.number(),
+      expectedPayout: z.number().nullable(),
+    }).optional(),
     createdAt: z.string(),
   })
   .passthrough();

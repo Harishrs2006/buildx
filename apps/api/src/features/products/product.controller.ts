@@ -3,10 +3,33 @@ import { isValidObjectId } from 'mongoose';
 import { Product } from '../../infrastructure/database/models/Product.model';
 import { Category } from '../../infrastructure/database/models/Category.model';
 import { checkSupplier, eligibleSupplierIds, resolveDestination, type Destination } from '../serviceability/serviceability.service';
+import { buyerProduct, ratesFor } from '../orders/commission';
 
 // Public catalogue. Every client (mobile included) only sees ACTIVE products from suppliers that
 // are verified, active and not suspended. With ?pincode=, results are further limited to
 // suppliers that deliver to that PIN; without it the response is unchanged for older clients.
+//
+// One entry per Sthiva catalog item: of all suppliers' listings of an item, buyers see the
+// cheapest (Sthiva picks the supplier at order time). Prices include Sthiva's commission, and a
+// category is only on sale once an admin has set its commission (Settings).
+
+/** Categories an admin has set a commission for, i.e. on sale. */
+async function sellableCategoryIds() {
+  const cats = await Category.find({ 'commission.platformDeliveryPercent': { $type: 'number' } }).select('_id').lean();
+  return cats.map((c) => c._id);
+}
+
+/** Listing → what buyers see: prices with commission, internal fields dropped. */
+async function forBuyers<T extends { categoryId: unknown; basePrice: number; bulkPricing?: { minQty: number; price: number }[] }>(rows: T[]) {
+  const catId = (c: unknown) => String((c as { _id?: unknown })?._id ?? c);
+  const rates = await ratesFor(rows.map((r) => catId(r.categoryId)));
+  return rows.flatMap((r) => {
+    const rate = rates.get(catId(r.categoryId));
+    if (!rate) return [];
+    const { _key, _gross, ...rest } = r as T & { _key?: unknown; _gross?: unknown };
+    return [buyerProduct(rest as unknown as T & { name: string; unit: string; gstRate: number; isGstInclusive: boolean }, rate.platform)];
+  });
+}
 
 export async function listProducts(req: Request, res: Response, next: NextFunction) {
   try {
@@ -16,37 +39,49 @@ export async function listProducts(req: Request, res: Response, next: NextFuncti
     if (pincode !== undefined) destination = await resolveDestination(pincode);
     const supplierIds = await eligibleSupplierIds(destination?.pincode);
 
-    const filter: Record<string, unknown> = { status: 'ACTIVE', supplierId: { $in: supplierIds } };
+    const onSale = await sellableCategoryIds();
+    const filter: Record<string, unknown> = { status: 'ACTIVE', supplierId: { $in: supplierIds }, categoryId: { $in: onSale } };
 
     if (typeof category === 'string' && category) {
       const cat = await Category.findOne({ slug: category }).lean();
-      if (cat) filter.categoryId = cat._id;
+      if (cat) filter.categoryId = onSale.some((id) => id.equals(cat._id)) ? cat._id : { $in: [] };
     }
 
     if (q) {
       filter.$text = { $search: q };
     }
 
-    const sortMap: Record<string, [string, 1 | -1][]> = {
-      popular:    [['totalSold', -1]],
-      price_asc:  [['basePrice', 1]],
-      price_desc: [['basePrice', -1]],
-      newest:     [['createdAt', -1]],
+    const sortMap: Record<string, Record<string, 1 | -1>> = {
+      popular:    { totalSold: -1, _id: 1 },
+      price_asc:  { _gross: 1, _id: 1 },
+      price_desc: { _gross: -1, _id: 1 },
+      newest:     { createdAt: -1, _id: 1 },
     };
 
     const pageNum  = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
 
-    const [products, total] = await Promise.all([
-      Product.find(filter)
-        .sort(sortMap[sort] ?? sortMap.popular)
-        .skip((pageNum - 1) * limitNum)
-        .limit(limitNum)
-        .populate('supplierId', 'businessName avgRating')
-        .populate('categoryId', 'name slug')
-        .lean(),
-      Product.countDocuments(filter),
+    // Cheapest listing per catalog item (listings outside the catalog stand alone)
+    const [result] = await Product.aggregate<{ rows: Record<string, unknown>[]; total: { n: number }[] }>([
+      { $match: filter },
+      {
+        $addFields: {
+          _key: { $ifNull: ['$catalogItemId', '$_id'] },
+          _gross: { $cond: ['$isGstInclusive', '$basePrice', { $multiply: ['$basePrice', { $add: [1, { $divide: ['$gstRate', 100] }] }] }] },
+        },
+      },
+      { $sort: { _gross: 1, _id: 1 } },
+      { $group: { _id: '$_key', doc: { $first: '$$ROOT' }, sellerCount: { $sum: 1 }, soldAll: { $sum: '$totalSold' } } },
+      { $replaceRoot: { newRoot: { $mergeObjects: ['$doc', { sellerCount: '$sellerCount', totalSold: '$soldAll' }] } } },
+      { $sort: sortMap[sort] ?? sortMap.popular },
+      { $facet: { rows: [{ $skip: (pageNum - 1) * limitNum }, { $limit: limitNum }], total: [{ $count: 'n' }] } },
     ]);
+    const populated = await Product.populate(result.rows, [
+      { path: 'supplierId', select: 'businessName avgRating' },
+      { path: 'categoryId', select: 'name slug' },
+    ]);
+    const products = await forBuyers(populated as unknown as { categoryId: unknown; basePrice: number }[]);
+    const total = result.total[0]?.n ?? 0;
 
     res.json({
       products,
@@ -89,8 +124,12 @@ export async function getProduct(req: Request, res: Response, next: NextFunction
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    // Prices with commission; categories not on sale yet are not shown
+    const [priced] = await forBuyers([product]);
+    if (!priced) return res.status(404).json({ message: 'Product not found' });
+
     res.json({
-      ...product,
+      ...priced,
       // Only present when a PIN was given: can this product be delivered there?
       ...(destination && {
         availability: {

@@ -107,8 +107,8 @@ export default function CartScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={
           supplierCount > 1 ? (
-            <Notice tone="warning" title={`Items from ${supplierCount} suppliers`} style={styles.mixed}>
-              One order comes from one supplier. Remove items until only one supplier is left, then check out.
+            <Notice tone="info" title="One supplier for your order" style={styles.mixed}>
+              Sthiva sends the whole order to one verified supplier who has every item. Checkout tells you if nobody has all of them.
             </Notice>
           ) : null
         }
@@ -140,7 +140,7 @@ export default function CartScreen() {
           <Text style={styles.stickyLabel}>Incl. GST</Text>
           <Text style={styles.stickyTotal}>{rupees(grandTotal)}</Text>
         </View>
-        <Button title="Checkout" variant="lime" onPress={() => router.push('/(buyer)/checkout' as never)} disabled={supplierCount > 1} style={styles.checkoutBtn} />
+        <Button title="Checkout" variant="lime" onPress={() => router.push('/(buyer)/checkout' as never)} style={styles.checkoutBtn} />
       </SafeAreaView>
 
       <ConfirmSheet

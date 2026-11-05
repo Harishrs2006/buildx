@@ -52,23 +52,28 @@ type Listing = {
 };
 
 /** For one supplier: their listing for each order line, or null if they can't supply all of it. */
-function matchLines(order: LeanOrder, listings: Listing[], enforcePrice: boolean): { productIds: Types.ObjectId[]; totalPaise: number } | null {
+function matchLines(order: LeanOrder, listings: Listing[], enforcePrice: boolean): { productIds: Types.ObjectId[]; totalPaise: number; linePaise: number[]; unitPaise: number[] } | null {
   const productIds: Types.ObjectId[] = [];
+  const linePaise: number[] = [];
+  const unitPaise: number[] = [];
   let totalPaise = 0;
   for (const item of order.items) {
     const l = listings.find((x) => item.catalogItemId && x.catalogItemId?.equals(item.catalogItemId));
     if (!l || l.stockQuantity < item.quantity) return null;
     try {
       const priced = priceLine(l, item.quantity);
-      if (enforcePrice && priced.totalPaise > toPaise(item.lineTotal)) return null;
+      // Compare with what the supplier side of this line was (older orders: the buyer's line)
+      if (enforcePrice && priced.totalPaise > toPaise(item.supplierLineTotal ?? item.lineTotal)) return null;
       totalPaise += priced.totalPaise;
+      linePaise.push(priced.totalPaise);
+      unitPaise.push(priced.unitPricePaise);
     } catch (err) {
       if (err instanceof PricingError) return null; // their listing can't sell this quantity
       throw err;
     }
     productIds.push(l._id);
   }
-  return { productIds, totalPaise };
+  return { productIds, totalPaise, linePaise, unitPaise };
 }
 
 async function listingsFor(order: LeanOrder, supplierIds: Types.ObjectId[] | null, session: ClientSession) {
@@ -96,7 +101,7 @@ async function findNextSupplier(order: LeanOrder, session: ClientSession) {
   const bySupplier = new Map<string, Listing[]>();
   for (const l of listings) bySupplier.set(l.supplierId.toString(), [...(bySupplier.get(l.supplierId.toString()) ?? []), l]);
 
-  const options: { supplierId: Types.ObjectId; productIds: Types.ObjectId[]; totalPaise: number }[] = [];
+  const options: { supplierId: Types.ObjectId; productIds: Types.ObjectId[]; totalPaise: number; linePaise: number[]; unitPaise: number[] }[] = [];
   for (const [sid, own] of bySupplier) {
     const m = matchLines(order, own, true);
     if (m) options.push({ supplierId: new Types.ObjectId(sid), ...m });
@@ -148,7 +153,7 @@ async function moveOn(params: {
     if (!order) return null;
     const now = new Date();
 
-    let next: { supplierId: Types.ObjectId; productIds: Types.ObjectId[] } | null = null;
+    let next: { supplierId: Types.ObjectId; productIds: Types.ObjectId[]; linePaise: number[]; unitPaise: number[]; totalPaise: number } | null = null;
     if (target) {
       const profile = await SupplierProfile.findById(target.supplierId).select('verificationStatus isActive').session(session).lean();
       if (!profile || profile.verificationStatus !== 'VERIFIED' || profile.isActive === false) {
@@ -156,7 +161,7 @@ async function moveOn(params: {
       }
       const m = matchLines(order, await listingsFor(order, [target.supplierId], session), false);
       if (!m) throw AppError.conflict('That supplier does not list every item in this order with enough stock');
-      next = { supplierId: target.supplierId, productIds: m.productIds };
+      next = { supplierId: target.supplierId, ...m };
     } else {
       next = await findNextSupplier(order, session);
     }
@@ -171,7 +176,15 @@ async function moveOn(params: {
       const expiresAt = await offerExpiry(now);
       attempts.push({ supplierId: next.supplierId, offeredAt: now, ...(target ? { byOps: true } : {}) });
       set.supplierId = next.supplierId;
-      set.items = order.items.map((it, i) => ({ ...it, productId: next!.productIds[i] }));
+      // Buyer prices stay; the supplier side follows the new supplier's own prices
+      set.items = order.items.map((it, i) => ({
+        ...it,
+        productId: next!.productIds[i],
+        supplierUnitPrice: next!.unitPaise[i] / 100,
+        supplierLineTotal: next!.linePaise[i] / 100,
+      }));
+      set.supplierTotal = next.totalPaise / 100;
+      set.commissionTotal = (toPaise(order.total) - next.totalPaise) / 100;
       set.allocation = { state: 'OFFERED', ...(expiresAt ? { expiresAt } : {}), attempts };
       set.inventoryState = 'DEDUCTED';
     } else {

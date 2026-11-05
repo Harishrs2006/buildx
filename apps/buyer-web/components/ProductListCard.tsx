@@ -5,6 +5,7 @@ import { illustrationFor } from '@/lib/illustrations';
 type ProductExtras = {
   images?: { url: string; isPrimary?: boolean }[];
   supplierId?: { businessName?: string };
+  sellerCount?: number; // suppliers selling this item (Sthiva picks one at order time)
   categoryId?: { name?: string };
   deliveryDays?: number;
   avgRating?: number;
@@ -67,7 +68,7 @@ export function ProductListCard({ product }: { product: ProductSummary }) {
 
       <div className="flex flex-1 flex-col px-5 pb-5 pt-3">
         <h3 className="font-display text-[20px] font-semibold leading-tight tracking-[-0.02em] text-ink">{product.name}</h3>
-        {extra.supplierId?.businessName && <p className="mt-1 text-[14px] text-stone">by {extra.supplierId.businessName}</p>}
+        {(extra.sellerCount ?? 0) > 1 && <p className="mt-1 text-[14px] text-stone">{extra.sellerCount} verified suppliers</p>}
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-6">
           <div>

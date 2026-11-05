@@ -16,6 +16,11 @@ export interface IOrderItem {
   taxableValue: number;
   gstAmount: number;
   lineTotal: number;
+  // Supplier side (orders from 2026-11-05): their own price for the line, and commission rates used
+  supplierUnitPrice?: number;
+  supplierLineTotal?: number;
+  commissionPercent?: number;        // Sthiva delivers rate, built into the buyer price
+  supplierDeliveryPercent?: number;  // lower rate Sthiva keeps if the supplier delivers
 }
 
 export type OrderStatusEvent = {
@@ -70,6 +75,8 @@ export interface IOrder extends Document {
   subtotal: number;        // Σ taxable value
   gstAmount: number;       // Σ GST
   total: number;           // amount payable
+  supplierTotal?: number;   // Σ supplier line totals (before any own-delivery adjustment)
+  commissionTotal?: number; // total − supplierTotal
   status: 'PENDING' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'ASSIGNED' | 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED' | 'DISPUTED';
   // Chosen by the supplier at dispatch: Sthiva delivery partner, or supplier's own vehicle
   deliveryMode?: 'PLATFORM' | 'SUPPLIER';
@@ -125,6 +132,10 @@ const orderSchema = new Schema<IOrder>(
         taxableValue: Number,
         gstAmount: Number,
         lineTotal: Number,
+        supplierUnitPrice: Number,
+        supplierLineTotal: Number,
+        commissionPercent: Number,
+        supplierDeliveryPercent: Number,
       },
     ],
     deliveryAddress: {
@@ -158,6 +169,8 @@ const orderSchema = new Schema<IOrder>(
     subtotal: { type: Number, required: true },
     gstAmount: { type: Number, required: true },
     total: { type: Number, required: true },
+    supplierTotal: Number,
+    commissionTotal: Number,
     status: {
       type: String,
       enum: ['PENDING', 'CONFIRMED', 'READY_FOR_PICKUP', 'ASSIGNED', 'PICKED_UP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED', 'DISPUTED'],

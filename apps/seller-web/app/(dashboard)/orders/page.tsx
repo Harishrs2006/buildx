@@ -101,6 +101,23 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
           </div>
         </div>
 
+        {order.earnings && (
+          <div className="rounded-xl border border-sand-4 p-4 text-[15px]">
+            <p className="eyebrow text-stone">What you earn</p>
+            {order.earnings.expectedPayout !== null ? (
+              <p className="mt-2"><span className="font-display text-lg font-bold tabular-nums">{rupees.format(order.earnings.expectedPayout)}</span> <span className="text-stone">after Sthiva&apos;s commission of {rupees.format(order.deliveryMode === 'SUPPLIER' ? order.earnings.commissionIfYouDeliver : order.earnings.commissionIfSthivaDelivers)}</span></p>
+            ) : (
+              <div className="mt-2 flex flex-col gap-1">
+                <p><span className="font-semibold tabular-nums">{rupees.format(order.earnings.payoutIfSthivaDelivers)}</span> <span className="text-stone">if a Sthiva driver delivers (commission {rupees.format(order.earnings.commissionIfSthivaDelivers)})</span></p>
+                {order.earnings.payoutIfYouDeliver !== order.earnings.payoutIfSthivaDelivers && (
+                  <p><span className="font-semibold tabular-nums">{rupees.format(order.earnings.payoutIfYouDeliver)}</span> <span className="text-stone">if you deliver yourself (commission {rupees.format(order.earnings.commissionIfYouDeliver)})</span></p>
+                )}
+              </div>
+            )}
+            <p className="mt-1 text-[13px] text-stone">The buyer pays {rupees.format(order.earnings.orderValue)} in total.</p>
+          </div>
+        )}
+
         <div className="rounded-xl bg-sand-3/60 p-4 text-[15px]">
           <p className="eyebrow text-stone">Deliver to</p>
           <p className="mt-2 font-semibold">{buyer?.name ?? 'Buyer'} · {a.label}</p>

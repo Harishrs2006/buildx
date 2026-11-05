@@ -32,8 +32,8 @@ beforeEach(async () => {
   const first = await seedProduct(a.profile._id, { basePrice: 400, stockQuantity: 100 });
   item = (await CatalogItem.create({ name: 'Cement', slug: 'cement-x', categoryId: first.categoryId, unit: 'BAG', createdBy: { role: 'ADMIN' } }))._id;
   await Product.updateOne({ _id: first._id }, { catalogItemId: item });
-  // b is cheaper than the buyer's price, c is dearer
-  const lb = await seedProduct(b.profile._id, { basePrice: 390, stockQuantity: 100, catalogItemId: item });
+  // a and b charge the same (a listed first, so a gets the first offer); c is dearer
+  const lb = await seedProduct(b.profile._id, { basePrice: 400, stockQuantity: 100, catalogItemId: item });
   const lc = await seedProduct(c.profile._id, { basePrice: 450, stockQuantity: 100, catalogItemId: item });
   listing = { a: first._id, b: lb._id, c: lc._id };
 });
@@ -69,7 +69,7 @@ describe('supplier offers', () => {
     expect((await get(id)).allocation!.attempts).toEqual([expect.objectContaining({ outcome: 'ACCEPTED' })]);
   });
 
-  it('a rejected order goes to the next supplier at or below the buyer price; stock moves with it', async () => {
+  it('a rejected order goes to the next supplier at or below the first supplier price; stock moves with it', async () => {
     const id = await place();
     expect((await reject(a, id)).status).toBe(200);
     let o = await get(id);
@@ -86,7 +86,7 @@ describe('supplier offers', () => {
     expect(await supplierOrders(a)).toEqual([]);
     expect(await supplierOrders(b)).toEqual([id]);
 
-    // c is dearer than what the buyer pays, so nobody is left: ops queue, no stock held
+    // c charges more than a did, so nobody is left automatically: ops queue, no stock held
     expect((await reject(b, id)).status).toBe(200);
     o = await get(id);
     expect(o.allocation!.state).toBe('NEEDS_OPS');

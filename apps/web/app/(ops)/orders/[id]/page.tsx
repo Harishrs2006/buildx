@@ -294,6 +294,34 @@ export default function OrderPage() {
       {o.status === 'PENDING' && o.allocation && <SupplierChoice order={o} reload={reload} />}
       <Actions order={o} reload={reload} />
 
+      {o.earnings && (
+        <Panel title="Money">
+          <dl className="grid gap-3 text-[15px] sm:grid-cols-3">
+            <div><dt className="eyebrow text-stone">Buyer pays</dt><dd className="mt-1 font-semibold tabular-nums">{rupees.format(o.earnings.orderValue)}</dd></div>
+            <div>
+              <dt className="eyebrow text-stone">Sthiva commission</dt>
+              <dd className="mt-1 font-semibold tabular-nums">
+                {rupees.format(o.deliveryMode === 'SUPPLIER' ? o.earnings.commissionIfYouDeliver : o.earnings.commissionIfSthivaDelivers)}
+                {!o.deliveryMode && o.earnings.commissionIfYouDeliver !== o.earnings.commissionIfSthivaDelivers && (
+                  <span className="block text-[13px] font-normal text-stone">{rupees.format(o.earnings.commissionIfYouDeliver)} if the supplier delivers</span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt className="eyebrow text-stone">Supplier payout</dt>
+              <dd className="mt-1 font-semibold tabular-nums">
+                {rupees.format(o.deliveryMode === 'SUPPLIER' ? o.earnings.payoutIfYouDeliver : o.earnings.payoutIfSthivaDelivers)}
+                {!o.deliveryMode && o.earnings.payoutIfYouDeliver !== o.earnings.payoutIfSthivaDelivers && (
+                  <span className="block text-[13px] font-normal text-stone">{rupees.format(o.earnings.payoutIfYouDeliver)} if they deliver</span>
+                )}
+              </dd>
+            </div>
+          </dl>
+          {o.supplierTotal === undefined && <p className="mt-3 text-[13px] text-stone">Placed before commission existed: the supplier gets the full amount.</p>}
+          {o.earnings.commissionIfSthivaDelivers < 0 && <p className="mt-3 text-[13px] text-error">This supplier charges more than the buyer pays: Sthiva loses on this order.</p>}
+        </Panel>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="People">
           <dl className="flex flex-col gap-3 text-[15px]">

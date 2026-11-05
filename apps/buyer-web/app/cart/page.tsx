@@ -20,7 +20,7 @@ export default function CartPage() {
         <PageHead eyebrow="Cart" title="Your" accent="order">
           {items.length > 0 && (
             <p className="text-[15px] text-stone">
-              {items.length} item{items.length > 1 ? 's' : ''} from <span className="font-semibold text-ink">{cart?.supplierName}</span>
+              {items.length} item{items.length > 1 ? 's' : ''}. Sthiva sends your order to a verified supplier near you.
             </p>
           )}
         </PageHead>

@@ -92,6 +92,15 @@ function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind:
         <Text style={styles.total}>{rupees(order.total)}</Text>
         <Text style={styles.payment}>{order.paymentStatus === 'CAPTURED' ? 'Cash collected' : 'Cash on delivery'}</Text>
       </View>
+      {order.earnings ? (
+        <Text style={styles.notes}>
+          {order.earnings.expectedPayout !== null
+            ? `You earn ${rupees(order.earnings.expectedPayout)} after Sthiva's commission.`
+            : order.earnings.payoutIfYouDeliver !== order.earnings.payoutIfSthivaDelivers
+              ? `You earn ${rupees(order.earnings.payoutIfSthivaDelivers)} if Sthiva delivers, ${rupees(order.earnings.payoutIfYouDeliver)} if you deliver.`
+              : `You earn ${rupees(order.earnings.payoutIfSthivaDelivers)} after Sthiva's commission.`}
+        </Text>
+      ) : null}
 
       {actions.length > 0 ? (
         <View style={styles.actions}>

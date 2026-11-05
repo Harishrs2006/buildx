@@ -28,7 +28,9 @@ User decisions 2026-11-05 07:40 IST:
   auto-offers only to suppliers whose price is not higher, so commission never shrinks; others via admin.
 Phase 1 (admin settings) merged as #66. Phase 2 merged as #67. Phase 3 (supplier offers) = PR feat/supplier-offers.
   After merge: user publishes OTA updates (partner + buyer) so the apps show Accept/Reject and the new label.
-  Next: Phase 4 (buyer sees catalog items at one price + commission + supplier payout).
+  Phase 4 (one price + commission) = PR feat/one-price. IMPORTANT after merge: the shop hides every category
+  without a commission, so the owner must set commission per category in ops Settings (0 is allowed).
+  Open question for owner: re-offer rule is strict (next supplier must not charge more than the first).
 0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
    Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
    projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
@@ -496,3 +498,12 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   supplier options panel. 324 API tests pass (8 new); 3 sites build; mobile typechecks.
 - 2026-11-05 08:35 IST: User merged #68. OTA publish failed: new eas-cli needs --environment in --non-interactive mode.
   Added '--environment production' to scripts/publish-update.cjs (copied to C:/bx/mobile).
+- 2026-11-05 08:50 IST: User merged #69. Phase 4 on feat/one-price: commission.ts (ratesFor, addPercent,
+  buyerProduct, payoutFor, supplierEarnings). Buyer price = supplier listed price x (1 + "Sthiva delivers" %);
+  supplier earns their listed price; if they deliver themselves Sthiva keeps only the lower % and the rest goes to
+  them. Categories without a commission are hidden and can't be ordered. /products shows one entry per catalog item
+  (cheapest eligible listing, sellerCount), prices with commission; AI estimate too. Orders: Sthiva picks the
+  cheapest supplier that has the whole cart and serves the PIN; items store supplierUnitPrice, supplierLineTotal,
+  commissionPercent, supplierDeliveryPercent; order supplierTotal + commissionTotal. Re-offer compares with the
+  supplier side. Supplier order list + ops order detail return earnings. Buyer web/app carts can mix listings.
+  332 API tests pass (8 new); 3 sites build; mobile typechecks.
