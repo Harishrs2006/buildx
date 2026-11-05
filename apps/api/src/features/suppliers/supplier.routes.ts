@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
 import { validate } from '../../shared/middleware/validate.middleware';
-import { supplierStatusSchema, codCollectedSchema } from '../orders/order.schemas';
+import { supplierStatusSchema, codCollectedSchema, problemSchema } from '../orders/order.schemas';
 import {
   getProfile, updateProfile, getStats, getAnalytics,
   listSupplierOrders, updateOrderStatus, confirmCodCollected,
   listSupplierProducts, getSupplierProduct, createProduct, updateProduct, deleteProduct,
-  acceptOrder, rejectOrder,
+  acceptOrder, rejectOrder, reportProblem,
 } from './supplier.controller';
 import { z } from 'zod';
 import {
@@ -115,6 +115,7 @@ router.get('/me/orders', listSupplierOrders);
 const rejectSchema = z.object({ reason: z.string().trim().min(3, 'Tell us why (at least 3 characters)').max(300) });
 router.post('/me/orders/:id/accept', acceptOrder);
 router.post('/me/orders/:id/reject', validate(rejectSchema), rejectOrder);
+router.post('/me/orders/:id/problem', validate(problemSchema), reportProblem);
 router.patch('/me/orders/:id/status', validate(supplierStatusSchema), updateOrderStatus);
 router.post('/me/orders/:id/cod', validate(codCollectedSchema), confirmCodCollected);
 

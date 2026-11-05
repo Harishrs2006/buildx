@@ -30,6 +30,7 @@ export const supplierOrderSchema = z
     deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
     // While PENDING: offered to this supplier, answer by expiresAt (if Sthiva set an answer time)
     allocation: z.object({ state: z.string(), expiresAt: z.string().optional() }).passthrough().optional(),
+    deliveryIssue: z.object({ reason: z.string(), resolvedAt: z.string().optional() }).passthrough().optional(),
     // What you earn: Sthiva commission and your payout, both ways the order can be delivered
     earnings: z.object({
       orderValue: z.number(),
@@ -62,15 +63,21 @@ export async function updateSupplierOrderStatus(
   client: ApiClient,
   id: string,
   status: SupplierOrderAction,
-  reason?: string
+  reason?: string,
+  otp?: string
 ): Promise<SupplierOrder> {
   return client.request(`/suppliers/me/orders/${id}/status`, {
     method: 'PATCH',
     auth: true,
     envelope: true,
     schema: supplierOrderSchema,
-    body: { status, reason },
+    body: { status, reason, ...(otp ? { otp } : {}) },
   });
+}
+
+/** Own-vehicle delivery went wrong (buyer not there, site closed...): Sthiva follows up. */
+export async function reportDeliveryProblem(client: ApiClient, id: string, reason: string): Promise<unknown> {
+  return client.request(`/suppliers/me/orders/${id}/problem`, { method: 'POST', auth: true, envelope: true, schema: z.unknown(), body: { reason } });
 }
 
 // Own-vehicle COD: the supplier confirms the exact total once the cash is in hand

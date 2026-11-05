@@ -66,10 +66,10 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Admin verification of drivers | DONE | Phase 5a (existing drivers grandfathered) |
 | Vehicle capacity | DONE | Phase 1 vehicle types; phase 5a picks by order weight |
 | Online / offline | DONE | |
-| Incoming assignments, accept | PART | Drivers self-pick from a pool; no offer/reject |
+| Incoming assignments, accept / reject | DONE | Phase 5b: one driver at a time, answer time, ops assign |
 | Pickup and drop details, navigation | DONE | Opens Google Maps |
 | Status updates | DONE | |
-| OTP / proof of delivery | TODO | |
+| OTP / proof of delivery | DONE | Phase 5b: 4-digit buyer code; ops can confirm without it |
 | History, earnings | PART | History yes; earnings need delivery pricing |
 | Separate driver app | TODO | Drivers currently use Sthiva Partner |
 
@@ -86,7 +86,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Commission and delivery rate settings | DONE | Phase 1 (Settings tab) |
 | Supplier reassignment after rejection | DONE | Phase 3: automatic, plus ops offer / move to next supplier |
 | Vehicle selection, delivery charge | PART | Phase 5a automatic; manual override in 5b |
-| Failed delivery handling | TODO | |
+| Failed delivery handling | DONE | Phase 5b: driver/supplier report, ops queue, resolve or cancel |
 | Refunds | TODO | Only after online payment exists |
 | Payouts and settlement records | TODO | |
 | Analytics (orders, sales, commission, performance) | PART | Summary counts only |

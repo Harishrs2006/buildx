@@ -34,8 +34,9 @@ Phase 1 (admin settings) merged as #66. Phase 2 merged as #67. Phase 3 (supplier
   categories via a one-off script with apps/api/.env (script deleted); live shop shows 10 products again.
   Owner decisions 2026-11-05 09:05: supplier keeps the whole delivery charge when they deliver; driver gets an
   admin-set % (driverSharePercent); driver jobs offered one driver at a time + ops can assign; re-offer stays strict.
-  Phase 5a (delivery pricing) = PR feat/delivery-pricing. Next: 5b (driver offers one at a time, delivery OTP,
-  failed delivery). Delivery charges stay OFF until an admin adds a vehicle type.
+  Phase 5a merged (#71). Phase 5b = PR feat/driver-offers. After merge: publish partner + buyer OTA updates
+  (old Partner app can't send the delivery code). Delivery charges stay OFF until an admin adds a vehicle type.
+  Next: Phase 6 (settlement records: supplier/driver payouts, admin marks paid).
 0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
    Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
    projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
@@ -521,3 +522,11 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   verification (ops Drivers tab Verify/Reject; unverified drivers get 403 on jobs; old drivers grandfathered);
   Settings: driver share %. Buyer web + app checkout show vehicle/km and block unpriced; app checkout now asks PIN.
   339 API tests pass (7 new); 3 sites build; mobile typechecks + address tests pass.
+- 2026-11-05 09:50 IST: Phase 5b on feat/driver-offers: driver-offers.ts (rank: verified, active, on duty, vehicle
+  capacity >= weight, not tried; smallest vehicle then fewest jobs; no GPS yet), Order.driverOffer {state OFFERED|
+  ASSIGNED|NEEDS_OPS, attempts}, driverOfferTimeoutMinutes setting + sweeper. Supplier dispatch starts offers; driver
+  accept/decline; ops assign closes offers; ops unassign re-offers. Orders before offers stay open to any verified
+  driver. Order.deliveryOtp (4 digits, select:false) shown to buyer until delivered; driver/supplier must send it to
+  mark DELIVERED; 5 wrong tries lock; ops /deliver confirms without it. deliveryIssue reports (driver/supplier) ->
+  ops "Delivery problem" queue -> resolve-problem. UI: ops queues/actions/settings, seller code + problem, buyer web
+  + app show code, Partner app Accept/Decline + code + problem. 349 API tests pass (10 new); 3 sites build.

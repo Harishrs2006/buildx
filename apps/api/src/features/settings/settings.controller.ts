@@ -40,6 +40,7 @@ export async function getSettings(_req: Request, res: Response, next: NextFuncti
       vehicles,
       offerTimeoutMinutes: general?.offerTimeoutMinutes ?? null,
       driverSharePercent: general?.driverSharePercent ?? null,
+      driverOfferTimeoutMinutes: general?.driverOfferTimeoutMinutes ?? null,
     }));
   } catch (err) { next(err); }
 }
@@ -96,13 +97,13 @@ export async function updateVehicle(req: Request, res: Response, next: NextFunct
 // PATCH /ops/settings/general
 export async function updateGeneral(req: Request, res: Response, next: NextFunction) {
   try {
-    const changes = req.body as { offerTimeoutMinutes?: number | null; driverSharePercent?: number | null };
+    const changes = req.body as { offerTimeoutMinutes?: number | null; driverSharePercent?: number | null; driverOfferTimeoutMinutes?: number | null };
     const settings = await PlatformSettings.findOneAndUpdate(
       { key: 'default' },
       { $set: { ...changes, updatedBy: new Types.ObjectId(req.auth!.userId) } },
       { upsert: true, new: true, runValidators: true }
     ).lean();
     audit(req, 'general', changes);
-    res.json(ok({ offerTimeoutMinutes: settings!.offerTimeoutMinutes ?? null, driverSharePercent: settings!.driverSharePercent ?? null }));
+    res.json(ok({ offerTimeoutMinutes: settings!.offerTimeoutMinutes ?? null, driverSharePercent: settings!.driverSharePercent ?? null, driverOfferTimeoutMinutes: settings!.driverOfferTimeoutMinutes ?? null }));
   } catch (err) { next(err); }
 }

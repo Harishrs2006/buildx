@@ -22,6 +22,8 @@ export const orderSummarySchema = z
     total: z.number(),
     deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
     allocation: z.object({ state: z.enum(['OFFERED', 'ACCEPTED', 'NEEDS_OPS']), expiresAt: z.string().optional() }).passthrough().optional(),
+    driverOffer: z.object({ state: z.enum(['OFFERED', 'ASSIGNED', 'NEEDS_OPS']).optional(), expiresAt: z.string().optional() }).passthrough().optional(),
+    deliveryIssue: z.object({ reason: z.string(), at: z.string(), byRole: z.string(), resolvedAt: z.string().optional(), resolution: z.string().optional() }).passthrough().optional(),
     paymentStatus: z.string(),
     paymentMethod: z.string().optional(),
     createdAt: z.string(),
@@ -67,7 +69,7 @@ export const summarySchema = z.object({
   counts: z.record(z.string(), z.number()),
   todayOrders: z.number(),
   thresholds: z.object({ CONFIRMED_MINUTES: z.number(), READY_UNASSIGNED_MINUTES: z.number(), ASSIGNED_MINUTES: z.number(), IN_DELIVERY_MINUTES: z.number() }),
-  attention: z.object({ needsSupplier: queue, notDispatched: queue, unassigned: queue, notPickedUp: queue, longInDelivery: queue, codPending: queue, uncheckedDestination: queue }),
+  attention: z.object({ needsSupplier: queue, noDriver: queue, deliveryProblems: queue, notDispatched: queue, unassigned: queue, notPickedUp: queue, longInDelivery: queue, codPending: queue, uncheckedDestination: queue }),
 });
 export type OpsSummary = z.infer<typeof summarySchema>;
 
@@ -147,6 +149,8 @@ export const opsApi = {
   addNote: (c: ApiClient, id: string, note: string) => send(c, 'POST', `/ops/orders/${id}/notes`, { note }, z.unknown()),
   supplierOptions: (c: ApiClient, id: string) => get(c, `/ops/orders/${id}/supplier-options`, z.array(supplierOptionSchema)),
   offer: (c: ApiClient, id: string, supplierId: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/offer`, { supplierId, reason }, z.unknown()),
+  markDelivered: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/deliver`, { reason }, z.unknown()),
+  resolveProblem: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/resolve-problem`, { reason }, z.unknown()),
   nextSupplier: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/next-supplier`, { reason }, z.unknown()),
   verifyDriver: (c: ApiClient, id: string, status: 'VERIFIED' | 'REJECTED', note?: string) =>
     send(c, 'PATCH', `/ops/drivers/${id}/verification`, { status, ...(note ? { note } : {}) }, z.unknown()),
@@ -175,6 +179,7 @@ export const settingsSchema = z.object({
   vehicles: z.array(vehicleSchema),
   offerTimeoutMinutes: z.number().nullable(),
   driverSharePercent: z.number().nullable().optional(),
+  driverOfferTimeoutMinutes: z.number().nullable().optional(),
 });
 export type PlatformSettings = z.infer<typeof settingsSchema>;
 export type VehicleInput = Omit<Vehicle, '_id'>;
@@ -185,7 +190,7 @@ export const settingsApi = {
     send(c, 'PATCH', `/ops/settings/commission/${categoryId}`, body, commissionRowSchema),
   addVehicle: (c: ApiClient, body: VehicleInput) => send(c, 'POST', '/ops/settings/vehicles', body, vehicleSchema),
   updateVehicle: (c: ApiClient, id: string, body: Partial<Omit<VehicleInput, 'code'>>) => send(c, 'PATCH', `/ops/settings/vehicles/${id}`, body, vehicleSchema),
-  setGeneral: (c: ApiClient, body: { offerTimeoutMinutes?: number | null; driverSharePercent?: number | null }) =>
+  setGeneral: (c: ApiClient, body: { offerTimeoutMinutes?: number | null; driverSharePercent?: number | null; driverOfferTimeoutMinutes?: number | null }) =>
     send(c, 'PATCH', '/ops/settings/general', body, z.unknown()),
 };
 

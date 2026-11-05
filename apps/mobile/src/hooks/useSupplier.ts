@@ -123,9 +123,9 @@ export function useSupplierOrders(status?: string) {
 
 export function useUpdateOrderStatus() {
   const qc = useQueryClient();
-  return useMutation<unknown, Error, { id: string; status: string; reason?: string }>({
-    mutationFn: ({ id, status, reason }) =>
-      api.patch(`/suppliers/me/orders/${id}/status`, { status, reason }).then((r) => r.data),
+  return useMutation<unknown, Error, { id: string; status: string; reason?: string; otp?: string }>({
+    mutationFn: ({ id, status, reason, otp }) =>
+      api.patch(`/suppliers/me/orders/${id}/status`, { status, reason, ...(otp ? { otp } : {}) }).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['supplier-orders'] });
       qc.invalidateQueries({ queryKey: ['supplier-stats'] });

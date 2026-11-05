@@ -52,9 +52,13 @@ export const cancelSchema = z.object({ reason: z.string().trim().max(300).option
 export const supplierStatusSchema = z.object({
   status: z.enum(['READY_FOR_PICKUP', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED']),
   reason: z.string().trim().max(300).optional(),
+  // Buyer's handover code, required to mark an own-vehicle delivery delivered
+  otp: z.string().trim().regex(/^\d{4}$/, 'The delivery code has 4 digits').optional(),
 });
 
-export const driverStatusSchema = z.object({ status: z.enum(['PICKED_UP', 'IN_TRANSIT', 'DELIVERED']) });
+const otp = z.string().trim().regex(/^\d{4}$/, 'The delivery code has 4 digits');
+export const driverStatusSchema = z.object({ status: z.enum(['PICKED_UP', 'IN_TRANSIT', 'DELIVERED']), otp: otp.optional() });
+export const problemSchema = z.object({ reason: z.string().trim().min(3, 'Say what went wrong').max(300) });
 
 export const codCollectedSchema = z.object({ amount: z.number().finite().positive() });
 

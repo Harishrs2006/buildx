@@ -70,7 +70,7 @@ describe('fire-and-forget notifications in request handlers', () => {
 
     expect(res.status).toBe(200);
     expect(unhandled).toEqual([]);
-    expect(error).toHaveBeenCalledWith('Driver notification lookup failed', expect.objectContaining({
+    expect(error).toHaveBeenCalledWith('[driver-offers] start failed', expect.objectContaining({
       orderId: order._id.toString(), error: 'driver lookup failed',
     }));
   });

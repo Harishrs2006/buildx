@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useApiClient } from '@sthiva/web-core';
 import {
-  acceptSupplierOrder, rejectSupplierOrder, confirmCashCollected, useSupplierOrders, updateSupplierOrderStatus, type SupplierOrder, type SupplierOrderAction,
+  acceptSupplierOrder, rejectSupplierOrder, reportDeliveryProblem, confirmCashCollected, useSupplierOrders, updateSupplierOrderStatus, type SupplierOrder, type SupplierOrderAction,
 } from '../../../lib/orders';
 import { productErrorText } from '../../../lib/products';
 import { Chip, ChipRow, EmptyState, ErrorNote, ORDER_STATUS, PageHead, Pager, Pill, rupees, shortDate, unitLabel } from '../../../components/ui';
@@ -29,7 +29,7 @@ const waNumber = (n: string) => {
   return d.length === 10 ? `91${d}` : d;
 };
 
-type Confirming = null | 'cancel' | 'delivered' | 'cash' | 'reject';
+type Confirming = null | 'cancel' | 'delivered' | 'cash' | 'reject' | 'problem';
 
 function timeLeft(iso?: string) {
   if (!iso) return null;
@@ -42,6 +42,7 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState<Confirming>(null);
   const [reason, setReason] = useState('');
+  const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const status = ORDER_STATUS[order.status];
   const buyer = order.buyerId && typeof order.buyerId === 'object' ? order.buyerId : null;
@@ -194,10 +195,17 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
                 <button type="button" disabled={busy} onClick={() => move('IN_TRANSIT')} className="btn-ghost">No driver yet? Deliver it myself</button>
               )}
               {order.status === 'IN_TRANSIT' && own && (
-                <button type="button" disabled={busy} onClick={() => setConfirming('delivered')} className="btn-lime">
-                  <span className="material-symbols-outlined text-[20px]" aria-hidden="true">task_alt</span>
-                  Mark as delivered
-                </button>
+                <>
+                  <button type="button" disabled={busy} onClick={() => setConfirming('delivered')} className="btn-lime">
+                    <span className="material-symbols-outlined text-[20px]" aria-hidden="true">task_alt</span>
+                    Mark as delivered
+                  </button>
+                  {!order.deliveryIssue || order.deliveryIssue.resolvedAt ? (
+                    <button type="button" disabled={busy} onClick={() => setConfirming('problem')} className="btn-ghost">Report a problem</button>
+                  ) : (
+                    <span className="self-center text-[14px] text-stone">Problem reported. Sthiva will call you.</span>
+                  )}
+                </>
               )}
               {cashDue && (
                 <button type="button" disabled={busy} onClick={() => setConfirming('cash')} className="btn-lime">
@@ -213,10 +221,35 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
 
           {confirming === 'delivered' && (
             <div role="alertdialog" aria-label="Mark as delivered?" className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <p className="flex-1 text-[15px]"><span className="font-semibold">Everything handed over at the site?</span> The buyer is told the order is delivered. This can&apos;t be undone.</p>
+              <p className="flex-1 text-[15px]"><span className="font-semibold">Everything handed over at the site?</span> Ask the buyer for their 4-digit delivery code (it is on their order page).</p>
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                inputMode="numeric"
+                placeholder="Code"
+                aria-label="Buyer's 4-digit delivery code"
+                className="field w-28 text-center font-mono tracking-[0.3em]"
+              />
               <div className="flex gap-2">
-                <button type="button" disabled={busy} onClick={() => move('DELIVERED')} className="btn-lime">{busy ? 'Saving' : 'Yes, delivered'}</button>
+                <button type="button" disabled={busy || code.length !== 4} onClick={() => run(() => updateSupplierOrderStatus(client, order._id, 'DELIVERED', undefined, code))} className="btn-lime">{busy ? 'Saving' : 'Yes, delivered'}</button>
                 <button type="button" disabled={busy} onClick={() => setConfirming(null)} className="btn-ghost">Not yet</button>
+              </div>
+            </div>
+          )}
+
+          {confirming === 'problem' && (
+            <div role="alertdialog" aria-label="Report a delivery problem" className="flex flex-col gap-3">
+              <p className="text-[15px]"><span className="font-semibold">What went wrong?</span> Sthiva&apos;s team calls you and the buyer to sort it out.</p>
+              <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Problem">
+                {['Buyer not at the site', 'Buyer not answering the phone', 'Site closed or no access', 'Buyer refused the goods'].map((r) => (
+                  <button key={r} type="button" role="radio" aria-checked={reason === r} onClick={() => setReason(r)} className={`min-h-[40px] rounded-full border px-3.5 text-[14px] font-medium ${reason === r ? 'border-ink bg-ink text-sand' : 'border-sand-4 bg-sand-2 hover:border-ink'}`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button type="button" disabled={busy || !reason} onClick={() => run(() => reportDeliveryProblem(client, order._id, reason))} className="btn-ink">Report it</button>
+                <button type="button" disabled={busy} onClick={() => { setConfirming(null); setReason(''); }} className="btn-ghost">Back</button>
               </div>
             </div>
           )}

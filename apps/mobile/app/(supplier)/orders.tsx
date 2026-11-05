@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Pressable, RefreshControl, ActivityIndicator, ScrollView, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
 import { Colors } from '../../src/constants/colors';
@@ -128,18 +128,19 @@ export default function SupplierOrdersScreen() {
   const { mutate: answerOffer, isPending: answering } = useAnswerOffer();
   const [sheet, setSheet] = useState<{ kind: SheetKind; order: SupplierOrder } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [code, setCode] = useState('');
 
   const orders = data?.data ?? [];
   const close = () => setSheet(null);
 
   // Choice sheets close at once (no double taps); confirm sheets stay open with a spinner
-  function setStatus(status: string, reason?: string, closeNow = false) {
+  function setStatus(status: string, reason?: string, closeNow = false, otp?: string) {
     if (!sheet) return;
     const order = sheet.order;
     setError(null);
     if (closeNow) close();
     updateStatus(
-      { id: order._id, status, reason },
+      { id: order._id, status, reason, otp },
       { onSuccess: close, onError: (err) => { close(); setError(`Could not update ${order.orderNumber}: ${err.message}`); } }
     );
   }
@@ -253,12 +254,27 @@ export default function SupplierOrdersScreen() {
       <ConfirmSheet
         visible={sheet?.kind === 'delivered'}
         title="Mark as delivered?"
-        body="Confirm the buyer has received all the material."
+        body="Ask the buyer for their 4-digit delivery code (on their order screen) after they check the material."
         confirmLabel="Delivered"
         loading={updating}
-        onConfirm={() => setStatus('DELIVERED')}
+        onConfirm={() => {
+          if (code.length !== 4) { close(); setError('Enter the 4-digit code from the buyer.'); return; }
+          setStatus('DELIVERED', undefined, false, code);
+          setCode('');
+        }}
         onCancel={close}
-      />
+      >
+        <TextInput
+          value={code}
+          onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 4))}
+          keyboardType="number-pad"
+          maxLength={4}
+          placeholder="Code"
+          placeholderTextColor={Colors.stone}
+          style={styles.code}
+          accessibilityLabel="Buyer's 4-digit delivery code"
+        />
+      </ConfirmSheet>
       <ConfirmSheet
         visible={sheet?.kind === 'cash'}
         title="Cash collected?"
@@ -274,6 +290,7 @@ export default function SupplierOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
+  code: { fontFamily: Font.monoBold, fontSize: 28, letterSpacing: 10, textAlign: 'center', height: 60, marginTop: 12, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.ink, color: Colors.ink, backgroundColor: Colors.sand },
   safe: { flex: 1, backgroundColor: Colors.sand },
   title: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12 },
   tabs: { paddingHorizontal: 20, gap: 8, paddingBottom: 12 },

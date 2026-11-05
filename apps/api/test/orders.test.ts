@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vites
 import request from 'supertest';
 import mongoose from 'mongoose';
 import {
-  acceptOffer, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
+  acceptOffer, deliveryCode, offerJobTo, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
   startDb, stopDb, clearDb, makeApp,
 } from './helpers';
 import { Order } from '../src/infrastructure/database/models/Order.model';
@@ -39,11 +39,14 @@ const place = (who: Who, items: unknown[], opts: { key?: string | null; body?: R
   return req.send({ items, deliveryAddress: SITE, ...opts.body });
 };
 const stockOf = async (id: unknown) => (await Product.findById(id).lean())!.stockQuantity;
-const supplierStatus = (who: Who, id: unknown, status: string, reason?: string) =>
-  request(app).patch(api(`/suppliers/me/orders/${id}/status`)).set(who.headers).send({ status, reason });
-const driverStatus = (who: Who, id: unknown, status: string) =>
-  request(app).patch(api(`/delivery/orders/${id}/status`)).set(who.headers).send({ status });
-const assign = (who: Who, id: unknown) => request(app).post(api(`/delivery/orders/${id}/assign`)).set(who.headers);
+const supplierStatus = async (who: Who, id: unknown, status: string, reason?: string) =>
+  request(app).patch(api(`/suppliers/me/orders/${id}/status`)).set(who.headers).send({ status, reason, ...(status === 'DELIVERED' ? { otp: await deliveryCode(id) } : {}) });
+const driverStatus = async (who: Who, id: unknown, status: string) =>
+  request(app).patch(api(`/delivery/orders/${id}/status`)).set(who.headers).send({ status, ...(status === 'DELIVERED' ? { otp: await deliveryCode(id) } : {}) });
+const assign = async (who: Who, id: unknown) => {
+  if ((who as { user?: { _id: mongoose.Types.ObjectId } }).user) await offerJobTo(id, (who as { user: { _id: mongoose.Types.ObjectId } }).user._id);
+  return request(app).post(api(`/delivery/orders/${id}/assign`)).set(who.headers);
+};
 const cancelAsBuyer = (who: Who, id: unknown) => request(app).post(api(`/orders/${id}/cancel`)).set(who.headers).send({});
 const cod = (who: Who, id: unknown, amount: number) =>
   request(app).post(api(`/delivery/orders/${id}/cod`)).set(who.headers).send({ amount });

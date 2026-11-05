@@ -1,17 +1,19 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Linking } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, ActivityIndicator, Linking, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMyDeliveries, useUpdateDeliveryStatus, useConfirmCodCollected, type DeliveryOrder } from '../../../src/hooks/useDelivery';
+import { useMyDeliveries, useUpdateDeliveryStatus, useConfirmCodCollected, useReportDeliveryProblem, type DeliveryOrder } from '../../../src/hooks/useDelivery';
 import { ORDER_STATUS_LABELS, type OrderStatus } from '../../../src/hooks/useOrders';
 import { Colors } from '../../../src/constants/colors';
 import { Font } from '../../../src/constants/typography';
-import { Button, ConfirmSheet, EmptyState, Eyebrow, Icon, Notice, ScreenHeader } from '../../../src/components/ui';
+import { Button, ChoiceSheet, ConfirmSheet, EmptyState, Eyebrow, Icon, Notice, ScreenHeader } from '../../../src/components/ui';
+
+const PROBLEMS = ['Buyer not at the site', 'Buyer not answering the phone', 'Site closed or no access', 'Buyer refused the goods'];
 
 const NEXT_STATUS: Record<string, { label: string; status: OrderStatus; ask: string } | null> = {
   ASSIGNED: { label: 'Picked up', status: 'PICKED_UP', ask: 'Confirm you have collected the material from the supplier.' },
   PICKED_UP: { label: 'On the way', status: 'IN_TRANSIT', ask: 'Let the buyer know the material is on its way.' },
-  IN_TRANSIT: { label: 'Delivered', status: 'DELIVERED', ask: 'Confirm the buyer has received all the material.' },
+  IN_TRANSIT: { label: 'Delivered', status: 'DELIVERED', ask: 'Ask the buyer for their 4-digit delivery code (on their order screen) after they check the material.' },
 };
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
@@ -32,7 +34,10 @@ export default function DriverOrderDetail() {
   const { data, isLoading, refetch } = useMyDeliveries();
   const { mutate: updateStatus, isPending } = useUpdateDeliveryStatus();
   const { mutate: confirmCod, isPending: codPending } = useConfirmCodCollected();
-  const [sheet, setSheet] = useState<'status' | 'cash' | null>(null);
+  const { mutate: reportProblem } = useReportDeliveryProblem();
+  const [sheet, setSheet] = useState<'status' | 'cash' | 'problem' | null>(null);
+  const [code, setCode] = useState('');
+  const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const order: DeliveryOrder | undefined = data?.data.find((o) => o._id === id);
@@ -63,9 +68,20 @@ export default function DriverOrderDetail() {
     if (!order || !next) return;
     setError(null);
     // After DELIVERED the screen stays open so the driver can confirm the cash
-    updateStatus({ id: order._id, status: next.status }, {
-      onSuccess: () => setSheet(null),
+    if (next.status === 'DELIVERED' && code.length !== 4) { setSheet(null); setError('Enter the 4-digit code from the buyer.'); return; }
+    updateStatus({ id: order._id, status: next.status, ...(next.status === 'DELIVERED' ? { otp: code } : {}) }, {
+      onSuccess: () => { setSheet(null); setCode(''); },
       onError: (err) => { setSheet(null); setError(err.message); },
+    });
+  }
+
+  function doProblem(reason: string) {
+    if (!order) return;
+    setSheet(null);
+    setError(null);
+    reportProblem({ id: order._id, reason }, {
+      onSuccess: () => setNotice('Reported. Sthiva will call you and the buyer.'),
+      onError: (err) => setError(err.message),
     });
   }
 
@@ -128,6 +144,10 @@ export default function DriverOrderDetail() {
         ) : null}
 
         {error ? <Notice tone="error" title="Not updated" onClose={() => setError(null)}>{error}</Notice> : null}
+        {notice ? <Notice tone="success" onClose={() => setNotice(null)}>{notice}</Notice> : null}
+        {['ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'].includes(order.status) ? (
+          <Button title="Report a problem" variant="ghost" onPress={() => setSheet('problem')} />
+        ) : null}
       </ScrollView>
 
       {next || cashPending ? (
@@ -148,6 +168,27 @@ export default function DriverOrderDetail() {
         cancelLabel="Not yet"
         loading={isPending}
         onConfirm={doStatus}
+        onCancel={() => setSheet(null)}
+      >
+        {next?.status === 'DELIVERED' ? (
+          <TextInput
+            value={code}
+            onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
+            placeholder="Code"
+            placeholderTextColor={Colors.stone}
+            style={styles.code}
+            accessibilityLabel="Buyer's 4-digit delivery code"
+          />
+        ) : null}
+      </ConfirmSheet>
+      <ChoiceSheet
+        visible={sheet === 'problem'}
+        title="What went wrong?"
+        body="Sthiva's team calls you and the buyer to sort it out."
+        options={PROBLEMS.map((r) => ({ label: r, onPress: () => doProblem(r) }))}
+        cancelLabel="Back"
         onCancel={() => setSheet(null)}
       />
       <ConfirmSheet
@@ -182,5 +223,6 @@ const styles = StyleSheet.create({
   itemQty: { fontFamily: Font.monoBold, fontSize: 14, color: Colors.ink },
   note: { fontFamily: Font.regular, fontSize: 15, lineHeight: 21, color: Colors.ink, marginTop: 6 },
   time: { fontFamily: Font.regular, fontSize: 14, color: Colors.stone, marginTop: 6 },
+  code: { fontFamily: Font.monoBold, fontSize: 28, letterSpacing: 10, textAlign: 'center', height: 60, marginTop: 12, borderRadius: 16, borderWidth: 1.5, borderColor: Colors.ink, color: Colors.ink, backgroundColor: Colors.sand },
   bottom: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12, backgroundColor: Colors.sand, borderTopWidth: 1, borderTopColor: Colors.sand4 },
 });

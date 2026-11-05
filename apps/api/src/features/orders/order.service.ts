@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomInt } from 'crypto';
 import mongoose, { ClientSession, Types } from 'mongoose';
 import { Product, IProduct } from '../../infrastructure/database/models/Product.model';
 import { Order, IOrder, OrderStatusEvent } from '../../infrastructure/database/models/Order.model';
@@ -330,6 +330,8 @@ export async function createOrder(params: {
               attempts: [{ supplierId, offeredAt: now }],
             },
             inventoryState: 'DEDUCTED',
+            // The buyer tells this to whoever delivers; needed to mark the order delivered
+            deliveryOtp: String(randomInt(1000, 10000)),
             idempotencyKey,
             requestHash,
             statusHistory: [{ status: 'PENDING', at: now, byRole: 'BUYER', byUserId: buyerId }],
@@ -555,4 +557,42 @@ export async function recordCodByOps(params: {
   ).lean<LeanOrder>();
   if (!order) throw AppError.conflict('Order changed while recording payment. Please refresh.');
   return { order, changed: true };
+}
+
+// ─── Handover code and delivery problems ────────────────────────────────────
+
+export const MAX_OTP_FAILURES = 5;
+
+/**
+ * Checks the buyer's handover code before an order is marked delivered. Orders from before
+ * codes existed have none and pass. After MAX_OTP_FAILURES wrong tries only Sthiva can confirm.
+ */
+export async function checkDeliveryOtp(filter: Record<string, unknown>, otp?: string) {
+  const order = await Order.findOne(filter).select('+deliveryOtp otpFailures status').lean<LeanOrder>();
+  if (!order) throw AppError.notFound('Order');
+  if (!order.deliveryOtp || order.status === 'DELIVERED') return;
+  if ((order.otpFailures ?? 0) >= MAX_OTP_FAILURES) {
+    throw AppError.conflict('Too many wrong codes. Call Sthiva support to confirm this delivery.');
+  }
+  if (!otp) throw AppError.badRequest('Ask the buyer for the 4-digit delivery code and enter it.');
+  if (otp !== order.deliveryOtp) {
+    await Order.updateOne({ _id: order._id }, { $inc: { otpFailures: 1 } });
+    const left = MAX_OTP_FAILURES - (order.otpFailures ?? 0) - 1;
+    throw AppError.badRequest(left > 0 ? `That code is wrong. ${left} tries left.` : 'That code is wrong. Call Sthiva support to confirm this delivery.');
+  }
+}
+
+/** Driver or supplier reports a delivery that went wrong; ops follow it up. */
+export async function reportDeliveryProblem(params: { filter: Record<string, unknown>; byRole: 'DELIVERY_PARTNER' | 'SUPPLIER'; userId: string; reason: string }) {
+  const { filter, byRole, userId, reason } = params;
+  const order = await Order.findOneAndUpdate(
+    { ...filter, status: { $in: ['ASSIGNED', 'PICKED_UP', 'IN_TRANSIT'] } },
+    { $set: { deliveryIssue: { reason, at: new Date(), byRole, byUserId: new Types.ObjectId(userId) } } },
+    { new: true }
+  ).lean<LeanOrder>();
+  if (!order) {
+    if (!(await Order.exists(filter))) throw AppError.notFound('Order');
+    throw AppError.conflict('Problems can be reported only while the order is out for delivery');
+  }
+  return order;
 }

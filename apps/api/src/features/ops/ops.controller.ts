@@ -12,6 +12,7 @@ import { notifyUser } from '../../shared/services/notification.service';
 import { cancelOrder, transitionOrder, recordCodByOps } from '../orders/order.service';
 import { opsOfferTo, opsFindNext } from '../orders/allocation.service';
 import { supplierEarnings } from '../orders/commission';
+import { afterUnassign, markAssignedByOps } from '../delivery/driver-offers';
 import { modeFilter } from '../orders/order-state';
 
 type OpsRole = 'OPERATOR' | 'ADMIN';
@@ -48,7 +49,7 @@ export const ATTENTION = {
 };
 
 const minutesAgo = (m: number) => new Date(Date.now() - m * 60_000);
-const summaryFields = 'orderNumber status total deliveryMode paymentStatus createdAt updatedAt supplierId buyerId driverId allocation.state allocation.expiresAt';
+const summaryFields = 'orderNumber status total deliveryMode paymentStatus createdAt updatedAt supplierId buyerId driverId allocation.state allocation.expiresAt driverOffer.state deliveryIssue';
 
 // GET /ops/summary — counts by status plus the queues that need a human
 export async function summary(_req: Request, res: Response, next: NextFunction) {
@@ -64,11 +65,15 @@ export async function summary(_req: Request, res: Response, next: NextFunction) 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const [byStatus, todayOrders, needsSupplier, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination] = await Promise.all([
+    const [byStatus, todayOrders, needsSupplier, noDriver, deliveryProblems, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination] = await Promise.all([
       Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
       Order.countDocuments({ createdAt: { $gte: startOfDay } }),
       // Every supplier said no or didn't answer: someone has to find one by hand
       queue({ status: 'PENDING', 'allocation.state': 'NEEDS_OPS' }),
+      // Every suitable driver said no or didn't answer
+      queue({ status: 'READY_FOR_PICKUP', 'driverOffer.state': 'NEEDS_OPS' }),
+      // Driver or supplier reported a failed delivery
+      queue({ 'deliveryIssue.at': { $exists: true }, 'deliveryIssue.resolvedAt': { $exists: false }, status: { $nin: ['DELIVERED', 'CANCELLED'] } }),
       queue({ status: 'CONFIRMED', updatedAt: { $lt: minutesAgo(ATTENTION.CONFIRMED_MINUTES) } }),
       queue({ status: 'READY_FOR_PICKUP', updatedAt: { $lt: minutesAgo(ATTENTION.READY_UNASSIGNED_MINUTES) } }),
       queue({ status: 'ASSIGNED', updatedAt: { $lt: minutesAgo(ATTENTION.ASSIGNED_MINUTES) } }),
@@ -82,7 +87,7 @@ export async function summary(_req: Request, res: Response, next: NextFunction) 
       counts: Object.fromEntries(byStatus.map((b) => [b._id, b.count])),
       todayOrders,
       thresholds: ATTENTION,
-      attention: { needsSupplier, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination },
+      attention: { needsSupplier, noDriver, deliveryProblems, notDispatched, unassigned, notPickedUp, longInDelivery, codPending, uncheckedDestination },
     }));
   } catch (err) { next(err); }
 }
@@ -183,6 +188,7 @@ export async function unassign(req: Request, res: Response, next: NextFunction) 
     });
     if (changed) {
       await withOpsNote(id, req, `Driver unassigned: ${req.body.reason}`);
+      await afterUnassign(id, before?.driverId);
       if (before?.driverId) {
         notifyUser(before.driverId.toString(), {
           title: 'Order reassigned',
@@ -229,6 +235,7 @@ export async function assign(req: Request, res: Response, next: NextFunction) {
       throw err instanceof AppError && err.statusCode === 404 ? AppError.conflict('Order already has a driver') : err;
     });
 
+    if (changed) await markAssignedByOps(id);
     if (changed) {
       await withOpsNote(id, req, `Assigned to driver ${driverUserId}${note ? `: ${note}` : ''}`);
       notifyUser(driverUserId, {
@@ -419,5 +426,43 @@ export async function setDriverVerification(req: Request, res: Response, next: N
       data: { screen: 'driver_available' },
     });
     res.json(ok(profile));
+  } catch (err) { next(err); }
+}
+
+// POST /ops/orders/:id/deliver { reason } — confirm delivery without the buyer's code
+export async function markDelivered(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = orderId(req);
+    const { userId, role } = opsActor(req);
+    const current = await Order.findById(id).select('deliveryMode driverId').lean();
+    if (!current) throw AppError.notFound('Order');
+    const { order, changed } = await transitionOrder({
+      filter: { _id: id }, to: 'DELIVERED', actor: 'OPS', mode: current.deliveryMode === 'SUPPLIER' ? 'SUPPLIER' : 'PLATFORM',
+      userId, historyRole: role, set: { deliveredAt: new Date() }, note: req.body.reason,
+    });
+    if (changed) {
+      await withOpsNote(id, req, `Marked delivered by Sthiva: ${req.body.reason}`);
+      if (current.driverId) await DeliveryPartner.updateOne({ userId: current.driverId }, { $inc: { totalDeliveries: 1 } });
+      notifyUser(order.buyerId.toString(), {
+        title: 'Order delivered',
+        body: `Order ${order.orderNumber} is marked delivered.`,
+        data: { screen: 'buyer_orders', orderId: id },
+      });
+    }
+    res.json(ok(order));
+  } catch (err) { next(err); }
+}
+
+// POST /ops/orders/:id/resolve-problem { reason } — the reported delivery problem is dealt with
+export async function resolveProblem(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = orderId(req);
+    const order = await Order.findOneAndUpdate(
+      { _id: id, 'deliveryIssue.at': { $exists: true }, 'deliveryIssue.resolvedAt': { $exists: false } },
+      { $set: { 'deliveryIssue.resolvedAt': new Date(), 'deliveryIssue.resolution': req.body.reason } },
+      { new: true }
+    ).lean();
+    if (!order) throw AppError.conflict('No open delivery problem on this order');
+    res.json(ok(await withOpsNote(id, req, `Delivery problem resolved: ${req.body.reason}`)));
   } catch (err) { next(err); }
 }

@@ -9,6 +9,8 @@ export interface IPlatformSettings extends Document {
   offerTimeoutMinutes: number | null;
   // Share of the delivery charge a Sthiva delivery partner earns (percent). null = not set yet.
   driverSharePercent: number | null;
+  // Minutes a driver has to accept a delivery job before it goes to the next driver. null = no limit.
+  driverOfferTimeoutMinutes: number | null;
   updatedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -19,6 +21,7 @@ const platformSettingsSchema = new Schema<IPlatformSettings>(
     key: { type: String, enum: ['default'], default: 'default', unique: true },
     offerTimeoutMinutes: { type: Number, min: 1, max: 1440, default: null },
     driverSharePercent: { type: Number, min: 0, max: 100, default: null },
+    driverOfferTimeoutMinutes: { type: Number, min: 1, max: 1440, default: null },
     updatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
 import { validate } from '../../shared/middleware/validate.middleware';
-import { driverStatusSchema, codCollectedSchema } from '../orders/order.schemas';
+import { driverStatusSchema, codCollectedSchema, problemSchema } from '../orders/order.schemas';
 import {
   listAvailableOrders, assignOrder,
   listMyOrders, updateDeliveryStatus, confirmCodCollected,
-  getProfile, updateProfile, getStats,
+  getProfile, updateProfile, getStats, declineOrder, reportProblem,
 } from './delivery.controller';
 
 const router = Router();
@@ -18,6 +18,8 @@ router.get('/available', listAvailableOrders);
 
 // Driver self-assign
 router.post('/orders/:id/assign', assignOrder);
+router.post('/orders/:id/decline', validate(problemSchema), declineOrder);
+router.post('/orders/:id/problem', validate(problemSchema), reportProblem);
 
 // Driver's own orders
 router.get('/my-orders', listMyOrders);

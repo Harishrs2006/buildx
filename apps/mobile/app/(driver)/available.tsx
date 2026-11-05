@@ -4,13 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
-import { useAvailableOrders, useAssignOrder, useDriverStats, useUpdateDriverProfile, type DeliveryOrder } from '../../src/hooks/useDelivery';
-import { Button, ConfirmSheet, EmptyState, Eyebrow, Icon, Notice, type } from '../../src/components/ui';
+import { useAvailableOrders, useAssignOrder, useDeclineOrder, useDriverStats, useUpdateDriverProfile, type DeliveryOrder } from '../../src/hooks/useDelivery';
+import { Button, ChoiceSheet, ConfirmSheet, EmptyState, Eyebrow, Icon, Notice, type } from '../../src/components/ui';
 import { Route } from '../../src/components/Route';
 
 const rupees = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
-function OrderCard({ order, onAssign }: { order: DeliveryOrder; onAssign: (o: DeliveryOrder) => void }) {
+const DECLINE_REASONS = ['Vehicle is busy', 'Too far for me', 'Load too big for my vehicle', 'Not available now'];
+
+function OrderCard({ order, onAssign, onDecline }: { order: DeliveryOrder; onAssign: (o: DeliveryOrder) => void; onDecline: (o: DeliveryOrder) => void }) {
   const supplier = order.supplierId as any;
   const extra = order.items.length - 2;
   const itemSummary = order.items.slice(0, 2).map((i) => `${i.name} (${i.quantity} ${i.unit})`).join(', ');
@@ -26,24 +28,43 @@ function OrderCard({ order, onAssign }: { order: DeliveryOrder; onAssign: (o: De
         <Icon name="package-variant-closed" size={16} color={Colors.stone} />
         <Text style={styles.itemsText} numberOfLines={2}>{itemSummary}{extra > 0 ? ` +${extra} more` : ''}</Text>
       </View>
+      {(order as any).delivery ? (
+        <Text style={styles.notes}>{(order as any).delivery.weightKg} kg · about {(order as any).delivery.distanceKm} km</Text>
+      ) : null}
       {order.notes ? <Text style={styles.notes}>Note: {order.notes}</Text> : null}
-      <Button title="Pick this up" variant="lime" onPress={() => onAssign(order)} style={styles.pick} />
+      <View style={styles.row}>
+        <Button title="Accept job" variant="lime" onPress={() => onAssign(order)} style={[styles.pick, styles.flex]} />
+        {(order as any).driverOffer?.state === 'OFFERED' ? (
+          <Button title="Decline" variant="ghost" onPress={() => onDecline(order)} style={styles.pick} />
+        ) : null}
+      </View>
     </View>
   );
 }
 
 export default function AvailableOrdersScreen() {
   const { data: statsData } = useDriverStats();
-  const { data, isLoading, isError, refetch, isRefetching } = useAvailableOrders();
+  // A driver Sthiva hasn't verified yet gets a message here instead of jobs
+  const { data, isLoading, isError, error: loadError, refetch, isRefetching } = useAvailableOrders();
   const { mutate: assignOrder, isPending: assigning } = useAssignOrder();
   const { mutate: updateProfile, isPending: toggling } = useUpdateDriverProfile();
+  const { mutate: declineOrder } = useDeclineOrder();
   const [picking, setPicking] = useState<DeliveryOrder | null>(null);
+  const [declining, setDeclining] = useState<DeliveryOrder | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const stats = statsData?.data;
   const orders = data?.data ?? [];
   const online = stats?.isAvailable ?? false;
   const active = stats?.activeOrders ?? 0;
+
+  function decline(reason: string) {
+    if (!declining) return;
+    const id = declining._id;
+    setDeclining(null);
+    setError(null);
+    declineOrder({ id, reason }, { onError: (err) => setError(err.message), onSettled: () => refetch() });
+  }
 
   function confirmPick() {
     if (!picking) return;
@@ -65,8 +86,8 @@ export default function AvailableOrdersScreen() {
     <SafeAreaView edges={['top']} style={styles.safe}>
       <View style={styles.header}>
         <View style={styles.flex}>
-          <Eyebrow>{orders.length} ready for pickup</Eyebrow>
-          <Text style={[type.title, styles.title]}>Pickups</Text>
+          <Eyebrow>{orders.length} offered to you</Eyebrow>
+          <Text style={[type.title, styles.title]}>Jobs</Text>
         </View>
         <View style={[styles.toggle, online && styles.toggleOn]}>
           <Text style={[styles.toggleText, online && styles.toggleTextOn]}>{online ? 'Online' : 'Offline'}</Text>
@@ -94,29 +115,38 @@ export default function AvailableOrdersScreen() {
       {isLoading ? (
         <ActivityIndicator color={Colors.ink} style={styles.loading} />
       ) : isError ? (
-        <Notice tone="error" title="We could not load pickups" style={styles.notice}>
+        <Notice tone="error" title="We could not load jobs" style={styles.notice}>
+          {loadError?.message ? <Text style={styles.notes}>{loadError.message}</Text> : null}
           <Pressable onPress={() => refetch()} hitSlop={8} accessibilityRole="button"><Text style={styles.link}>Try again</Text></Pressable>
         </Notice>
       ) : (
         <FlatList
           data={orders}
           keyExtractor={(o) => o._id}
-          renderItem={({ item }) => <OrderCard order={item} onAssign={setPicking} />}
+          renderItem={({ item }) => <OrderCard order={item} onAssign={setPicking} onDecline={setDeclining} />}
           contentContainerStyle={styles.list}
           refreshControl={<RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={Colors.ink} />}
           ListEmptyComponent={
             <EmptyState
               icon="map-marker-radius-outline"
-              title="No pickups right now"
-              body={online ? 'Pull down to refresh. Orders show up here when a supplier marks them ready.' : 'You are offline. Go online to get new pickups.'}
+              title="No jobs right now"
+              body={online ? 'Sthiva offers you a job when an order near you is ready. You get a notification.' : 'You are offline. Go online to get jobs.'}
             />
           }
         />
       )}
 
+      <ChoiceSheet
+        visible={!!declining}
+        title="Why can't you take it?"
+        body="Sthiva offers it to another driver."
+        options={DECLINE_REASONS.map((r) => ({ label: r, onPress: () => decline(r) }))}
+        cancelLabel="Back"
+        onCancel={() => setDeclining(null)}
+      />
       <ConfirmSheet
         visible={!!picking}
-        title="Pick up this order?"
+        title="Accept this job?"
         body={picking ? `You deliver ${picking.orderNumber} and collect ${rupees(picking.total)} in cash from the buyer.` : undefined}
         confirmLabel="Yes, I will deliver it"
         loading={assigning}
@@ -151,4 +181,5 @@ const styles = StyleSheet.create({
   itemsText: { fontFamily: Font.regular, flex: 1, fontSize: 13, lineHeight: 18, color: Colors.ink },
   notes: { fontFamily: Font.regular, fontSize: 13, color: Colors.stone, marginTop: 8 },
   pick: { marginTop: 14 },
+  row: { flexDirection: 'row', gap: 10 },
 });

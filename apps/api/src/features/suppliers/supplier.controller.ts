@@ -3,7 +3,6 @@ import { isValidObjectId } from 'mongoose';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
 import { Product } from '../../infrastructure/database/models/Product.model';
 import { Order } from '../../infrastructure/database/models/Order.model';
-import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { Category } from '../../infrastructure/database/models/Category.model';
 import { CatalogItem } from '../../infrastructure/database/models/CatalogItem.model';
@@ -11,10 +10,11 @@ import { createCatalogItem, findMatchingItem } from '../catalog/catalog.service'
 import { bulkPricingProblem } from './product-rules';
 import { ORDER_STATUSES } from '../ops/ops.schemas';
 import { ok } from '@sthiva/shared';
-import { notifyUser, notifyUsers } from '../../shared/services/notification.service';
+import { notifyUser } from '../../shared/services/notification.service';
 import { logger } from '../../shared/logger/logger';
-import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
+import { cancelOrder, transitionOrder, recordCodCollected, checkDeliveryOtp, reportDeliveryProblem } from '../orders/order.service';
 import { acceptOffer, rejectOffer } from '../orders/allocation.service';
+import { startDriverOffers } from '../delivery/driver-offers';
 import { supplierEarnings } from '../orders/commission';
 
 async function getSupplierProfile(userId: string) {
@@ -165,11 +165,13 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
     const profile = await getSupplierProfile(req.auth!.userId);
-    const { status, reason } = req.body as {
+    const { status, reason, otp } = req.body as {
       status: 'READY_FOR_PICKUP' | 'IN_TRANSIT' | 'DELIVERED' | 'CANCELLED';
       reason?: string;
+      otp?: string;
     };
     const filter = { _id: req.params.id, supplierId: profile._id };
+    if (status === 'DELIVERED') await checkDeliveryOtp(filter, otp);
     const userId = req.auth!.userId;
     const now = new Date();
 
@@ -186,17 +188,8 @@ export async function updateOrderStatus(req: Request, res: Response, next: NextF
     if (!changed) {
       // no-op
     } else if (status === 'READY_FOR_PICKUP') {
-      // Broadcast to all available drivers
-      DeliveryPartner.find({ isAvailable: true }).select('userId').lean().then((drivers) => {
-        const driverUserIds = drivers.map((d) => d.userId.toString());
-        return notifyUsers(driverUserIds, {
-          title: 'Order ready for pickup',
-          body: `Order ${order.orderNumber} is ready. ₹${order.total.toLocaleString('en-IN')}, cash on delivery.`,
-          data: { screen: 'driver_available', orderId: order._id.toString() },
-        });
-      }).catch((err) => {
-        logger.error('Driver notification lookup failed', { orderId: order._id.toString(), error: err?.message });
-      });
+      // Offered to one suitable driver at a time (driver-offers.ts)
+      startDriverOffers(order._id.toString());
     } else if (status === 'IN_TRANSIT') {
       notifyUser(order.buyerId.toString(), {
         title: 'On the way',
@@ -450,5 +443,18 @@ export async function rejectOrder(req: Request, res: Response, next: NextFunctio
     const profile = await getSupplierProfile(req.auth!.userId);
     await rejectOffer({ orderId: String(req.params.id), supplierProfileId: profile._id.toString(), userId: req.auth!.userId, reason: req.body.reason });
     res.json(ok({ rejected: true }));
+  } catch (err) { next(err); }
+}
+
+// POST /suppliers/me/orders/:id/problem { reason } — own-vehicle delivery went wrong; Sthiva follows up
+export async function reportProblem(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    const profile = await getSupplierProfile(req.auth!.userId);
+    const order = await reportDeliveryProblem({
+      filter: { _id: req.params.id, supplierId: profile._id, deliveryMode: 'SUPPLIER' },
+      byRole: 'SUPPLIER', userId: req.auth!.userId, reason: req.body.reason,
+    });
+    res.json(ok(order));
   } catch (err) { next(err); }
 }

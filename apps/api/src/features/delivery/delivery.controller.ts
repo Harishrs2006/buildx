@@ -5,7 +5,8 @@ import { DeliveryPartner, isDriverVerified } from '../../infrastructure/database
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@sthiva/shared';
 import { notifyUser } from '../../shared/services/notification.service';
-import { transitionOrder, recordCodCollected } from '../orders/order.service';
+import { transitionOrder, recordCodCollected, checkDeliveryOtp, reportDeliveryProblem } from '../orders/order.service';
+import { openToDriverFilter, markAccepted, declineJob } from './driver-offers';
 import { allowedSources, modeFilter } from '../orders/order-state';
 
 async function getDriverProfile(userId: string) {
@@ -33,13 +34,13 @@ export async function listAvailableOrders(req: Request, res: Response, next: Nex
     await getVerifiedDriver(req.auth!.userId);
 
     const [orders, total] = await Promise.all([
-      Order.find({ status: 'READY_FOR_PICKUP', driverId: { $exists: false } })
+      Order.find(openToDriverFilter(req.auth!.userId))
         .populate('supplierId', 'businessName whatsappNumber')
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),
-      Order.countDocuments({ status: 'READY_FOR_PICKUP', driverId: { $exists: false } }),
+      Order.countDocuments(openToDriverFilter(req.auth!.userId)),
     ]);
 
     res.json(ok(orders, { total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 }));
@@ -56,7 +57,8 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
     await getVerifiedDriver(driverUserId);
 
     const order = await Order.findOneAndUpdate(
-      { _id: req.params.id, status: { $in: allowedSources('ASSIGNED', 'DELIVERY_PARTNER', 'PLATFORM') }, driverId: { $exists: false }, ...modeFilter('PLATFORM') },
+      // Only a job offered to this driver (or an older order from before offers)
+      { $and: [{ _id: req.params.id, status: { $in: allowedSources('ASSIGNED', 'DELIVERY_PARTNER', 'PLATFORM') }, ...modeFilter('PLATFORM') }, openToDriverFilter(driverUserId)] },
       {
         $set: { status: 'ASSIGNED', driverId: driverUserId, assignedAt: new Date() },
         $push: { statusHistory: { status: 'ASSIGNED', at: new Date(), byRole: 'DELIVERY_PARTNER', byUserId: driverUserId } },
@@ -70,6 +72,8 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
       if (mine) return res.json(ok(mine));
       throw AppError.conflict('Order is no longer available for pickup');
     }
+
+    await markAccepted(order._id.toString(), driverUserId);
 
     // Notify buyer that a driver has been assigned
     notifyUser(order.buyerId.toString(), {
@@ -113,7 +117,8 @@ export async function updateDeliveryStatus(req: Request, res: Response, next: Ne
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
-    const { status } = req.body as { status: 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED' };
+    const { status, otp } = req.body as { status: 'PICKED_UP' | 'IN_TRANSIT' | 'DELIVERED'; otp?: string };
+    if (status === 'DELIVERED') await checkDeliveryOtp({ _id: req.params.id, driverId: req.auth!.userId }, otp);
     const set: Record<string, unknown> = {};
     if (status === 'PICKED_UP') set.pickedUpAt = new Date();
     if (status === 'DELIVERED') set.deliveredAt = new Date();
@@ -212,5 +217,26 @@ export async function getStats(req: Request, res: Response, next: NextFunction) 
       avgRating: profile?.avgRating ?? 0,
       isAvailable: profile?.isAvailable ?? false,
     }));
+  } catch (err) { next(err); }
+}
+
+// POST /delivery/orders/:id/decline { reason } — turn down an offered job; the next driver gets it
+export async function declineOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    await declineJob(String(req.params.id), req.auth!.userId, req.body.reason);
+    res.json(ok({ declined: true }));
+  } catch (err) { next(err); }
+}
+
+// POST /delivery/orders/:id/problem { reason } — delivery went wrong (buyer not there, site closed...)
+export async function reportProblem(req: Request, res: Response, next: NextFunction) {
+  try {
+    if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
+    const order = await reportDeliveryProblem({
+      filter: { _id: req.params.id, driverId: req.auth!.userId },
+      byRole: 'DELIVERY_PARTNER', userId: req.auth!.userId, reason: req.body.reason,
+    });
+    res.json(ok(order));
   } catch (err) { next(err); }
 }

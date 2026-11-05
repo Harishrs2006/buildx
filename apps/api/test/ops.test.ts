@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import {
-  acceptOffer, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
+  acceptOffer, deliveryCode, offerJobTo, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
   startDb, stopDb, clearDb, makeApp,
 } from './helpers';
 import { Order } from '../src/infrastructure/database/models/Order.model';
@@ -39,11 +39,14 @@ const ops = {
   post: (who: Who, path: string, body: object = {}) => request(app).post(api(`/ops${path}`)).set(who.headers).send(body),
   patch: (who: Who, path: string, body: object = {}) => request(app).patch(api(`/ops${path}`)).set(who.headers).send(body),
 };
-const supplierStatus = (id: string, status: string) =>
-  request(app).patch(api(`/suppliers/me/orders/${id}/status`)).set(supplier.headers).send({ status });
-const driverStatus = (who: Who, id: string, status: string) =>
-  request(app).patch(api(`/delivery/orders/${id}/status`)).set(who.headers).send({ status });
-const assign = (who: Who, id: string) => request(app).post(api(`/delivery/orders/${id}/assign`)).set(who.headers);
+const supplierStatus = async (id: string, status: string) =>
+  request(app).patch(api(`/suppliers/me/orders/${id}/status`)).set(supplier.headers).send({ status, ...(status === 'DELIVERED' ? { otp: await deliveryCode(id) } : {}) });
+const driverStatus = async (who: Who, id: string, status: string) =>
+  request(app).patch(api(`/delivery/orders/${id}/status`)).set(who.headers).send({ status, ...(status === 'DELIVERED' ? { otp: await deliveryCode(id) } : {}) });
+const assign = async (who: Who, id: string) => {
+  if ((who as { user?: { _id: mongoose.Types.ObjectId } }).user) await offerJobTo(id, (who as { user: { _id: mongoose.Types.ObjectId } }).user._id);
+  return request(app).post(api(`/delivery/orders/${id}/assign`)).set(who.headers);
+};
 const getOrder = (id: string) => Order.findById(id).select('+opsNotes').lean();
 const stockOf = async (id: unknown) => (await Product.findById(id).lean())!.stockQuantity;
 

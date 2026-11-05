@@ -4,7 +4,7 @@ import { validate } from '../../shared/middleware/validate.middleware';
 import {
   summary, listOrders, getOrder, cancel, unassign, assign, recordCod, addNote,
   listDrivers, listSuppliers, setSupplierVerification, setUserActive,
-  offerToSupplier, nextSupplier, supplierOptions, setDriverVerification,
+  offerToSupplier, nextSupplier, supplierOptions, setDriverVerification, markDelivered, resolveProblem,
 } from './ops.controller';
 import {
   listOrdersQuery, opsCancelSchema, opsUnassignSchema, opsAssignSchema, opsCodSchema, opsNoteSchema,
@@ -34,6 +34,8 @@ router.post('/orders/:id/notes', validate(opsNoteSchema), addNote);
 router.get('/orders/:id/supplier-options', supplierOptions);
 router.post('/orders/:id/offer', validate(opsOfferSchema), offerToSupplier);
 router.post('/orders/:id/next-supplier', validate(opsReasonSchema), nextSupplier);
+router.post('/orders/:id/deliver', validate(opsReasonSchema), markDelivered);
+router.post('/orders/:id/resolve-problem', validate(opsReasonSchema), resolveProblem);
 
 router.get('/drivers', listDrivers);
 router.patch('/drivers/:id/verification', validate(supplierVerificationSchema), setDriverVerification);
