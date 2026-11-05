@@ -1,0 +1,39 @@
+# Deploys main to the Vultr server (deploy/vultr). Does nothing until these repository secrets exist:
+#   VULTR_HOST     server IP or name
+#   VULTR_SSH_KEY  private key of a deploy key whose public half is in /root/.ssh/authorized_keys
+name: Deploy to Vultr
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vultr
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check the server is configured
+        id: cfg
+        env:
+          HOST: ${{ secrets.VULTR_HOST }}
+        run: echo "ready=$([ -n "$HOST" ] && echo yes || echo no)" >> "$GITHUB_OUTPUT"
+      - name: Deploy
+        if: steps.cfg.outputs.ready == 'yes'
+        env:
+          HOST: ${{ secrets.VULTR_HOST }}
+          KEY: ${{ secrets.VULTR_SSH_KEY }}
+        run: |
+          install -m 600 /dev/null key && printf '%s\n' "$KEY" > key
+          ssh -i key -o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30 root@"$HOST" /opt/sthiva/deploy/vultr/deploy.sh
+          rm -f key
+      - name: Check the sites answer
+        if: steps.cfg.outputs.ready == 'yes'
+        run: |
+          for u in https://api.sthiva.com/health https://www.sthiva.com https://seller.sthiva.com https://ops.sthiva.com; do
+            curl -fsS -o /dev/null --retry 10 --retry-delay 15 --retry-all-errors "$u" && echo "ok $u"
+          done

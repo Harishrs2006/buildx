@@ -614,3 +614,16 @@ Original plan:
     Cloudinary cloud/folder buildx, Render service buildx-api (render.yaml blueprint name; renaming risks a second
     service) and its buildx-api.onrender.com address (api.sthiva.com is the public one), Android packages com.buildx.*
     (old builds) in Firebase.
+- 2026-11-06 IST: Owner merged #79; wants a real launch in a couple of days and will give Vultr credits.
+  Branch feat/vultr-deploy: deploy/vultr (docker-compose: api + shop + seller + ops + Caddy auto-HTTPS; one
+  web.Dockerfile for the three Next sites via STANDALONE=1 output; bootstrap.sh for Ubuntu 24.04 with firewall,
+  swap, auto updates; deploy.sh; .env.example; README runbook) and .github/workflows/deploy-vultr.yml (SSH deploy
+  on push to main, idle until VULTR_HOST / VULTR_SSH_KEY secrets exist). Tested: standalone shop server serves
+  pages, CSS, images and the /__/auth Firebase proxy; compose config valid; normal Vercel builds unaffected.
+  Docker Desktop was not running, so images were not built locally.
+  docs/LAUNCH.md now starts with a two-day launch plan. Waiting on the owner: demo supplier removal OK, support
+  phone/email/legal name, first real suppliers, Settings values, Vultr server.
+- 2026-11-06 IST: Owner OK: removed the demo supplier now. Live DB: "BuildX Demo Supplier (placeholder...)" set
+  isActive=false and its 10 listings DISCONTINUED (soft, reversible; no open orders). Live /products now 0.
+  Owner chose to show their name until the company exists: Vercel sthiva-shop NEXT_PUBLIC_LEGAL_NAME =
+  "Sthiva, operated by Harish R S" (live after the next shop deploy). Support phone/email still to come from owner.

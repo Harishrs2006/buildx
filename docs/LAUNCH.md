@@ -7,6 +7,27 @@ Rule: nothing below that costs money happens without the owner saying yes. Never
 GitHub, chat or a screenshot. Secrets live only in the provider's dashboard and in
 `C:/dev/BuildX/buildx-secrets` (outside the repo).
 
+## Launch plan (2026-11-06): live in about two days
+
+Done already: sthiva.com with HTTPS on all four addresses, all eight platform phases, three apps,
+compulsory Monday check, private supplier documents, settlements, insights.
+
+Day 1 (owner):
+1. Say yes to removing the demo supplier and its 10 placeholder listings (buyers must never see fake stock).
+2. Send the support phone (WhatsApp), support email and the legal name to show on the site
+   (the company name once registered; until then the owner's name as proprietor).
+3. Sign and verify the first real suppliers; they upload GST / shop licence and do the weekly check.
+4. In ops Settings: commission per category, supplier and driver answer times, driver share, vehicles.
+5. Vultr credits: create the server (deploy/vultr/README.md); Claude does the rest.
+
+Day 2 (Claude, after day 1):
+6. Deploy to Vultr, switch DNS, verify every site, keep Render and Vercel as fallback for a week.
+7. Put support details and legal name on the shop, turn on Google indexing, submit the sitemap.
+8. Publish app updates; rebuild the three APKs with the final settings.
+9. A real test order end to end (place, supplier accepts, delivery code, cash confirmed, payout statement).
+
+Then: Google Play (owner pays $25 and verifies identity), company + GST registration, Razorpay.
+
 ## 0. Already done (free)
 
 - Test sign-in number +91 70192 82019 has a private code (in `buildx-secrets/TEST_SIGNIN.txt`); the
@@ -32,9 +53,9 @@ GitHub, chat or a screenshot. Secrets live only in the provider's dashboard and 
 | Step | Where | Cost | What Claude sets afterwards |
 | --- | --- | --- | --- |
 | Firebase Blaze (pay as you go) | Firebase console, project buildx-15494 | about $0.06 per SMS (third-party estimate; first 10 a day free per Google) | Turn phone sign-in back on: `NEXT_PUBLIC_PHONE_SIGNIN=true` on buyer and seller Vercel projects if wanted; set a budget alert |
-| Render Starter | Render, service buildx-api | $7/month | Change plan in `render.yaml` to `starter`; health check stays `/health` |
+| Render Starter | Render, service buildx-api | $7/month | Not needed once Vultr hosts the API (deploy/vultr) |
 | MongoDB Atlas Flex | Atlas, Cluster0 | $8 to $30/month | Upgrade from M0 (daily backups, 8 kept); then restrict Network Access to Render's outbound IPs (Render dashboard, Connect, Outbound) instead of 0.0.0.0/0 |
-| Vercel Pro | Vercel team buildx9 | $20/month per member | Hobby is personal, non-commercial only; nothing to change in code |
+| Vercel Pro | Vercel team sthiva | $20/month per member | Hobby is personal, non-commercial only. Not needed once Vultr hosts the sites (deploy/vultr) |
 | Domain (.in) | Any registrar | roughly Rs 600 to 1,000 a year | See step 3 |
 | Google Play developer account | play.google.com/console | $25 once | See step 4 |
 
