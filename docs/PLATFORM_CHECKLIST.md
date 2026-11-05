@@ -37,7 +37,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | --- | --- | --- |
 | Registration: business, owner, phone, address, GSTIN | DONE | |
 | PIN codes served | DONE | Checked against India Post directory |
-| Verification documents upload | PART | Schema has kycDocuments; no upload screen |
+| Verification documents upload | DONE | GST certificate, shop licence or Udyam; private files, 10-minute ops links |
 | Admin verifies before selling | DONE | Ops console |
 | Delivery options (own vehicle or Sthiva) | DONE | Profile setting (canDeliver) plus choice per order at dispatch |
 | Weekly availability (product, qty, supply price, delivery, areas) | TODO | Core gap |

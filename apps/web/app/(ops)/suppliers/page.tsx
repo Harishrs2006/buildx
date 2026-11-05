@@ -39,6 +39,77 @@ function Fact({ label, children }: { label: string; children: React.ReactNode })
   );
 }
 
+const DOC_STATUS: Record<string, { label: string; tone: Tone }> = {
+  SUBMITTED: { label: 'To check', tone: 'wait' },
+  ACCEPTED: { label: 'Accepted', tone: 'live' },
+  REJECTED: { label: 'Rejected', tone: 'bad' },
+};
+
+// GST certificate, shop licence or Udyam certificate. Links are fetched only when opened and stop
+// working after 10 minutes; each opening is logged.
+function Documents({ supplierId, count }: { supplierId: string; count: number }) {
+  const client = useApiClient();
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState<Awaited<ReturnType<typeof opsApi.documents>> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [note, setNote] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
+    setError(null);
+    try { setData(await opsApi.documents(client, supplierId)); } catch (err) { setError(errorText(err, 'Couldn’t load documents.')); }
+  };
+  const review = async (type: string, status: 'ACCEPTED' | 'REJECTED') => {
+    setBusy(true);
+    setError(null);
+    try { await opsApi.reviewDocument(client, supplierId, type, status, status === 'REJECTED' ? note.trim() : undefined); setRejecting(null); setNote(''); await load(); }
+    catch (err) { setError(errorText(err, 'Couldn’t save.')); } finally { setBusy(false); }
+  };
+
+  if (!open) {
+    return (
+      <button type="button" onClick={() => { setOpen(true); load(); }} className="btn-ghost self-start">
+        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">folder_open</span>
+        {count ? `Documents (${count})` : 'Documents (none uploaded)'}
+      </button>
+    );
+  }
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-sand-4 p-4">
+      <p className="text-[14px] font-semibold">Verification documents</p>
+      {error && <p className="text-[13px] text-error">{error}</p>}
+      {!data && !error && <div className="skeleton h-16" role="status" aria-label="Loading documents" />}
+      {data && data.documents.length === 0 && <p className="text-[14px] text-stone">The supplier hasn’t uploaded any yet. They can do it on the Business page of the seller website.</p>}
+      {data?.documents.map((d) => (
+        <div key={d.type} className="flex flex-col gap-2 border-t border-sand-4 pt-3 first:border-0 first:pt-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-medium">{d.label}</p>
+            <Pill tone={DOC_STATUS[d.status].tone}>{DOC_STATUS[d.status].label}</Pill>
+            {d.uploadedAt && <span className="text-[13px] text-stone">uploaded {ago(d.uploadedAt)}</span>}
+            <a href={d.viewUrl} target="_blank" rel="noreferrer" className="ml-auto text-[14px] font-medium text-cobalt hover:underline">Open (link works for 10 min)</a>
+          </div>
+          {d.status === 'REJECTED' && d.note && <p className="text-[13px] text-stone">Reason sent: {d.note}</p>}
+          {rejecting === d.type ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <input value={note} onChange={(e) => setNote(e.target.value.slice(0, 300))} placeholder="Reason, sent to the supplier" className="field flex-1" aria-label={`Reason for rejecting the ${d.label}`} />
+              <div className="flex gap-2">
+                <button type="button" disabled={busy || note.trim().length < 3} onClick={() => review(d.type, 'REJECTED')} className="btn bg-error text-white hover:bg-[#A51F24]">Reject</button>
+                <button type="button" disabled={busy} onClick={() => setRejecting(null)} className="btn-ghost">Back</button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              {d.status !== 'ACCEPTED' && <button type="button" disabled={busy} onClick={() => review(d.type, 'ACCEPTED')} className="btn-lime px-4">Accept</button>}
+              {d.status !== 'REJECTED' && <button type="button" disabled={busy} onClick={() => setRejecting(d.type)} className="btn-ghost">Reject</button>}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function SupplierCard({ supplier, onChanged }: { supplier: OpsSupplier; onChanged: (s: OpsSupplier) => void }) {
   const client = useApiClient();
   const [rejecting, setRejecting] = useState(false);
@@ -129,6 +200,7 @@ function SupplierCard({ supplier, onChanged }: { supplier: OpsSupplier; onChange
             Check the GSTIN on the government portal before approving: services.gst.gov.in, Search Taxpayer.
           </p>
         )}
+        <Documents supplierId={supplier._id} count={((supplier as { kycDocuments?: { publicId?: string }[] }).kycDocuments ?? []).filter((d) => d.publicId).length} />
         {error && <ErrorNote>{error}</ErrorNote>}
       </div>
 

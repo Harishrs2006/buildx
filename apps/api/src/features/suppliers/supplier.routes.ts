@@ -1,4 +1,5 @@
 import { supplierSettlements } from '../settlements/settlement.controller';
+import { myDocuments, uploadDocument, documentUpload } from './documents';
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
 import { validate } from '../../shared/middleware/validate.middleware';
@@ -111,6 +112,8 @@ router.patch('/me', validate(updateProfileSchema), updateProfile);
 router.get('/me/stats', getStats);
 router.get('/me/analytics', getAnalytics);
 router.get('/me/settlements', supplierSettlements);
+router.get('/me/documents', myDocuments);
+router.post('/me/documents', documentUpload, uploadDocument);
 
 router.get('/me/orders', listSupplierOrders);
 // Orders are offered to one supplier at a time: accept, or reject so the next supplier gets it

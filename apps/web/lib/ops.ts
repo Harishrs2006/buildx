@@ -156,6 +156,16 @@ export const opsApi = {
     send(c, 'PATCH', `/ops/drivers/${id}/verification`, { status, ...(note ? { note } : {}) }, z.unknown()),
   drivers: (c: ApiClient) => get(c, '/ops/drivers', z.array(driverSchema)),
   suppliers: (c: ApiClient, verification?: Verification) => get(c, '/ops/suppliers', z.array(supplierSchema), { verification }),
+  // Verification papers: view links expire after 10 minutes, so they are fetched only when opened
+  documents: (c: ApiClient, id: string) => get(c, `/ops/suppliers/${id}/documents`, z.object({
+    gstin: z.string().nullable(),
+    documents: z.array(z.object({
+      type: z.string(), label: z.string(), status: z.enum(['SUBMITTED', 'ACCEPTED', 'REJECTED']),
+      note: z.string().optional(), uploadedAt: z.string().optional(), format: z.string().optional(), viewUrl: z.string(),
+    })),
+  })),
+  reviewDocument: (c: ApiClient, id: string, type: string, status: 'ACCEPTED' | 'REJECTED', note?: string) =>
+    send(c, 'PATCH', `/ops/suppliers/${id}/documents/${type}`, { status, ...(note ? { note } : {}) }, z.unknown()),
   verify: (c: ApiClient, id: string, status: 'VERIFIED' | 'REJECTED', note?: string) =>
     send(c, 'PATCH', `/ops/suppliers/${id}/verification`, { status, ...(note ? { note } : {}) }, supplierSchema),
 };

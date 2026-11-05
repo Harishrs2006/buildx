@@ -22,11 +22,18 @@ export interface ISupplierProfile extends Document {
   servicePincodes: string[];
   logoUrl?: string;
   verificationStatus: 'PENDING' | 'VERIFIED' | 'REJECTED';
+  // Verification papers (owner decision 2026-11-05: GST certificate if registered, and a shop licence or
+  // Udyam certificate). Private Cloudinary files: only publicId is kept, never a public URL. One per type.
   kycDocuments: {
-    type: 'AADHAAR' | 'GST' | 'BANK_STATEMENT' | 'SHOP_LICENSE';
-    url: string;
+    type: 'GST' | 'SHOP_LICENSE' | 'UDYAM' | 'AADHAAR' | 'BANK_STATEMENT';
     publicId: string;
-    verified: boolean;
+    format?: string;
+    status?: 'SUBMITTED' | 'ACCEPTED' | 'REJECTED';
+    note?: string;
+    uploadedAt?: Date;
+    reviewedAt?: Date;
+    url?: string;      // legacy field, never set by current code
+    verified: boolean; // kept in step with status === 'ACCEPTED'
   }[];
   avgRating: number;
   totalReviews: number;
@@ -60,9 +67,15 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
     verificationStatus: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED'], default: 'PENDING' },
     kycDocuments: [
       {
-        type: { type: String, enum: ['AADHAAR', 'GST', 'BANK_STATEMENT', 'SHOP_LICENSE'] },
+        _id: false,
+        type: { type: String, enum: ['GST', 'SHOP_LICENSE', 'UDYAM', 'AADHAAR', 'BANK_STATEMENT'] },
         url: String,
         publicId: String,
+        format: String,
+        status: { type: String, enum: ['SUBMITTED', 'ACCEPTED', 'REJECTED'], default: 'SUBMITTED' },
+        note: { type: String, trim: true, maxlength: 300 },
+        uploadedAt: Date,
+        reviewedAt: Date,
         verified: { type: Boolean, default: false },
       },
     ],

@@ -23,8 +23,7 @@ Times are IST.
 Waiting on the owner (decisions or accounts):
 1. Publish OTA updates for partner + buyer (phases 5b-7 need them), install Sthiva-Driver.apk and try it.
 2. Ops Settings: answer times, driver share, real commission rates, vehicles; catalog weights; supplier pickup points.
-3. Supplier verification documents (schema has kycDocuments): needs a decision on which documents (masked Aadhaar,
-   GST, shop licence, bank proof) and must use private signed storage, never public URLs.
+3. DONE (owner chose GST + shop licence/Udyam, 2026-11-05): supplier verification documents.
 4. Spec gaps needing rules: weekly supplier availability, product variations, market reference prices,
    online payment (Razorpay needs company KYC) and refunds.
 5. Websites' NEXT_PUBLIC_API_URL -> https://api.sthiva.com (Vercel asks the owner for an emailed code).
@@ -571,3 +570,11 @@ Original plan:
     in listings and orders (isActive checked in sellableCategoryIds and ratesFor).
   - Vercel ignored-build step was already in place. Session log CURRENT STATE / NEXT STEPS rewritten.
   - 363 API tests pass (2 new files + 1 settings test); ops and seller sites build; mobile tsc clean.
+- 2026-11-05 23:55 IST: Owner decisions: verification documents = GST certificate (if registered) + shop licence or
+  Udyam certificate (no Aadhaar, no bank proof for now); next build = weekly availability.
+  - Documents (same PR #78): POST/GET /suppliers/me/documents (multipart type+file, JPEG/PNG/PDF <= 5 MB, one per
+    type, replacing deletes the old file); GET /ops/suppliers/:id/documents (10-minute signed links, each view
+    logged), PATCH /ops/suppliers/:id/documents/:type (accept / reject with reason, supplier gets a push).
+    Files are Cloudinary type=private (StorageService.uploadPrivate / privateViewUrl); no public URL stored or sent.
+  - UI: seller website Business page "Verification documents"; ops Suppliers card "Documents" panel.
+  - 4 new API tests pass; ops and seller sites build.
