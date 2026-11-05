@@ -131,6 +131,22 @@ function Actions({ order, reload }: { order: OrderDetail; reload: () => void }) 
             onRun={(reason) => run(() => opsApi.unassign(client, order._id, reason))()}
           />
         )}
+        {(order.status === 'PICKED_UP' || order.status === 'IN_TRANSIT') && (
+          <Action
+            label="Mark delivered without the code"
+            hint="Only after confirming with the buyer that everything arrived (for example their phone is off or the code is lost)."
+            placeholder="How you confirmed, e.g. buyer confirmed on a call at 4:10 pm"
+            onRun={(reason) => run(() => opsApi.markDelivered(client, order._id, reason))()}
+          />
+        )}
+        {order.deliveryIssue && !order.deliveryIssue.resolvedAt && (
+          <Action
+            label="Problem resolved"
+            hint="Record what was agreed. To give up on the order, cancel it instead."
+            placeholder="What was agreed, e.g. buyer back on site, driver returns at 5 pm"
+            onRun={(reason) => run(() => opsApi.resolveProblem(client, order._id, reason))()}
+          />
+        )}
         {codOpen && (
           <Action
             label="Record cash received"
@@ -284,6 +300,17 @@ export default function OrderPage() {
 
       {o.serviceabilityCheck === 'SKIPPED_NO_PINCODE' && (
         <p className="rounded-xl bg-[#FFF4D6] px-4 py-3 text-[15px] text-[#5C4300]">This order came without a delivery PIN, so supplier coverage was never checked. Confirm with the supplier.</p>
+      )}
+      {o.deliveryIssue && !o.deliveryIssue.resolvedAt && (
+        <p className="rounded-xl bg-error-container px-4 py-3 text-[15px] text-on-error-container">
+          Delivery problem reported by the {o.deliveryIssue.byRole === 'SUPPLIER' ? 'supplier' : 'driver'} {shortDate.format(new Date(o.deliveryIssue.at))}: {o.deliveryIssue.reason}
+        </p>
+      )}
+      {o.status === 'READY_FOR_PICKUP' && o.driverOffer?.state === 'NEEDS_OPS' && (
+        <p className="rounded-xl bg-[#FFF4D6] px-4 py-3 text-[15px] text-[#5C4300]">No suitable driver accepted this job. Assign a driver below.</p>
+      )}
+      {o.status === 'READY_FOR_PICKUP' && o.driverOffer?.state === 'OFFERED' && (
+        <p className="rounded-xl bg-sand-3 px-4 py-3 text-[15px]">Offered to a driver{o.driverOffer.expiresAt ? `, answer by ${shortDate.format(new Date(o.driverOffer.expiresAt))}` : ''}. You can still assign someone yourself.</p>
       )}
       {o.status === 'CANCELLED' && (
         <p className="rounded-xl bg-error-container px-4 py-3 text-[15px] text-on-error-container">

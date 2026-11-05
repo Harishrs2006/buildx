@@ -220,3 +220,21 @@ export async function acceptOffer(app: Application, who: { headers: Record<strin
   if (res.status !== 200) throw new Error(`accept failed: ${res.status} ${JSON.stringify(res.body)}`);
   return res;
 }
+
+/** The buyer's 4-digit handover code for an order (needed to mark it delivered). */
+export async function deliveryCode(orderId: unknown): Promise<string | undefined> {
+  return (await Order.findById(orderId).select('+deliveryOtp').lean())?.deliveryOtp;
+}
+
+/** Offers a delivery job to a specific driver (tests choose the driver instead of the ranking). */
+export async function offerJobTo(orderId: unknown, driverUserId: mongoose.Types.ObjectId) {
+  // Let the background first offer (made when the supplier dispatched) finish, so it can't overwrite ours
+  for (let i = 0; i < 25; i++) {
+    const o = await Order.findById(orderId).select('status driverId driverOffer.state').lean();
+    if (!o || o.status !== 'READY_FOR_PICKUP' || o.driverId || o.driverOffer?.state) break;
+    await new Promise((r) => setTimeout(r, 20));
+  }
+  await Order.updateOne({ _id: orderId }, {
+    $set: { driverOffer: { state: 'OFFERED', driverUserId, attempts: [{ driverUserId, offeredAt: new Date() }] } },
+  });
+}

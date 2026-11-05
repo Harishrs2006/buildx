@@ -20,7 +20,9 @@ function notifySupplier(supplierProfileId: unknown, payload: Parameters<typeof n
 
 // What a buyer sees of an order: which suppliers were offered it, and why they said no, stays internal
 export function buyerView<T extends { allocation?: unknown; statusHistory?: { status: string; note?: string }[] }>(order: T) {
-  const { allocation: _internal, ...rest } = order;
+  const { allocation: _internal, driverOffer: _offer, ...rest } = order as T & { driverOffer?: unknown; deliveryOtp?: string; status?: string };
+  // The handover code matters only until the order is delivered or cancelled
+  if (rest.status === 'DELIVERED' || rest.status === 'CANCELLED') delete rest.deliveryOtp;
   const history = (order.statusHistory ?? [])
     .filter((h, i) => h.status !== 'PENDING' || i === 0)
     .map((h) => (h.status === 'PENDING' ? { ...h, note: undefined } : h));
@@ -127,7 +129,7 @@ export async function getOrder(req: Request, res: Response, next: NextFunction) 
   try {
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
-    const order = await Order.findOne({ _id: req.params.id, buyerId: req.auth!.userId }).lean();
+    const order = await Order.findOne({ _id: req.params.id, buyerId: req.auth!.userId }).select('+deliveryOtp').lean();
     if (!order) throw AppError.notFound('Order');
 
     res.json(ok(buyerView(order)));

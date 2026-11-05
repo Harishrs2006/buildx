@@ -166,7 +166,7 @@ function VehicleRow({ v, canEdit, onSaved }: { v: Vehicle; canEdit: boolean; onS
 }
 
 function GeneralNumber({ field, value, canEdit, onSaved, unit, label, min, max, step, placeholder, invalid }: {
-  field: 'offerTimeoutMinutes' | 'driverSharePercent';
+  field: 'offerTimeoutMinutes' | 'driverSharePercent' | 'driverOfferTimeoutMinutes';
   value: number | null | undefined; canEdit: boolean; onSaved: () => void;
   unit: string; label: string; min: number; max: number; step: number | string; placeholder: string; invalid: string;
 }) {
@@ -250,6 +250,11 @@ export default function SettingsPage() {
           <Section title="Supplier answer time" hint="How long a supplier has to accept an order before Sthiva offers it to the next supplier. Leave empty to turn it off; then the ops team moves unanswered orders by hand.">
             <GeneralNumber key={show(state.data.offerTimeoutMinutes)} field="offerTimeoutMinutes" value={state.data.offerTimeoutMinutes} canEdit={canEdit} onSaved={reload}
               unit="minutes" label="Minutes a supplier has to accept an order" min={1} max={1440} step={1} placeholder="Off" invalid="Use whole minutes from 1 to 1440." />
+          </Section>
+
+          <Section title="Driver answer time" hint="How long a driver has to accept a delivery job before Sthiva offers it to the next driver. Leave empty to turn it off; then the job waits until the driver answers or the ops team assigns someone.">
+            <GeneralNumber key={show(state.data.driverOfferTimeoutMinutes)} field="driverOfferTimeoutMinutes" value={state.data.driverOfferTimeoutMinutes} canEdit={canEdit} onSaved={reload}
+              unit="minutes" label="Minutes a driver has to accept a job" min={1} max={1440} step={1} placeholder="Off" invalid="Use whole minutes from 1 to 1440." />
           </Section>
 
           <Section title="Driver share of the delivery charge" hint="What a Sthiva delivery partner earns from each delivery charge; Sthiva keeps the rest. When a supplier delivers with their own vehicle, they get the whole delivery charge.">

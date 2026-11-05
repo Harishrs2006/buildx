@@ -70,6 +70,18 @@ export interface IOrder extends Document {
   // SKIPPED_NO_PINCODE: legacy client sent no PIN (see ORDERS_REQUIRE_DELIVERY_PINCODE).
   serviceabilityCheck?: 'VERIFIED' | 'SKIPPED_NO_PINCODE';
   allocation?: Allocation;
+  // Sthiva delivery job: offered to one driver at a time (features/delivery/driver-offers.ts)
+  driverOffer?: {
+    state: 'OFFERED' | 'ASSIGNED' | 'NEEDS_OPS';
+    driverUserId?: Types.ObjectId;
+    expiresAt?: Date;
+    attempts: { driverUserId: Types.ObjectId; offeredAt: Date; outcome?: 'ACCEPTED' | 'DECLINED' | 'EXPIRED' | 'WITHDRAWN'; at?: Date; reason?: string }[];
+  };
+  // The buyer gives this code to whoever delivers; required to mark the order delivered
+  deliveryOtp?: string;
+  otpFailures?: number;
+  // A delivery that went wrong (buyer not there, site closed, refused...), waiting for ops
+  deliveryIssue?: { reason: string; at: Date; byRole: 'DELIVERY_PARTNER' | 'SUPPLIER'; byUserId: Types.ObjectId; resolvedAt?: Date; resolution?: string };
   deliveryMethod: 'STANDARD' | 'EXPRESS';
   deliveryCharge: number;
   // How the delivery charge was worked out (absent when delivery pricing was off)
@@ -188,6 +200,31 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     deliveryMode: { type: String, enum: ['PLATFORM', 'SUPPLIER'] },
+    driverOffer: {
+      state: { type: String, enum: ['OFFERED', 'ASSIGNED', 'NEEDS_OPS'] },
+      driverUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+      expiresAt: Date,
+      attempts: [
+        {
+          _id: false,
+          driverUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+          offeredAt: Date,
+          outcome: { type: String, enum: ['ACCEPTED', 'DECLINED', 'EXPIRED', 'WITHDRAWN'] },
+          at: Date,
+          reason: String,
+        },
+      ],
+    },
+    deliveryOtp: { type: String, select: false },
+    otpFailures: { type: Number, default: 0 },
+    deliveryIssue: {
+      reason: String,
+      at: Date,
+      byRole: { type: String, enum: ['DELIVERY_PARTNER', 'SUPPLIER'] },
+      byUserId: { type: Schema.Types.ObjectId, ref: 'User' },
+      resolvedAt: Date,
+      resolution: String,
+    },
     dispatchedAt: Date,
     driverId: { type: Schema.Types.ObjectId, ref: 'User', index: true },
     assignedAt: Date,
@@ -246,6 +283,8 @@ const orderSchema = new Schema<IOrder>(
 orderSchema.index({ status: 1, updatedAt: 1 });
 // Offer timeout sweep
 orderSchema.index({ 'allocation.state': 1, 'allocation.expiresAt': 1 });
+orderSchema.index({ 'driverOffer.driverUserId': 1, 'driverOffer.state': 1 });
+orderSchema.index({ 'driverOffer.state': 1, 'driverOffer.expiresAt': 1 });
 
 // One order per (buyer, Idempotency-Key): a retried or double-tapped checkout can't create a second order
 orderSchema.index(

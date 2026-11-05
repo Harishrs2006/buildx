@@ -76,6 +76,16 @@ function OrderDetail({ id }: { id: string }) {
         </div>
       </section>
 
+      {order.deliveryOtp && (
+        <section className="card flex flex-col gap-2 border-2 border-ink p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div>
+            <p className="eyebrow text-stone">Delivery code</p>
+            <p className="mt-1 text-[15px] text-stone">Give this code to the driver only after you have checked the material.</p>
+          </div>
+          <p className="font-mono text-4xl font-bold tracking-[0.3em]" aria-label={`Delivery code ${order.deliveryOtp.split('').join(' ')}`}>{order.deliveryOtp}</p>
+        </section>
+      )}
+
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="card p-5 sm:p-6">
           <OrderTimeline order={order} />

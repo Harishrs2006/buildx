@@ -11,6 +11,8 @@ type QueueKey = keyof OpsSummary['attention'];
 function queues(t: OpsSummary['thresholds']): { key: QueueKey; title: string; hint: string }[] {
   const hrs = (m: number) => (m % 60 === 0 ? `${m / 60} h` : `${m} min`);
   return [
+    { key: 'deliveryProblems', title: 'Delivery problem', hint: 'A driver or supplier reported a failed delivery. Call them and the buyer, then resolve it on the order.' },
+    { key: 'noDriver', title: 'No driver accepted', hint: 'Every suitable driver said no or did not answer. Open the order and assign a driver.' },
     { key: 'needsSupplier', title: 'Needs a supplier', hint: 'Every supplier said no or did not answer. Open the order and offer it to a supplier.' },
     { key: 'unassigned', title: 'No driver yet', hint: `Ready for pickup for over ${hrs(t.READY_UNASSIGNED_MINUTES)}. Assign a driver.` },
     { key: 'notPickedUp', title: 'Driver has not picked up', hint: `Assigned for over ${hrs(t.ASSIGNED_MINUTES)}. Call the driver or reassign.` },

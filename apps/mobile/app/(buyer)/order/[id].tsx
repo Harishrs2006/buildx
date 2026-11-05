@@ -110,6 +110,16 @@ export default function OrderDetailScreen() {
           </View>
         </View>
 
+        {(order as { deliveryOtp?: string }).deliveryOtp ? (
+          <View style={[styles.card, styles.codeCard]}>
+            <Eyebrow>Delivery code</Eyebrow>
+            <Text style={styles.code} accessibilityLabel={`Delivery code ${(order as { deliveryOtp?: string }).deliveryOtp!.split('').join(' ')}`}>
+              {(order as { deliveryOtp?: string }).deliveryOtp}
+            </Text>
+            <Text style={styles.codeHint}>Give this code to the driver only after you have checked the material.</Text>
+          </View>
+        ) : null}
+
         <View style={styles.card}>
           <Eyebrow>Progress</Eyebrow>
           <View style={styles.cardBody}><OrderTimeline status={order.status} /></View>
@@ -179,6 +189,9 @@ function PriceRow({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
+  codeCard: { borderColor: Colors.ink, borderWidth: 1.5 },
+  code: { fontFamily: Font.monoBold, fontSize: 34, letterSpacing: 12, color: Colors.ink, marginTop: 8 },
+  codeHint: { fontFamily: Font.regular, fontSize: 14, lineHeight: 20, color: Colors.stone, marginTop: 4 },
   safe: { flex: 1, backgroundColor: Colors.sand },
   flex: { flex: 1 },
   loading: { marginTop: 60 },

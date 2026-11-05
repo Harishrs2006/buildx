@@ -26,6 +26,7 @@ export const generalSettingsSchema = z
     offerTimeoutMinutes: z.number().int().min(1).max(1440).nullable(),
     // Share of the delivery charge a Sthiva driver earns
     driverSharePercent: percent,
+    driverOfferTimeoutMinutes: z.number().int().min(1).max(1440).nullable(),
   })
   .partial()
   .refine((v) => Object.keys(v).length > 0, 'Nothing to change');

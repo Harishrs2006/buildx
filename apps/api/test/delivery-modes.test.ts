@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import {
-  acceptOffer, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
+  acceptOffer, deliveryCode, offerJobTo, seedUser, seedSupplier, seedDriver, seedProduct, newKey, SITE,
   startDb, stopDb, clearDb, makeApp,
 } from './helpers';
 import { Order } from '../src/infrastructure/database/models/Order.model';
@@ -27,15 +27,18 @@ beforeEach(async () => {
   driver = await seedDriver('driver');
 });
 
-const supplierStatus = (who: Who, id: string, status: string) =>
-  request(app).patch(api(`/suppliers/me/orders/${id}/status`)).set(who.headers).send({ status });
+const supplierStatus = async (who: Who, id: string, status: string) =>
+  request(app).patch(api(`/suppliers/me/orders/${id}/status`)).set(who.headers).send({ status, ...(status === 'DELIVERED' ? { otp: await deliveryCode(id) } : {}) });
 const supplierCod = (who: Who, id: string, amount: number) =>
   request(app).post(api(`/suppliers/me/orders/${id}/cod`)).set(who.headers).send({ amount });
-const driverStatus = (who: Who, id: string, status: string) =>
-  request(app).patch(api(`/delivery/orders/${id}/status`)).set(who.headers).send({ status });
+const driverStatus = async (who: Who, id: string, status: string) =>
+  request(app).patch(api(`/delivery/orders/${id}/status`)).set(who.headers).send({ status, ...(status === 'DELIVERED' ? { otp: await deliveryCode(id) } : {}) });
 const driverCod = (who: Who, id: string, amount: number) =>
   request(app).post(api(`/delivery/orders/${id}/cod`)).set(who.headers).send({ amount });
-const assign = (who: Who, id: string) => request(app).post(api(`/delivery/orders/${id}/assign`)).set(who.headers);
+const assign = async (who: Who, id: string) => {
+  if ((who as { user?: { _id: mongoose.Types.ObjectId } }).user) await offerJobTo(id, (who as { user: { _id: mongoose.Types.ObjectId } }).user._id);
+  return request(app).post(api(`/delivery/orders/${id}/assign`)).set(who.headers);
+};
 const getOrder = (id: string) => Order.findById(id).lean();
 
 async function placeOrder(qty = 10) {

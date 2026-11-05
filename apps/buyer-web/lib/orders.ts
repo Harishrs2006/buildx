@@ -108,6 +108,8 @@ export const orderSchema = z
     status: orderStatusSchema,
     deliveryMode: z.enum(['PLATFORM', 'SUPPLIER']).optional(),
     statusHistory: z.array(statusEventSchema).optional(),
+    // Given to whoever delivers; the API sends it only until the order is delivered or cancelled
+    deliveryOtp: z.string().optional(),
     createdAt: z.string(),
   })
   .passthrough();

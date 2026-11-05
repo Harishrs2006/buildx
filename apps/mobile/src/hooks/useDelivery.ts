@@ -109,11 +109,29 @@ export function useAssignOrder() {
   });
 }
 
+// Turn down a job Sthiva offered; it goes to the next driver
+export function useDeclineOrder() {
+  const qc = useQueryClient();
+  return useMutation<unknown, Error, { id: string; reason: string }>({
+    mutationFn: ({ id, reason }) => api.post(`/delivery/orders/${id}/decline`, { reason }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['delivery-available'] }),
+  });
+}
+
+// Delivery went wrong (buyer not there, site closed...): Sthiva's team follows up
+export function useReportDeliveryProblem() {
+  const qc = useQueryClient();
+  return useMutation<unknown, Error, { id: string; reason: string }>({
+    mutationFn: ({ id, reason }) => api.post(`/delivery/orders/${id}/problem`, { reason }).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-deliveries'] }),
+  });
+}
+
 export function useUpdateDeliveryStatus() {
   const qc = useQueryClient();
-  return useMutation<{ data: DeliveryOrder }, Error, { id: string; status: string }>({
-    mutationFn: ({ id, status }) =>
-      api.patch(`/delivery/orders/${id}/status`, { status }).then((r) => r.data),
+  return useMutation<{ data: DeliveryOrder }, Error, { id: string; status: string; otp?: string }>({
+    mutationFn: ({ id, status, otp }) =>
+      api.patch(`/delivery/orders/${id}/status`, { status, ...(otp ? { otp } : {}) }).then((r) => r.data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-deliveries'] });
       qc.invalidateQueries({ queryKey: ['driver-stats'] });

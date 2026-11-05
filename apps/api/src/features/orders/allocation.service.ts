@@ -23,6 +23,7 @@ import { logger } from '../../shared/logger/logger';
 import { notifyUser } from '../../shared/services/notification.service';
 import { checkSupplier } from '../serviceability/serviceability.service';
 import { priceLine, toPaise, PricingError } from './pricing';
+import { expireDriverOffers } from '../delivery/driver-offers';
 
 type LeanOrder = IOrder & { _id: Types.ObjectId };
 type Outcome = 'REJECTED' | 'EXPIRED' | 'WITHDRAWN';
@@ -303,6 +304,7 @@ export async function expireOverdueOffers(now = new Date()): Promise<number> {
 export function startOfferSweeper(intervalMs = 60_000): NodeJS.Timeout {
   return setInterval(() => {
     expireOverdueOffers().catch((err) => logger.error('[allocation] sweep failed', { error: err?.message }));
+    expireDriverOffers().catch((err) => logger.error('[driver-offers] sweep failed', { error: err?.message }));
   }, intervalMs);
 }
 
