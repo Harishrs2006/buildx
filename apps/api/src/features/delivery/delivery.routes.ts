@@ -1,3 +1,4 @@
+import { driverSettlements } from '../settlements/settlement.controller';
 import { Router } from 'express';
 import { requireAuth, requireRole } from '../../shared/middleware/auth.middleware';
 import { validate } from '../../shared/middleware/validate.middleware';
@@ -30,5 +31,6 @@ router.post('/orders/:id/cod', validate(codCollectedSchema), confirmCodCollected
 router.get('/me', getProfile);
 router.patch('/me', updateProfile);
 router.get('/me/stats', getStats);
+router.get('/me/settlements', driverSettlements);
 
 export { router as deliveryRoutes };
