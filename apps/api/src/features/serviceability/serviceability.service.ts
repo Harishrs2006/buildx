@@ -51,11 +51,15 @@ export async function resolveDestination(pincode: unknown): Promise<Destination>
   return { pincode: postal.pincode, district: postal.district, state: postal.state };
 }
 
+import { weeklyCheckFilter } from '../suppliers/weekly';
+
 // Suppliers whose listings may be shown or ordered at all: verified, profile active, account
-// not suspended. Optionally narrowed to those that list `pincode`.
+// not suspended, and up to date with the compulsory Monday check (features/suppliers/weekly.ts).
+// Optionally narrowed to those that list `pincode`.
 const eligibleProfileFilter = (pincode?: string) => ({
   verificationStatus: 'VERIFIED',
   isActive: true,
+  ...weeklyCheckFilter(),
   ...(pincode ? { servicePincodes: pincode } : {}),
 });
 

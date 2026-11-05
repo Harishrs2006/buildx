@@ -193,9 +193,20 @@ function SupplierCard({ supplier, onChanged }: { supplier: OpsSupplier; onChange
           <Fact label="Weekly check">
             {(() => {
               const at = (supplier as { weeklyConfirmedAt?: string }).weeklyConfirmedAt;
-              if (!at) return <span className="text-stone">Never confirmed</span>;
-              const days = Math.floor((Date.now() - new Date(at).getTime()) / 86400000);
-              return <span className={days >= 7 ? 'text-error' : ''}>Confirmed {ago(at)}</span>;
+              // Mirrors the API rule (features/suppliers/weekly.ts): from the end of Monday 9 Nov 2026, a supplier
+              // without this week's check (last week's still counts on Monday) is hidden from buyers
+              const IST = 330 * 60000, DAY = 86400000, now = Date.now();
+              const ist = new Date(now + IST);
+              const weekStart = Date.UTC(ist.getUTCFullYear(), ist.getUTCMonth(), ist.getUTCDate()) - ((ist.getUTCDay() + 6) % 7) * DAY - IST;
+              const enforced = now >= Date.parse('2026-11-09T18:30:00Z');
+              const since = now >= weekStart + DAY ? weekStart : weekStart - 7 * DAY;
+              const hidden = enforced && (!at || Date.parse(at) < since);
+              return (
+                <span className="flex flex-col gap-1">
+                  <span className={hidden ? 'text-error' : ''}>{at ? `Confirmed ${ago(at)}` : 'Never confirmed'}</span>
+                  {hidden && <Pill tone="bad">Hidden from buyers</Pill>}
+                </span>
+              );
             })()}
           </Fact>
         </dl>

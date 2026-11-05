@@ -37,7 +37,8 @@ export interface ISupplierProfile extends Document {
   }[];
   // Weekly availability check (features/suppliers/weekly.ts)
   weeklyConfirmedAt?: Date;
-  weeklyReminderFor?: Date; // week start of the last reminder sent
+  weeklyReminderFor?: Date; // week start of the last Monday reminder sent
+  weeklyHiddenNoticeFor?: Date; // week start of the last "your items are hidden" notice
   avgRating: number;
   totalReviews: number;
   totalDeliveries: number;
@@ -84,6 +85,7 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
     ],
     weeklyConfirmedAt: Date,
     weeklyReminderFor: Date,
+    weeklyHiddenNoticeFor: Date,
     avgRating: { type: Number, default: 0, min: 0, max: 5 },
     totalReviews: { type: Number, default: 0 },
     totalDeliveries: { type: Number, default: 0 },

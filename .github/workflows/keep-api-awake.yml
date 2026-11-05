@@ -14,4 +14,4 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: Ping /health
-        run: curl -fsS --max-time 120 --retry 2 --retry-delay 10 https://buildx-api.onrender.com/health -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n"
+        run: curl -fsS --max-time 120 --retry 2 --retry-delay 10 https://api.sthiva.com/health -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n"
