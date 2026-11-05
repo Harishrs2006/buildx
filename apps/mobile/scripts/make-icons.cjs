@@ -28,5 +28,9 @@ const png = (o, f) => sharp(icon(o)).png().toFile(f);
   // Sthiva Partner (sellers, drivers): ink, mark in white and yellow
   await png({ bg: DARK, s: 0.74, left: WHITE, right: YELLOW }, 'assets/partner/icon.png');
   await png({ bg: null, s: 0.56, left: WHITE, right: YELLOW }, 'assets/partner/android-icon-foreground.png');
+  // Sthiva Driver (delivery partners): light, mark in ink and yellow
+  fs.mkdirSync('assets/driver', { recursive: true });
+  await png({ bg: WHITE, s: 0.74, left: INK, right: YELLOW }, 'assets/driver/icon.png');
+  await png({ bg: null, s: 0.56, left: INK, right: YELLOW }, 'assets/driver/android-icon-foreground.png');
   console.log('icons written');
 })();

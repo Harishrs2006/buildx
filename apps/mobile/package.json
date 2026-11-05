@@ -42,7 +42,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "update:buyer": "node scripts/publish-update.cjs buyer",
-    "update:partner": "node scripts/publish-update.cjs partner"
+    "update:partner": "node scripts/publish-update.cjs partner",
+    "update:driver": "node scripts/publish-update.cjs driver"
   },
   "private": true
 }

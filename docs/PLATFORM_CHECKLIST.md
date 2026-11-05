@@ -71,7 +71,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Status updates | DONE | |
 | OTP / proof of delivery | DONE | Phase 5b: 4-digit buyer code; ops can confirm without it |
 | History, earnings | DONE | Phase 6: Payouts tab in Sthiva Partner (driver share of delivery charge) |
-| Separate driver app | TODO | Drivers currently use Sthiva Partner |
+| Separate driver app | DONE | Phase 8: Sthiva Driver (com.sthiva.driver); Sthiva Partner still works for drivers |
 
 ## 5. Admin (ops console)
 

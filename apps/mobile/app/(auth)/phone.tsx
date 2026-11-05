@@ -8,7 +8,7 @@ import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
 import { SthivaMark, Button, Eyebrow, type } from '../../src/components/ui';
 import { signInWithGoogle, signOutEverywhere } from '../../src/lib/googleAuth';
-import { IS_PARTNER } from '../../src/lib/appVariant';
+import { APP_NAME, IS_DRIVER, IS_PARTNER } from '../../src/lib/appVariant';
 
 export default function PhoneScreen() {
   const router = useRouter();
@@ -80,11 +80,11 @@ export default function PhoneScreen() {
       <SafeAreaView edges={['top']} style={styles.hero}>
         <View style={styles.brandRow}>
           <SthivaMark size={40} tile />
-          <Text style={styles.brand}>{IS_PARTNER ? 'Sthiva Partner' : 'Sthiva'}</Text>
+          <Text style={styles.brand}>{APP_NAME}</Text>
         </View>
         <Text style={styles.heroTitle}>
-          {IS_PARTNER ? 'Orders in,' : 'Order for the site,'}{'\n'}
-          <Text style={styles.heroAccent}>{IS_PARTNER ? 'trucks out.' : 'not the queue.'}</Text>
+          {IS_DRIVER ? 'Jobs near you,' : IS_PARTNER ? 'Orders in,' : 'Order for the site,'}{'\n'}
+          <Text style={styles.heroAccent}>{IS_DRIVER ? 'paid per trip.' : IS_PARTNER ? 'trucks out.' : 'not the queue.'}</Text>
         </Text>
       </SafeAreaView>
 
@@ -93,7 +93,9 @@ export default function PhoneScreen() {
           <Eyebrow>Welcome</Eyebrow>
           <Text style={[type.title, styles.heading]}>Sign in or create an account</Text>
           <Text style={type.body}>
-            {IS_PARTNER
+            {IS_DRIVER
+              ? 'For delivery partners with their own vehicle. Get an alert the moment a delivery job comes your way.'
+              : IS_PARTNER
               ? 'For suppliers and delivery partners. Get an alert on your phone the moment an order comes in.'
               : 'Use your Google account. It is free and takes one tap.'}
           </Text>

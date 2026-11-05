@@ -567,3 +567,18 @@ Original plan:
   - Ops console: Insights tab (stat tiles, sales-per-day bar chart with hover + table view, top items, supplier and
     driver tables) and People tab. Desktop tabs show icons only below xl; phone tab bar scrolls.
   - 359 API tests pass (4 new); ops site builds. Not yet seen in a browser with real data (needs ops sign-in).
+- 2026-11-05 23:15 IST: User merged #74 and #75. #75 had been merged into feat/settlements, but #74's squash already
+  included it, so main has phase 7 (empty PR #76 closed).
+- 2026-11-05 23:20 IST: PHASE 8 Sthiva Driver app (branch feat/driver-app).
+  - APP_VARIANT=driver -> "Sthiva Driver", com.sthiva.driver, scheme sthivadriver, EAS channel driver-production,
+    icon assets/driver (light tile, ink + yellow S; scripts/make-icons.cjs), adaptive bg #FAF8F3.
+  - src/lib/appVariant.ts: buyer | partner | driver. Driver app accepts only DELIVERY_PARTNER accounts and onboards
+    only drivers; other accounts see the other-app screen naming the right app. Sthiva Partner still serves drivers.
+  - Firebase: Android app com.sthiva.driver registered (app id 1:1054722710633:android:cde8c73c8e6f50c8b696f8),
+    SHA-1 5e8f...f625; Google created its Android OAuth client. Local google-services.json (gitignored) now has 5
+    packages; copy in buildx-secrets/firebase.
+  - publish-update.cjs and npm run update:driver handle the driver channel.
+  - Built C:/dev/BuildX/Sthiva-Driver.apk (not in git): package com.sthiva.driver, label Sthiva Driver, signed
+    5e8f...f625, bundle uses https://api.sthiva.com, appVariant driver. NOTE: C:/bx/mobile/android is now prebuilt
+    for the driver variant; run `APP_VARIANT=<variant> npx expo prebuild -p android --clean --no-install` before
+    building another app.
