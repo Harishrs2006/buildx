@@ -3,6 +3,8 @@ import { Schema, model, Document, Types } from 'mongoose';
 export interface IProduct extends Document {
   _id: Types.ObjectId;
   supplierId: Types.ObjectId;
+  // The shared catalog item this listing sells (buyers see the item once, across suppliers)
+  catalogItemId?: Types.ObjectId;
   categoryId: Types.ObjectId;
   name: string;
   slug: string;
@@ -34,6 +36,7 @@ export interface IProduct extends Document {
 const productSchema = new Schema<IProduct>(
   {
     supplierId: { type: Schema.Types.ObjectId, ref: 'SupplierProfile', required: true, index: true },
+    catalogItemId: { type: Schema.Types.ObjectId, ref: 'CatalogItem', index: true },
     categoryId: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, index: true },
@@ -92,6 +95,11 @@ const productSchema = new Schema<IProduct>(
 productSchema.index({ status: 1, isFeatured: -1, totalSold: -1 });
 productSchema.index({ categoryId: 1, status: 1 });
 productSchema.index({ supplierId: 1, status: 1 });
+// A supplier lists each catalog item once
+productSchema.index(
+  { supplierId: 1, catalogItemId: 1 },
+  { unique: true, name: 'one_listing_per_item', partialFilterExpression: { catalogItemId: { $type: 'objectId' } } }
+);
 productSchema.index({ name: 'text', shortDescription: 'text', tags: 'text' });
 
 export const Product = model<IProduct>('Product', productSchema);

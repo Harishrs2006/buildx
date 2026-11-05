@@ -28,6 +28,7 @@ export const supplierProfileSchema = z
     address: z.string().optional(),
     categories: z.array(z.string()).optional(),
     brands: z.array(z.string()).optional(),
+    canDeliver: z.boolean().optional(),
     avgRating: z.number().optional(),
     totalReviews: z.number().optional(),
   })

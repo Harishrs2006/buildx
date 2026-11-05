@@ -39,7 +39,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | PIN codes served | DONE | Checked against India Post directory |
 | Verification documents upload | PART | Schema has kycDocuments; no upload screen |
 | Admin verifies before selling | DONE | Ops console |
-| Delivery options (own vehicle or Sthiva) | PART | Chosen per order at dispatch, not in profile |
+| Delivery options (own vehicle or Sthiva) | DONE | Profile setting (canDeliver) plus choice per order at dispatch |
 | Weekly availability (product, qty, supply price, delivery, areas) | TODO | Core gap |
 | Incoming order notification | DONE | Push |
 | Accept / reject order | TODO | Orders arrive already confirmed |
@@ -50,6 +50,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 
 | Feature | Status | Notes |
 | --- | --- | --- |
+| Shared Sthiva catalog (one item, many supplier listings) | DONE | Phase 2: suppliers pick or add items; ops check and merge |
 | Market reference price per product | TODO | |
 | Admin commission rules (by category, by delivery arrangement) | TODO | No values in code until admin enters them |
 | Buyer price computed from rules | TODO | |
@@ -81,8 +82,8 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Supplier verification | DONE | |
 | Suspend users | DONE | ADMIN only |
 | Buyers and drivers lists, driver verification | PART | Drivers list only |
-| Categories and catalog management | TODO | Seeded only |
-| Market prices, commission, delivery rates settings | TODO | |
+| Categories and catalog management | PART | Catalog items: review, edit, merge, add (phase 2). Categories still seeded |
+| Commission and delivery rate settings | DONE | Phase 1 (Settings tab) |
 | Supplier reassignment after rejection | TODO | |
 | Vehicle selection, delivery charge override | TODO | |
 | Failed delivery handling | TODO | |

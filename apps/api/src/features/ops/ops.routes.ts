@@ -9,6 +9,8 @@ import {
   listOrdersQuery, opsCancelSchema, opsUnassignSchema, opsAssignSchema, opsCodSchema, opsNoteSchema,
   supplierListQuery, supplierVerificationSchema, userActiveSchema,
 } from './ops.schemas';
+import { opsList, opsGet, opsCreate, opsUpdate, opsMerge } from '../catalog/catalog.controller';
+import { catalogCreateSchema, catalogUpdateSchema, catalogMergeSchema } from '../catalog/catalog.schemas';
 import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral } from '../settings/settings.controller';
 import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema } from '../settings/settings.schemas';
 
@@ -34,6 +36,13 @@ router.patch('/suppliers/:id/verification', validate(supplierVerificationSchema)
 
 // Account suspension is ADMIN-only
 router.patch('/users/:id/active', requireRole('ADMIN'), validate(userActiveSchema), setUserActive);
+
+// Sthiva catalog: operators and admins keep it tidy (review new items, fix, merge duplicates)
+router.get('/catalog', opsList);
+router.get('/catalog/:id', opsGet);
+router.post('/catalog', validate(catalogCreateSchema), opsCreate);
+router.patch('/catalog/:id', validate(catalogUpdateSchema), opsUpdate);
+router.post('/catalog/:id/merge', validate(catalogMergeSchema), opsMerge);
 
 // Platform settings: operators read, ADMIN changes
 router.get('/settings', getSettings);

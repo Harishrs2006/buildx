@@ -1,4 +1,5 @@
-﻿import "./config/env";
+﻿import { linkUnlinkedProducts } from './features/catalog/catalog.service';
+import "./config/env";
 import { initFirebase } from "./config/firebase";
 import { createApp } from "./app";
 import { connectDatabase, disconnectDatabase } from "./infrastructure/database/mongoose.client";
@@ -19,6 +20,8 @@ async function bootstrap(): Promise<void> {
 
   await connectDatabase(env.MONGODB_URI);
   await dropLegacyUserIndexes().catch((err) => logger.error("Could not drop legacy phone_1 index", { error: err?.message }));
+  // Listings from before the Sthiva catalog get their catalog item (no-op once done)
+  await linkUnlinkedProducts().catch((err) => logger.error('Could not link listings to catalog items', { error: err?.message }));
   await connectRedis();
 
   const server = app.listen(env.API_PORT, () => {

@@ -22,6 +22,7 @@ export type ProfileUpdate = Partial<{
   address: string;
   categories: string[];
   brands: string[];
+  canDeliver: boolean;
 }>;
 
 export async function updateSupplierProfile(client: ApiClient, update: ProfileUpdate): Promise<SupplierProfile> {

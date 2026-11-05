@@ -7,7 +7,7 @@ import {
   useApiClient, catalogItems, catalogItem, matchCatalogItem, suggestedListingName, suggestedListingUnit, type CatalogItem,
 } from '@sthiva/web-core';
 import { useCategories } from '../lib/categories';
-import { createSupplierProduct, productErrorText, updateSupplierProduct, type ProductInput, type SupplierProduct } from '../lib/products';
+import { createSupplierProduct, productErrorText, searchSthivaItems, updateSupplierProduct, type ProductInput, type SthivaItem, type SupplierProduct } from '../lib/products';
 import { GST_RATES, bulkPricingProblem, gstBreakdown } from '../lib/pricing';
 import { ImageUploader, type ProductImage } from './ImageUploader';
 import { rupees } from './ui';
@@ -192,6 +192,9 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
   const [showProblems, setShowProblems] = useState(false);
+  // The Sthiva item this listing sells (new listings only). Buyers see one item across suppliers.
+  const [linked, setLinked] = useState<SthivaItem | null>(null);
+  const [suggestions, setSuggestions] = useState<SthivaItem[]>([]);
 
   const ordered = categories.status === 'success'
     ? [...categories.data].sort((a, b) => Number(sells.includes(b.slug)) - Number(sells.includes(a.slug)))
@@ -214,6 +217,29 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Items already on Sthiva that look like what is being typed
+  useEffect(() => {
+    if (isEdit || linked || name.trim().length < 3) { setSuggestions([]); return; }
+    let live = true;
+    const t = setTimeout(() => {
+      searchSthivaItems(client, name.trim(), categoryId || undefined)
+        .then((r) => live && setSuggestions(r.slice(0, 5)))
+        .catch(() => live && setSuggestions([]));
+    }, 350);
+    return () => { live = false; clearTimeout(t); };
+  }, [client, isEdit, linked, name, categoryId]);
+
+  function sellExisting(s: SthivaItem) {
+    touch();
+    setLinked(s);
+    setName(s.name);
+    setNameTouched(true);
+    setUnit(s.unit);
+    // The item's category wins (the server enforces it too)
+    if (typeof s.categoryId === 'string' && s.categoryId !== categoryId) { setCategoryId(s.categoryId); setItemId(null); }
+    setSuggestions([]);
+  }
 
   // Leaving with unsaved changes asks first
   useEffect(() => {
@@ -294,6 +320,7 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
     setSubmitting(mode);
     const cleanedSpecs = Object.fromEntries(Object.entries(specs).filter(([, v]) => v.trim() !== ''));
     const input: ProductInput = {
+      ...(linked && !isEdit ? { catalogItemId: linked._id } : {}),
       name: name.trim(),
       categoryId,
       description: description.trim(),
@@ -419,12 +446,38 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
           <Field label="Product name" error={show('name')}>
             <input
               value={name}
-              onChange={(e) => { setName(e.target.value); setNameTouched(true); }}
+              onChange={(e) => { setName(e.target.value); setNameTouched(true); setLinked(null); }}
               placeholder="e.g. TATA Tiscon TMT bars Fe 550D 12 mm"
               maxLength={150}
               className="field"
             />
           </Field>
+          {linked && (
+            <div className="-mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-lime/40 px-3 py-2 text-[14px]">
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">link</span>
+              <span className="flex-1">You&apos;re selling the Sthiva item <strong>{linked.name}</strong>. Buyers see it once, and Sthiva sends orders to the best supplier.</span>
+              <button type="button" onClick={() => setLinked(null)} className="text-[13px] font-semibold underline">Not this</button>
+            </div>
+          )}
+          {!isEdit && !linked && suggestions.length > 0 && (
+            <div className="-mt-2 rounded-xl border border-sand-4 p-3">
+              <p className="text-[14px] font-semibold">Already on Sthiva</p>
+              <p className="text-[13px] text-stone">If it&apos;s one of these, pick it so buyers find all offers in one place.</p>
+              <ul className="mt-2 flex flex-col gap-1.5">
+                {suggestions.map((s) => (
+                  <li key={s._id} className="flex flex-wrap items-center gap-2 text-[14px]">
+                    <span className="flex-1">{s.name} <span className="text-stone">· per {UNITS.find((u) => u.value === s.unit)?.short ?? s.unit}</span></span>
+                    {s.myListingId ? (
+                      <Link href={`/products/${s.myListingId}/edit`} className="text-[13px] font-semibold text-cobalt underline">You sell this: edit it</Link>
+                    ) : (
+                      <button type="button" onClick={() => sellExisting(s)} className="rounded-full border border-ink px-3 py-1 text-[13px] font-semibold hover:bg-ink hover:text-sand">Sell this</button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[13px] text-stone">Not listed? Carry on: your product becomes a new Sthiva item, checked by our team.</p>
+            </div>
+          )}
           {item && name.trim() && (
             match?.id === item.id ? (
               <p className="-mt-2 flex items-center gap-1.5 text-[14px] text-tertiary">
@@ -459,7 +512,7 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Sold per" error={show('unit')}>
-              <select value={unit} onChange={(e) => setUnit(e.target.value)} className="field">
+              <select value={unit} onChange={(e) => setUnit(e.target.value)} disabled={isEdit || !!linked} className="field">
                 <option value="" disabled>Choose a unit</option>
                 {UNITS.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
               </select>
