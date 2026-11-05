@@ -15,6 +15,7 @@ import { notifyUser, notifyUsers } from '../../shared/services/notification.serv
 import { logger } from '../../shared/logger/logger';
 import { cancelOrder, transitionOrder, recordCodCollected } from '../orders/order.service';
 import { acceptOffer, rejectOffer } from '../orders/allocation.service';
+import { supplierEarnings } from '../orders/commission';
 
 async function getSupplierProfile(userId: string) {
   const profile = await SupplierProfile.findOne({ userId }).lean();
@@ -146,7 +147,9 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
       Order.countDocuments(filter),
     ]);
 
-    res.json(ok(orders, { total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 }));
+    // Each order with what the supplier earns on it (order value, Sthiva commission, payout)
+    const withEarnings = orders.map((o) => ({ ...o, earnings: supplierEarnings(o) }));
+    res.json(ok(withEarnings, { total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 }));
   } catch (err) { next(err); }
 }
 

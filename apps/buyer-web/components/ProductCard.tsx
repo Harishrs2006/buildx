@@ -6,6 +6,7 @@ type ProductExtras = {
   images?: { url: string; isPrimary?: boolean }[];
   categoryId?: { name?: string };
   supplierId?: { businessName?: string; avgRating?: number };
+  sellerCount?: number;
 };
 
 const rupees = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
@@ -29,8 +30,8 @@ export function ProductCard({ product }: { product: ProductSummary }) {
           <span className="text-xs text-muted-foreground">{extra.categoryId.name}</span>
         )}
         <h3 className="font-medium text-sm leading-snug line-clamp-2">{product.name}</h3>
-        {extra.supplierId?.businessName && (
-          <span className="text-xs text-muted-foreground">{extra.supplierId.businessName}</span>
+        {(extra.sellerCount ?? 0) > 1 && (
+          <span className="text-xs text-muted-foreground">{extra.sellerCount} verified suppliers</span>
         )}
         <div className="mt-auto pt-2 flex items-baseline gap-1">
           <span className="font-semibold text-foreground">{rupees.format(product.basePrice)}</span>

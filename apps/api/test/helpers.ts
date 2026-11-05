@@ -176,7 +176,8 @@ export async function seedProduct(supplierProfileId: mongoose.Types.ObjectId, ex
   productSeq += 1;
   const category = await Category.findOneAndUpdate(
     { slug: 'cement-concrete' },
-    { $setOnInsert: { name: 'Cement & Concrete', slug: 'cement-concrete' } },
+    // 0% commission: on sale, and buyer prices equal supplier prices (commission tests set their own)
+    { $setOnInsert: { name: 'Cement & Concrete', slug: 'cement-concrete', commission: { platformDeliveryPercent: 0 } } },
     { upsert: true, new: true }
   );
   return Product.create({

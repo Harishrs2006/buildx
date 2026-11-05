@@ -91,11 +91,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       quantity: qty,
       minOrderQuantity: minQty,
     });
-    setCartNotice(
-      result === 'replaced'
-        ? `Your cart had items from another supplier, so it now holds ${data.name} only.`
-        : `Added ${qty} ${unit} to your cart.`
-    );
+    setCartNotice(result === 'added' ? `Added ${qty} ${unit} to your cart.` : '');
   }
 
   return (

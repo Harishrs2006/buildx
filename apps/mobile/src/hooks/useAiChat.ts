@@ -156,14 +156,7 @@ export function useAiChat() {
         .filter((p): p is { item: AnalysedItem; opt: PriceOption } => !!p.opt);
       if (picks.length === 0) return { status: 'nothing' };
 
-      const suppliers = [...new Map(picks.map((p) => [p.opt.supplierId, p.opt.supplier])).values()];
-      if (suppliers.length > 1) return { status: 'mixed', suppliers };
-
-      const cart = useCartStore.getState();
-      const { supplierId, supplier } = picks[0].opt;
-      if (cart.hasConflict(supplierId)) {
-        return { status: 'cart_conflict', cartSupplier: cart.items[0]?.supplierName ?? 'another supplier', supplier };
-      }
+      // Sthiva picks one supplier for the whole cart at checkout, so items from different listings can mix
 
       for (const { item, opt } of picks) {
         addToCart({

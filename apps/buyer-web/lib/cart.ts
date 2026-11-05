@@ -106,24 +106,22 @@ export function useCart(): CartState | null {
   return useSyncExternalStore(subscribe, read, () => null);
 }
 
-/** Adds a product to the cart. Returns 'replaced' if it came from a different supplier's cart. */
+/**
+ * Adds a product to the cart. Items from different listings can share a cart: Sthiva picks one
+ * supplier for the whole order at checkout (the quote says if no single supplier has everything).
+ */
 export function addToCart(
   supplierId: string,
   supplierName: string,
   item: Omit<CartItem, 'quantity'> & { quantity: number }
-): 'added' | 'replaced' {
+): 'added' {
   const current = read();
-  if (current && current.supplierId !== supplierId) {
-    write({ supplierId, supplierName, items: [item] });
-    notify();
-    return 'replaced';
-  }
   const items = current?.items ?? [];
   const existing = items.find((i) => i.productId === item.productId);
   const nextItems = existing
     ? items.map((i) => (i.productId === item.productId ? { ...i, quantity: i.quantity + item.quantity } : i))
     : [...items, item];
-  write({ supplierId, supplierName, items: nextItems });
+  write({ supplierId: current?.supplierId ?? supplierId, supplierName: current?.supplierName ?? supplierName, items: nextItems });
   notify();
   return 'added';
 }

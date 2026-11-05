@@ -43,7 +43,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Weekly availability (product, qty, supply price, delivery, areas) | TODO | Core gap |
 | Incoming order notification | DONE | Push |
 | Accept / reject order | DONE | Phase 3: offers, next supplier on reject or timeout |
-| Order view: distance, Sthiva commission, expected payout | TODO | Needs commission model |
+| Order view: distance, Sthiva commission, expected payout | PART | Commission and payout done; distance in phase 5 |
 | Fulfil, dispatch, deliver | DONE | |
 
 ## 3. Pricing and commission
@@ -52,10 +52,10 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | --- | --- | --- |
 | Shared Sthiva catalog (one item, many supplier listings) | DONE | Phase 2: suppliers pick or add items; ops check and merge |
 | Market reference price per product | TODO | |
-| Admin commission rules (by category, by delivery arrangement) | TODO | No values in code until admin enters them |
-| Buyer price computed from rules | TODO | |
-| Supplier payout computed per order | TODO | |
-| Full financial breakdown for admin | TODO | |
+| Admin commission rules (by category, by delivery arrangement) | DONE | Phase 1 settings, applied in phase 4 |
+| Buyer price computed from rules | DONE | Phase 4: cheapest supplier price + commission |
+| Supplier payout computed per order | DONE | Phase 4: stored per line, shown to supplier |
+| Full financial breakdown for admin | PART | Per order (Money panel); totals in phase 6/7 |
 | GST per item | DONE | |
 
 ## 4. Delivery partner

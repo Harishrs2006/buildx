@@ -11,6 +11,7 @@ import { logger } from '../../shared/logger/logger';
 import { notifyUser } from '../../shared/services/notification.service';
 import { cancelOrder, transitionOrder, recordCodByOps } from '../orders/order.service';
 import { opsOfferTo, opsFindNext } from '../orders/allocation.service';
+import { supplierEarnings } from '../orders/commission';
 import { modeFilter } from '../orders/order-state';
 
 type OpsRole = 'OPERATOR' | 'ADMIN';
@@ -121,7 +122,8 @@ export async function getOrder(req: Request, res: Response, next: NextFunction) 
       .populate('driverId', 'name phone')
       .lean();
     if (!order) throw AppError.notFound('Order');
-    res.json(ok(order));
+    // Money breakdown: buyer total, Sthiva commission, supplier payout (both delivery ways)
+    res.json(ok({ ...order, earnings: supplierEarnings(order) }));
   } catch (err) { next(err); }
 }
 

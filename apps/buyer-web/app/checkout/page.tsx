@@ -178,7 +178,7 @@ function CheckoutForm() {
       <aside className="lg:sticky lg:top-[calc(var(--header-h)+24px)] lg:self-start">
         <div className="rounded-3xl bg-ink p-6 text-sand">
           <p className="eyebrow text-stone-light">Order summary</p>
-          <p className="mt-2 text-[14px] text-stone-light">From {cart.supplierName}</p>
+          <p className="mt-2 text-[14px] text-stone-light">Supplied by a verified Sthiva supplier near you</p>
 
           {quote.status === 'loading' && (
             <div className="mt-5 flex flex-col gap-3" role="status" aria-label="Pricing your cart">

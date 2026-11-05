@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import Anthropic from '@anthropic-ai/sdk';
 import { env } from '../../config/env';
 import { Product } from '../../infrastructure/database/models/Product.model';
+import { buyerProduct, ratesFor } from '../orders/commission';
 import { AppError } from '../../shared/errors/AppError';
 
 const anthropic = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
@@ -178,12 +179,17 @@ Return ONLY valid JSON array.`,
 
         const qty = ext.quantity;
 
-        const options: PriceOption[] = products.map((p) => {
+        // Buyer prices include Sthiva's commission; categories not on sale yet are left out
+        const rates = await ratesFor(products.map((p) => p.categoryId));
+        const options: PriceOption[] = products.flatMap((raw) => {
+          const rate = rates.get(raw.categoryId.toString());
+          if (!rate) return [];
+          const p = buyerProduct(raw, rate.platform);
           const supplier = p.supplierId as any;
           const beforeGst = qty ? p.basePrice * qty : p.basePrice;
           const gstAmt = qty ? beforeGst * (p.gstRate / 100) : 0;
 
-          return {
+          return [{
             productId: p._id.toString(),
             name: p.name,
             supplier: supplier?.businessName ?? 'Unknown',
@@ -197,7 +203,7 @@ Return ONLY valid JSON array.`,
             inStock: p.stockQuantity > (qty ?? 0),
             stockQuantity: p.stockQuantity,
             deliveryDays: p.deliveryDays,
-          };
+          }];
         });
 
         return {

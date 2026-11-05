@@ -45,6 +45,12 @@ export const orderDetailSchema = orderSummarySchema.extend({
   subtotal: z.number(),
   gstAmount: z.number(),
   deliveryCharge: z.number(),
+  supplierTotal: z.number().optional(),
+  commissionTotal: z.number().optional(),
+  earnings: z.object({
+    orderValue: z.number(), payoutIfSthivaDelivers: z.number(), commissionIfSthivaDelivers: z.number(),
+    payoutIfYouDeliver: z.number(), commissionIfYouDeliver: z.number(), expectedPayout: z.number().nullable(),
+  }).optional(),
   serviceabilityCheck: z.string().optional(),
   cancellationReason: z.string().optional(),
   cancelledBy: z.string().optional(),
