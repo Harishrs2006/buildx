@@ -59,7 +59,10 @@ function OrderCard({ order, onAction }: { order: SupplierOrder; onAction: (kind:
       <Text style={styles.buyer}>{buyer?.name ?? 'Buyer'}</Text>
       <View style={styles.meta}>
         <Icon name="map-marker-outline" size={16} color={Colors.stone} />
-        <Text style={styles.metaText} numberOfLines={2}>{order.deliveryAddress.fullAddress}</Text>
+        <Text style={styles.metaText} numberOfLines={2}>
+          {order.deliveryAddress.fullAddress}
+          {typeof (order as { distanceKm?: number | null }).distanceKm === 'number' ? ` · about ${(order as { distanceKm?: number }).distanceKm} km away` : ''}
+        </Text>
       </View>
       <View style={styles.meta}>
         <Icon name="phone-outline" size={16} color={Colors.stone} />

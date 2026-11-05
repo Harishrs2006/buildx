@@ -74,7 +74,66 @@ function CommissionLine({ row, canEdit, onSaved }: { row: CommissionRow; canEdit
   );
 }
 
-const EMPTY_VEHICLE = { code: '', name: '', maxLoadKg: '', baseFare: '', perKmRate: '' };
+// A category: rename, change its place in the shop, show or hide it. The web address part (slug)
+// is fixed when it is created.
+function CategoryRow({ row, canEdit, onSaved }: { row: CommissionRow; canEdit: boolean; onSaved: () => void }) {
+  const client = useApiClient();
+  const [name, setName] = useState(row.name);
+  const [order, setOrder] = useState(String(row.sortOrder ?? 0));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const changed = name.trim() !== row.name || Number(order) !== (row.sortOrder ?? 0);
+
+  async function run(body: Parameters<typeof settingsApi.updateCategory>[2]) {
+    setBusy(true);
+    setError(null);
+    try { await settingsApi.updateCategory(client, row._id, body); onSaved(); } catch (err) { setError(errorText(err, 'Couldn’t save this category.')); } finally { setBusy(false); }
+  }
+
+  return (
+    <li className="flex flex-wrap items-center gap-3 rounded-xl border border-black/10 p-4">
+      <input value={name} onChange={(e) => setName(e.target.value)} disabled={!canEdit || busy} maxLength={60} aria-label="Category name" className="field min-w-[12rem] flex-1" />
+      <label className="flex items-center gap-2 text-[13px] text-stone">
+        Order
+        <input type="number" min={0} max={1000} step={1} value={order} onChange={(e) => setOrder(e.target.value)} disabled={!canEdit || busy} aria-label={`${row.name}: position in the shop`} className="field w-20" />
+      </label>
+      <span className="font-mono text-[13px] text-stone">/{row.slug}</span>
+      {row.isActive === false ? <Pill tone="muted">Hidden</Pill> : row.platformDeliveryPercent === null ? <Pill tone="wait">Needs commission</Pill> : <Pill tone="live">In the shop</Pill>}
+      {canEdit && (
+        <div className="flex gap-2">
+          {changed && <button type="button" disabled={busy || name.trim().length < 2} onClick={() => run({ name: name.trim(), sortOrder: Number(order) })} className="btn-lime px-4">Save</button>}
+          <button type="button" disabled={busy} onClick={() => run({ isActive: row.isActive === false })} className="btn-ghost">{row.isActive === false ? 'Show' : 'Hide'}</button>
+        </div>
+      )}
+      {error && <p className="w-full text-[13px] text-error">{error}</p>}
+    </li>
+  );
+}
+
+function AddCategory({ onSaved }: { onSaved: () => void }) {
+  const client = useApiClient();
+  const [name, setName] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try { await settingsApi.addCategory(client, { name: name.trim() }); setName(''); onSaved(); } catch (err) { setError(errorText(err, 'Couldn’t add this category.')); } finally { setBusy(false); }
+  }
+  return (
+    <form onSubmit={submit} className="flex flex-wrap items-end gap-3 rounded-xl bg-black/[0.03] p-4">
+      <label className="flex min-w-[12rem] flex-1 flex-col gap-1 text-[13px] text-stone">
+        New category
+        <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="e.g. Plumbing" className="field" disabled={busy} />
+      </label>
+      <button type="submit" disabled={busy || name.trim().length < 2} className="btn-lime px-4">Add</button>
+      {error && <p className="w-full text-[13px] text-error">{error}</p>}
+    </form>
+  );
+}
+
+const EMPTY_VEHICLE ={ code: '', name: '', maxLoadKg: '', baseFare: '', perKmRate: '' };
 
 function VehicleForm({ initial, onSubmit, onCancel, isNew }: {
   initial: typeof EMPTY_VEHICLE;
@@ -210,6 +269,15 @@ export default function SettingsPage() {
       {state.status === 'error' && <ErrorNote>{errorText(state.error, 'Couldn’t load settings.')}</ErrorNote>}
       {state.status === 'success' && (
         <>
+          <Section title="Categories" hint="What buyers browse by. Lower order numbers come first. A new category stays out of the shop until it has a commission below. Hiding a category hides its products from buyers.">
+            <ul className="flex flex-col gap-3">
+              {state.data.categories.map((row) => (
+                <CategoryRow key={`${row._id}-${row.name}-${row.sortOrder}-${row.isActive}`} row={row} canEdit={canEdit} onSaved={reload} />
+              ))}
+            </ul>
+            {canEdit && <AddCategory onSaved={reload} />}
+          </Section>
+
           <Section title="Sthiva commission" hint="Percent of the supplier’s price, per category. Set a separate rate for orders the supplier delivers themselves.">
             {state.data.categories.length === 0 ? (
               <EmptyState icon="category" title="No categories yet" body="Categories appear here once they exist in the catalog." />

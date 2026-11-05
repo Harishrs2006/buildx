@@ -16,6 +16,7 @@ import { cancelOrder, transitionOrder, recordCodCollected, checkDeliveryOtp, rep
 import { acceptOffer, rejectOffer } from '../orders/allocation.service';
 import { startDriverOffers } from '../delivery/driver-offers';
 import { supplierEarnings } from '../orders/commission';
+import { deliveryPoint, distanceKm } from '../delivery/delivery-pricing';
 
 async function getSupplierProfile(userId: string) {
   const profile = await SupplierProfile.findOne({ userId }).lean();
@@ -147,8 +148,18 @@ export async function listSupplierOrders(req: Request, res: Response, next: Next
       Order.countDocuments(filter),
     ]);
 
-    // Each order with what the supplier earns on it (order value, Sthiva commission, payout)
-    const withEarnings = orders.map((o) => ({ ...o, earnings: supplierEarnings(o) }));
+    // Each order with what the supplier earns on it (order value, Sthiva commission, payout), and how far
+    // the site is in a straight line from the supplier's pickup point (null if either point is unknown).
+    // A priced delivery already stored its distance; otherwise it is worked out from the address or PIN.
+    const from = profile.location;
+    const withEarnings = await Promise.all(orders.map(async (o) => {
+      let km: number | null = o.delivery?.distanceKm ?? null;
+      if (km === null && from) {
+        const to = await deliveryPoint(o.deliveryAddress);
+        km = to ? distanceKm(from, to) : null;
+      }
+      return { ...o, earnings: supplierEarnings(o), distanceKm: km };
+    }));
     res.json(ok(withEarnings, { total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 }));
   } catch (err) { next(err); }
 }

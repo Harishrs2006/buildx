@@ -13,9 +13,9 @@ import { buyerProduct, ratesFor } from '../orders/commission';
 // cheapest (Sthiva picks the supplier at order time). Prices include Sthiva's commission, and a
 // category is only on sale once an admin has set its commission (Settings).
 
-/** Categories an admin has set a commission for, i.e. on sale. */
+/** Categories an admin has set a commission for and not hidden, i.e. on sale. */
 async function sellableCategoryIds() {
-  const cats = await Category.find({ 'commission.platformDeliveryPercent': { $type: 'number' } }).select('_id').lean();
+  const cats = await Category.find({ 'commission.platformDeliveryPercent': { $type: 'number' }, isActive: { $ne: false } }).select('_id').lean();
   return cats.map((c) => c._id);
 }
 

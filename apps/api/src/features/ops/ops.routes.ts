@@ -14,10 +14,10 @@ import {
 } from './ops.schemas';
 import { opsList, opsGet, opsCreate, opsUpdate, opsMerge } from '../catalog/catalog.controller';
 import { catalogCreateSchema, catalogUpdateSchema, catalogMergeSchema } from '../catalog/catalog.schemas';
-import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral } from '../settings/settings.controller';
+import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral, createCategory, updateCategory } from '../settings/settings.controller';
 import { opsBalances, opsList as settlementList, opsGet as settlementGet, opsCreate as settlementCreate, opsMarkPaid, opsCancel as settlementCancel } from '../settlements/settlement.controller';
 import { balancesQuery, settlementListQuery, createSettlementSchema, markPaidSchema, cancelSettlementSchema } from '../settlements/settlement.schemas';
-import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema } from '../settings/settings.schemas';
+import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema, categoryCreateSchema, categoryUpdateSchema } from '../settings/settings.schemas';
 
 const router = Router();
 
@@ -62,6 +62,8 @@ router.post('/catalog/:id/merge', validate(catalogMergeSchema), opsMerge);
 // Platform settings: operators read, ADMIN changes
 router.get('/settings', getSettings);
 router.patch('/settings/commission/:id', requireRole('ADMIN'), validate(commissionSchema), setCommission);
+router.post('/settings/categories', requireRole('ADMIN'), validate(categoryCreateSchema), createCategory);
+router.patch('/settings/categories/:id', requireRole('ADMIN'), validate(categoryUpdateSchema), updateCategory);
 router.post('/settings/vehicles', requireRole('ADMIN'), validate(vehicleCreateSchema), createVehicle);
 router.patch('/settings/vehicles/:id', requireRole('ADMIN'), validate(vehicleUpdateSchema), updateVehicle);
 router.patch('/settings/general', requireRole('ADMIN'), validate(generalSettingsSchema), updateGeneral);

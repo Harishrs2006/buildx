@@ -40,6 +40,8 @@ export const supplierOrderSchema = z
       commissionIfYouDeliver: z.number(),
       expectedPayout: z.number().nullable(),
     }).optional(),
+    // Straight-line km from the supplier's pickup point; null when either point is unknown
+    distanceKm: z.number().nullable().optional(),
     createdAt: z.string(),
   })
   .passthrough();

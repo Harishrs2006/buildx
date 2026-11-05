@@ -62,6 +62,24 @@ describe('ops settings API', () => {
     categoryId = (await Category.create({ name: 'Cement', slug: 'cement' }))._id.toString();
   });
 
+  it('admins add, rename, reorder and hide categories; the slug never changes', async () => {
+    const add = (who: { headers: Record<string, string> }, body: object) => request(app).post(api('/ops/settings/categories')).set(who.headers).send(body);
+    expect((await add(operator, { name: 'Sand & Aggregates' })).status).toBe(403);
+    const created = await add(admin, { name: 'Sand & Aggregates', sortOrder: 3 });
+    expect(created.status).toBe(201);
+    expect(created.body.data).toMatchObject({ slug: 'sand-aggregates', isActive: true, sortOrder: 3 });
+    expect((await add(admin, { name: 'sand aggregates' })).status).toBe(409);
+
+    const id = created.body.data._id;
+    const upd = await request(app).patch(api(`/ops/settings/categories/${id}`)).set(admin.headers).send({ name: 'Sand and aggregates', isActive: false });
+    expect(upd.status).toBe(200);
+    expect(upd.body.data).toMatchObject({ name: 'Sand and aggregates', slug: 'sand-aggregates', isActive: false });
+    expect((await request(app).patch(api(`/ops/settings/categories/${id}`)).set(admin.headers).send({ slug: 'x' })).status).toBe(400);
+    // A new category has no commission, so the shop leaves it out until one is set
+    expect((await request(app).get(api('/ops/settings')).set(operator.headers)).body.data.categories)
+      .toContainEqual(expect.objectContaining({ slug: 'sand-aggregates', platformDeliveryPercent: null, sortOrder: 3 }));
+  });
+
   it('starts with nothing configured', async () => {
     const res = await request(app).get(api('/ops/settings')).set(operator.headers);
     expect(res.status).toBe(200);
