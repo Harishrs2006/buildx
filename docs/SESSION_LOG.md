@@ -51,7 +51,10 @@ Phase 1 (admin settings) merged as #66. Phase 2 merged as #67. Phase 3 (supplier
 7. Open old PRs #51 (launch prep) and #34 (README refresh) predate the rename: review/rebase or close.
 
 ## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
-Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
+BOUGHT 2026-11-05 on Cloudflare Registrar (account harishrs21082006, nameservers jillian/sean.ns.cloudflare.com).
+CONNECTED 2026-11-05 ~17:30 IST (see timeline). Remaining: web NEXT_PUBLIC_API_URL still onrender (editing a Vercel
+var needs an emailed code: user can switch it to https://api.sthiva.com), ALLOW_INDEXING after launch details.
+Original plan:
 1. Vercel (Claude in Chrome): sthiva.com + www.sthiva.com -> buyer project (buildx-vgud),
    seller.sthiva.com -> seller project (buildx-48kc), ops.sthiva.com -> ops project (buildx-ops).
 2. Render: custom domain api.sthiva.com on the API service (free plan allows it).
@@ -530,3 +533,16 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   mark DELIVERED; 5 wrong tries lock; ops /deliver confirms without it. deliveryIssue reports (driver/supplier) ->
   ops "Delivery problem" queue -> resolve-problem. UI: ops queues/actions/settings, seller code + problem, buyer web
   + app show code, Partner app Accept/Decline + code + problem. 349 API tests pass (10 new); 3 sites build.
+- 2026-11-05 17:30 IST: DOMAIN sthiva.com bought by the user on Cloudflare and connected:
+  - Vercel domains: buildx-vgud gets www.sthiva.com (primary) + sthiva.com (308 to www); buildx-48kc gets
+    seller.sthiva.com; buildx-ops gets ops.sthiva.com. Old *.vercel.app URLs still work.
+  - Cloudflare DNS (all DNS only, not proxied): @ and www CNAME 48ebdc9dc4500567.vercel-dns-017.com,
+    seller CNAME 685c82bf411f661b.vercel-dns-017.com, ops CNAME 8e7f76325dd7bc05.vercel-dns-017.com,
+    api CNAME buildx-api.onrender.com.
+  - Render: api.sthiva.com custom domain verified, HTTPS works (/health 200). FRONTEND_URL now also allows
+    https://sthiva.com, www., seller., ops. (old vercel.app origins kept); API redeployed.
+  - Vercel buyer env: NEXT_PUBLIC_SITE_URL=https://www.sthiva.com (new), NEXT_PUBLIC_SELLER_PORTAL_URL=
+    https://seller.sthiva.com (deleted + re-added; editing needs an email code). NEXT_PUBLIC_API_URL left on onrender.
+  - Code (branch feat/sthiva-domain): buyer site.ts default URL, mobile home WEB_URL, eas.json and
+    publish-update.cjs now use https://api.sthiva.com and https://www.sthiva.com.
+  - PR #72 (phase 5b) was merged by the user.

@@ -12,7 +12,8 @@ if (!['buyer', 'partner'].includes(variant) || !message) {
 const env = {
   ...process.env,
   NODE_ENV: 'production',
-  EXPO_PUBLIC_API_URL: 'https://buildx-api.onrender.com',
+  EXPO_PUBLIC_API_URL: 'https://api.sthiva.com',
+  EXPO_PUBLIC_WEB_URL: 'https://www.sthiva.com',
   ...(variant === 'partner' ? { APP_VARIANT: 'partner' } : {}),
 };
 if (variant === 'buyer') delete env.APP_VARIANT;
