@@ -24,6 +24,7 @@ import { notifyUser } from '../../shared/services/notification.service';
 import { checkSupplier } from '../serviceability/serviceability.service';
 import { priceLine, toPaise, PricingError } from './pricing';
 import { expireDriverOffers } from '../delivery/driver-offers';
+import { sendWeeklyReminders } from '../suppliers/weekly';
 
 type LeanOrder = IOrder & { _id: Types.ObjectId };
 type Outcome = 'REJECTED' | 'EXPIRED' | 'WITHDRAWN';
@@ -305,6 +306,7 @@ export function startOfferSweeper(intervalMs = 60_000): NodeJS.Timeout {
   return setInterval(() => {
     expireOverdueOffers().catch((err) => logger.error('[allocation] sweep failed', { error: err?.message }));
     expireDriverOffers().catch((err) => logger.error('[driver-offers] sweep failed', { error: err?.message }));
+    sendWeeklyReminders().catch((err) => logger.error('[weekly] reminders failed', { error: err?.message }));
   }, intervalMs);
 }
 

@@ -8,6 +8,8 @@ export default function DriverLayout() {
       <Tabs.Screen name="deliveries" options={{ tabBarIcon: ({ focused }) => <TabItem label="Deliveries" icon="map-marker-path" focused={focused} /> }} />
       <Tabs.Screen name="payouts" options={{ tabBarIcon: ({ focused }) => <TabItem label="Payouts" icon="cash-multiple" focused={focused} /> }} />
       <Tabs.Screen name="profile" options={{ tabBarIcon: ({ focused }) => <TabItem label="Profile" icon="account-circle-outline" focused={focused} /> }} />
+      {/* Pushed screen, not a tab */}
+      <Tabs.Screen name="order/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

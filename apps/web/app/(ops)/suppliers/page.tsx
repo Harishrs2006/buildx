@@ -190,6 +190,14 @@ function SupplierCard({ supplier, onChanged }: { supplier: OpsSupplier; onChange
             {(supplier.categories ?? []).length ? supplier.categories!.map((c) => catalogCategory(c)?.name ?? c).join(', ') : <span className="text-stone">Not chosen</span>}
           </Fact>
           <Fact label="Brands">{(supplier.brands ?? []).length ? supplier.brands!.join(', ') : <span className="text-stone">None or local only</span>}</Fact>
+          <Fact label="Weekly check">
+            {(() => {
+              const at = (supplier as { weeklyConfirmedAt?: string }).weeklyConfirmedAt;
+              if (!at) return <span className="text-stone">Never confirmed</span>;
+              const days = Math.floor((Date.now() - new Date(at).getTime()) / 86400000);
+              return <span className={days >= 7 ? 'text-error' : ''}>Confirmed {ago(at)}</span>;
+            })()}
+          </Fact>
         </dl>
 
         {supplier.verificationStatus === 'PENDING' && missing.length > 0 && (

@@ -35,6 +35,9 @@ export interface ISupplierProfile extends Document {
     url?: string;      // legacy field, never set by current code
     verified: boolean; // kept in step with status === 'ACCEPTED'
   }[];
+  // Weekly availability check (features/suppliers/weekly.ts)
+  weeklyConfirmedAt?: Date;
+  weeklyReminderFor?: Date; // week start of the last reminder sent
   avgRating: number;
   totalReviews: number;
   totalDeliveries: number;
@@ -79,6 +82,8 @@ const supplierProfileSchema = new Schema<ISupplierProfile>(
         verified: { type: Boolean, default: false },
       },
     ],
+    weeklyConfirmedAt: Date,
+    weeklyReminderFor: Date,
     avgRating: { type: Number, default: 0, min: 0, max: 5 },
     totalReviews: { type: Number, default: 0 },
     totalDeliveries: { type: Number, default: 0 },

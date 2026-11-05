@@ -40,7 +40,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Verification documents upload | DONE | GST certificate, shop licence or Udyam; private files, 10-minute ops links |
 | Admin verifies before selling | DONE | Ops console |
 | Delivery options (own vehicle or Sthiva) | DONE | Profile setting (canDeliver) plus choice per order at dispatch |
-| Weekly availability (product, qty, supply price, delivery, areas) | TODO | Core gap |
+| Weekly availability (product, qty, supply price, delivery, areas) | DONE | Weekly check: confirm every item's quantity and price; Monday reminder; ops sees last check. No auto-pause (owner can decide) |
 | Incoming order notification | DONE | Push |
 | Accept / reject order | DONE | Phase 3: offers, next supplier on reject or timeout |
 | Order view: distance, Sthiva commission, expected payout | DONE | Distance: straight line from the pickup point |

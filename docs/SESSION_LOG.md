@@ -24,7 +24,8 @@ Waiting on the owner (decisions or accounts):
 1. Publish OTA updates for partner + buyer (phases 5b-7 need them), install Sthiva-Driver.apk and try it.
 2. Ops Settings: answer times, driver share, real commission rates, vehicles; catalog weights; supplier pickup points.
 3. DONE (owner chose GST + shop licence/Udyam, 2026-11-05): supplier verification documents.
-4. Spec gaps needing rules: weekly supplier availability, product variations, market reference prices,
+4. Weekly availability DONE (no auto-pause for suppliers who skip it: owner can decide). Still needing rules:
+   product variations, market reference prices,
    online payment (Razorpay needs company KYC) and refunds.
 5. Websites' NEXT_PUBLIC_API_URL -> https://api.sthiva.com (Vercel asks the owner for an emailed code).
 6. Launch details: business email, legal name, support phone; then NEXT_PUBLIC_ALLOW_INDEXING=true.
@@ -578,3 +579,14 @@ Original plan:
     Files are Cloudinary type=private (StorageService.uploadPrivate / privateViewUrl); no public URL stored or sent.
   - UI: seller website Business page "Verification documents"; ops Suppliers card "Documents" panel.
   - 4 new API tests pass; ops and seller sites build.
+- 2026-11-06 00:20 IST: WEEKLY AVAILABILITY (same PR #78).
+  - GET/POST /suppliers/me/weekly: every ACTIVE/OUT_OF_STOCK listing; POST must include all of them (quantity +
+    price), checks bulk tiers first, applies stock-driven status, sets Product.availabilityConfirmedAt and
+    SupplierProfile.weeklyConfirmedAt. Weeks start Monday 00:00 IST.
+  - Reminder: sendWeeklyReminders in the one-minute sweeper; Monday 09:00-24:00 IST, verified active suppliers with
+    listings who have not confirmed; one per week (weeklyReminderFor claimed atomically). Push opens the weekly screen.
+  - No automatic pausing of suppliers who skip it (would be a new business rule; owner decides).
+  - UI: seller website Weekly check tab; Partner app Weekly check (from Overview); ops supplier card shows last check.
+  - Fixed: Partner app supplier and driver tab bars showed blank tabs for pushed screens (analytics, product add/edit,
+    driver order); now href:null like the buyer and ops layouts.
+  - 371 API tests pass (5 new); ops + seller sites build; mobile tsc clean. Needs partner OTA after merge.
