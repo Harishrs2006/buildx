@@ -494,3 +494,5 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   line price; cheapest first. Stock moves with the offer; NEEDS_OPS holds none (inventoryState NONE). Buyer view
   hides allocation + supplier reasons. Seller web + Partner app: Accept/Reject; ops: Needs a supplier queue and
   supplier options panel. 324 API tests pass (8 new); 3 sites build; mobile typechecks.
+- 2026-11-05 08:35 IST: User merged #68. OTA publish failed: new eas-cli needs --environment in --non-interactive mode.
+  Added '--environment production' to scripts/publish-update.cjs (copied to C:/bx/mobile).
