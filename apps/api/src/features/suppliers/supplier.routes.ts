@@ -38,6 +38,8 @@ export const updateProfileSchema = z
     categories: z.array(z.string().trim().regex(/^[a-z0-9-]{2,60}$/)).max(20),
     brands: z.array(z.string().trim().min(1).max(60)).max(60),
     canDeliver: z.boolean(),
+    // Pickup point (shop or yard), to price delivery by distance
+    location: z.object({ lat: z.number().min(6).max(38), lng: z.number().min(68).max(98) }, { invalid_type_error: 'Location must be inside India' }),
   })
   .partial()
   .strict();

@@ -19,6 +19,9 @@ export const quoteSchema = z.object({
   items: cartItems,
   // Confirmed delivery PIN. Optional only for older mobile clients.
   deliveryPincode: pincodeInput.optional(),
+  // The pinned delivery point, if any (else the PIN's post office is used to price delivery)
+  deliveryLat: z.number().min(-90).max(90).optional(),
+  deliveryLng: z.number().min(-180).max(180).optional(),
 });
 
 export const createOrderSchema = z.object({

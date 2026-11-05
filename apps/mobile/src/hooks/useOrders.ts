@@ -59,6 +59,8 @@ export type OrderQuote = {
   subtotal: number;
   gstAmount: number;
   deliveryCharge: number;
+  // OFF: no delivery charges yet. PRICED: vehicle, weight, distance. UNPRICED: can't order yet (message says why).
+  deliveryPricing?: { status: 'OFF' | 'PRICED' | 'UNPRICED'; vehicle?: string; weightKg?: number; distanceKm?: number; message?: string };
   total: number;
 };
 
@@ -88,10 +90,10 @@ export function useOrder(id: string) {
 }
 
 // Server-priced summary (GST-inclusive/exclusive, bulk tiers) for the checkout screen
-export function useOrderQuote(items: { productId: string; quantity: number }[], enabled: boolean) {
+export function useOrderQuote(items: { productId: string; quantity: number }[], enabled: boolean, deliveryPincode?: string) {
   return useQuery<{ data: OrderQuote }>({
-    queryKey: ['order-quote', items],
-    queryFn: () => api.post('/orders/quote', { items }).then((r) => r.data),
+    queryKey: ['order-quote', items, deliveryPincode],
+    queryFn: () => api.post('/orders/quote', { items, ...(deliveryPincode ? { deliveryPincode } : {}) }).then((r) => r.data),
     enabled: enabled && items.length > 0,
     staleTime: 0,
   });

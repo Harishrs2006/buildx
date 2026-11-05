@@ -30,7 +30,7 @@ export function buyerView<T extends { allocation?: unknown; statusHistory?: { st
 // POST /orders/quote — server-priced summary for the checkout screen
 export async function quote(req: Request, res: Response, next: NextFunction) {
   try {
-    res.json(ok(await quoteOrder(req.body.items, req.body.deliveryPincode)));
+    res.json(ok(await quoteOrder(req.body.items, req.body.deliveryPincode, { lat: req.body.deliveryLat, lng: req.body.deliveryLng })));
   } catch (err) {
     next(err);
   }

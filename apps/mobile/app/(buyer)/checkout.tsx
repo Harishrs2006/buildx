@@ -38,11 +38,12 @@ export default function CheckoutScreen() {
   const [triedNext, setTriedNext] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
   const addressOk = !!address.fullAddress.trim();
+  const pinOk = /^[1-9]\d{5}$/.test(address.pincode ?? '');
   const phoneOk = /^[6-9]\d{9}$/.test(address.contactPhone.trim());
 
   // Prices shown on the summary come from the server (GST-inclusive/exclusive, bulk tiers, delivery)
   const orderItems = cartItemsToOrderPayload(items);
-  const quoteQuery = useOrderQuote(orderItems, step === 'summary');
+  const quoteQuery = useOrderQuote(orderItems, step === 'summary', pinOk ? address.pincode : undefined);
   const quote = quoteQuery.data?.data;
   const grandTotal = step === 'summary' && quote ? quote.total : estimatedTotal;
 
@@ -50,7 +51,7 @@ export default function CheckoutScreen() {
 
   function goToSummary() {
     setTriedNext(true);
-    if (!addressOk || !phoneOk) return;
+    if (!addressOk || !phoneOk || !pinOk) return;
     setOrderError(null);
     setStep('summary');
   }
@@ -101,6 +102,7 @@ export default function CheckoutScreen() {
               onNotesChange={setNotes}
               addressError={triedNext && !addressOk}
               phoneError={triedNext && !phoneOk}
+              pinError={triedNext && !pinOk}
             />
           ) : quote ? (
             <OrderSummaryView quote={quote} supplierName={supplierName} address={address} notes={notes} />
@@ -129,7 +131,7 @@ export default function CheckoutScreen() {
           {step === 'address' ? (
             <Button title="Review order" variant="lime" onPress={goToSummary} style={styles.cta} />
           ) : (
-            <Button title="Place order" variant="lime" onPress={handlePlaceOrder} loading={isPending} disabled={!quote} style={styles.cta} />
+            <Button title="Place order" variant="lime" onPress={handlePlaceOrder} loading={isPending} disabled={!quote || quote.deliveryPricing?.status === 'UNPRICED'} style={styles.cta} />
           )}
         </SafeAreaView>
       </KeyboardAvoidingView>
@@ -139,13 +141,14 @@ export default function CheckoutScreen() {
 
 // ─── Address form ─────────────────────────────────────────────────────────────
 
-function AddressForm({ address, onChange, notes, onNotesChange, addressError, phoneError }: {
+function AddressForm({ address, onChange, notes, onNotesChange, addressError, phoneError, pinError }: {
   address: DeliveryAddress;
   onChange: (a: DeliveryAddress) => void;
   notes: string;
   onNotesChange: (n: string) => void;
   addressError: boolean;
   phoneError: boolean;
+  pinError: boolean;
 }) {
   return (
     <View>
@@ -179,6 +182,19 @@ function AddressForm({ address, onChange, notes, onNotesChange, addressError, ph
         accessibilityLabel="Full delivery address"
       />
       {addressError ? <Text style={styles.fieldError}>Enter the address the driver should come to.</Text> : null}
+
+      <Text style={styles.label}>PIN code</Text>
+      <TextInput
+        style={[styles.input, pinError && styles.inputError]}
+        value={address.pincode ?? ''}
+        onChangeText={(v) => onChange({ ...address, pincode: v.replace(/\D/g, '').slice(0, 6) })}
+        placeholder="6-digit PIN of the site"
+        placeholderTextColor={Colors.stoneLight}
+        keyboardType="number-pad"
+        maxLength={6}
+        accessibilityLabel="Delivery PIN code"
+      />
+      {pinError ? <Text style={styles.fieldError}>Enter the 6-digit PIN code of the site.</Text> : null}
 
       <Text style={styles.label}>Phone at the site</Text>
       <TextInput
@@ -264,6 +280,10 @@ function OrderSummaryView({ quote, supplierName, address, notes }: {
         <PriceRow label="Subtotal" value={rupees(quote.subtotal)} />
         <PriceRow label="GST" value={rupees(quote.gstAmount)} />
         <PriceRow label="Delivery" value={quote.deliveryCharge > 0 ? rupees(quote.deliveryCharge) : 'No charge'} />
+        {quote.deliveryPricing?.status === 'PRICED' ? (
+          <Text style={styles.hint}>{quote.deliveryPricing.vehicle}, {quote.deliveryPricing.weightKg} kg, about {quote.deliveryPricing.distanceKm} km</Text>
+        ) : null}
+        {quote.deliveryPricing?.status === 'UNPRICED' ? <Text style={styles.fieldError}>{quote.deliveryPricing.message}</Text> : null}
         <View style={styles.totalRow}>
           <Text style={styles.totalRowLabel}>Total</Text>
           <Text style={styles.totalRowValue}>{rupees(quote.total)}</Text>

@@ -20,6 +20,12 @@ export const vehicleCreateSchema = z.object({
 
 export const vehicleUpdateSchema = vehicleCreateSchema.omit({ code: true }).partial();
 
-export const generalSettingsSchema = z.object({
-  offerTimeoutMinutes: z.number().int().min(1).max(1440).nullable(),
-});
+// Send only what changes; null switches a setting off
+export const generalSettingsSchema = z
+  .object({
+    offerTimeoutMinutes: z.number().int().min(1).max(1440).nullable(),
+    // Share of the delivery charge a Sthiva driver earns
+    driverSharePercent: percent,
+  })
+  .partial()
+  .refine((v) => Object.keys(v).length > 0, 'Nothing to change');

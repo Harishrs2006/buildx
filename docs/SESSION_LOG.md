@@ -30,7 +30,12 @@ Phase 1 (admin settings) merged as #66. Phase 2 merged as #67. Phase 3 (supplier
   After merge: user publishes OTA updates (partner + buyer) so the apps show Accept/Reject and the new label.
   Phase 4 (one price + commission) = PR feat/one-price. IMPORTANT after merge: the shop hides every category
   without a commission, so the owner must set commission per category in ops Settings (0 is allowed).
-  Open question for owner: re-offer rule is strict (next supplier must not charge more than the first).
+  Phase 4 merged (#70). 2026-11-05 09:00: at owner's request set 0% commission (both rates) on all 10 live
+  categories via a one-off script with apps/api/.env (script deleted); live shop shows 10 products again.
+  Owner decisions 2026-11-05 09:05: supplier keeps the whole delivery charge when they deliver; driver gets an
+  admin-set % (driverSharePercent); driver jobs offered one driver at a time + ops can assign; re-offer stays strict.
+  Phase 5a (delivery pricing) = PR feat/delivery-pricing. Next: 5b (driver offers one at a time, delivery OTP,
+  failed delivery). Delivery charges stay OFF until an admin adds a vehicle type.
 0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
    Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
    projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
@@ -507,3 +512,12 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   commissionPercent, supplierDeliveryPercent; order supplierTotal + commissionTotal. Re-offer compares with the
   supplier side. Supplier order list + ops order detail return earnings. Buyer web/app carts can mix listings.
   332 API tests pass (8 new); 3 sites build; mobile typechecks.
+- 2026-11-05 09:20 IST: Phase 5a on feat/delivery-pricing: delivery-pricing.ts (straight-line km supplier
+  location -> pinned point or delivery PIN post office; weight from CatalogItem.weightKgPerUnit; smallest vehicle;
+  charge = base + perKm x km). OFF until a vehicle type exists; when ON, unpriceable orders are refused with
+  DELIVERY_NOT_PRICED. Supplier choice ranks goods + delivery. Order.delivery {vehicle, weightKg, distanceKm,
+  driverSharePercent}; total includes delivery. Earnings: supplier keeps full charge when self-delivering; driver
+  payout = charge x driverSharePercent. SupplierProfile.location (seller setup "Use where I am now"); driver
+  verification (ops Drivers tab Verify/Reject; unverified drivers get 403 on jobs; old drivers grandfathered);
+  Settings: driver share %. Buyer web + app checkout show vehicle/km and block unpriced; app checkout now asks PIN.
+  339 API tests pass (7 new); 3 sites build; mobile typechecks + address tests pass.

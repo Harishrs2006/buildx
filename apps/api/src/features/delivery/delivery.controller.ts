@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { Order } from '../../infrastructure/database/models/Order.model';
-import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
+import { DeliveryPartner, isDriverVerified } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { AppError } from '../../shared/errors/AppError';
 import { ok } from '@sthiva/shared';
 import { notifyUser } from '../../shared/services/notification.service';
@@ -14,11 +14,23 @@ async function getDriverProfile(userId: string) {
   return profile;
 }
 
+/** Jobs are only for drivers Sthiva has verified. */
+async function getVerifiedDriver(userId: string) {
+  const profile = await getDriverProfile(userId);
+  if (!isDriverVerified(profile)) {
+    throw AppError.forbidden(profile.verificationStatus === 'REJECTED'
+      ? 'Your driver verification was not approved. Contact Sthiva support.'
+      : 'Sthiva is checking your licence and vehicle. You can take jobs once you are verified.');
+  }
+  return profile;
+}
+
 // GET /delivery/available — orders marked READY_FOR_PICKUP with no driver assigned
 export async function listAvailableOrders(req: Request, res: Response, next: NextFunction) {
   try {
     const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
     const limit = Math.min(20, parseInt(req.query.limit as string, 10) || 10);
+    await getVerifiedDriver(req.auth!.userId);
 
     const [orders, total] = await Promise.all([
       Order.find({ status: 'READY_FOR_PICKUP', driverId: { $exists: false } })
@@ -40,8 +52,8 @@ export async function assignOrder(req: Request, res: Response, next: NextFunctio
     if (!isValidObjectId(req.params.id)) throw AppError.badRequest('Invalid order ID');
 
     const driverUserId = req.auth!.userId;
-    // Role alone isn't enough — the driver must have completed onboarding with a profile
-    await getDriverProfile(driverUserId);
+    // Role alone isn't enough: the driver must have a profile and be verified by Sthiva
+    await getVerifiedDriver(driverUserId);
 
     const order = await Order.findOneAndUpdate(
       { _id: req.params.id, status: { $in: allowedSources('ASSIGNED', 'DELIVERY_PARTNER', 'PLATFORM') }, driverId: { $exists: false }, ...modeFilter('PLATFORM') },

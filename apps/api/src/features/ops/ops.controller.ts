@@ -4,7 +4,7 @@ import { ok } from '@sthiva/shared';
 import { Order } from '../../infrastructure/database/models/Order.model';
 import { User } from '../../infrastructure/database/models/User.model';
 import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
-import { DeliveryPartner } from '../../infrastructure/database/models/DeliveryPartner.model';
+import { DeliveryPartner, isDriverVerified } from '../../infrastructure/database/models/DeliveryPartner.model';
 import { Product } from '../../infrastructure/database/models/Product.model';
 import { AppError } from '../../shared/errors/AppError';
 import { logger } from '../../shared/logger/logger';
@@ -204,12 +204,13 @@ export async function assign(req: Request, res: Response, next: NextFunction) {
 
     const [driverUser, driverProfile] = await Promise.all([
       User.findById(driverUserId).select('role isActive').lean(),
-      DeliveryPartner.findOne({ userId: driverUserId }).select('_id').lean(),
+      DeliveryPartner.findOne({ userId: driverUserId }).select('_id verificationStatus').lean(),
     ]);
     if (!driverUser || driverUser.role !== 'DELIVERY_PARTNER' || !driverProfile) {
       throw AppError.badRequest('That user is not an onboarded delivery partner');
     }
     if (!driverUser.isActive) throw AppError.badRequest('That delivery partner account is suspended');
+    if (!isDriverVerified(driverProfile)) throw AppError.badRequest('Verify this driver first (Drivers tab)');
     if (!(await Order.exists({ _id: id }))) throw AppError.notFound('Order');
 
     const { order, changed } = await transitionOrder({
@@ -284,7 +285,7 @@ export async function listDrivers(_req: Request, res: Response, next: NextFuncti
     const activeBy = new Map(load.map((l) => [l._id.toString(), l.active]));
     res.json(ok(drivers.map((d) => {
       const user = d.userId as unknown as { _id: Types.ObjectId } | null;
-      return { ...d, activeOrders: user ? activeBy.get(user._id.toString()) ?? 0 : 0 };
+      return { ...d, verificationStatus: isDriverVerified(d) ? 'VERIFIED' : d.verificationStatus, activeOrders: user ? activeBy.get(user._id.toString()) ?? 0 : 0 };
     })));
   } catch (err) { next(err); }
 }
@@ -398,5 +399,25 @@ export async function supplierOptions(req: Request, res: Response, next: NextFun
         tried: tried.filter((t) => t.supplierId === sp._id.toString()).map((t) => t.outcome ?? 'OFFERED'),
       };
     })));
+  } catch (err) { next(err); }
+}
+
+// PATCH /ops/drivers/:id/verification { status, note } — approve or reject a delivery partner
+export async function setDriverVerification(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = String(req.params.id);
+    if (!isValidObjectId(id)) throw AppError.badRequest('Invalid driver ID');
+    const { status, note } = req.body as { status: 'VERIFIED' | 'REJECTED'; note?: string };
+    const profile = await DeliveryPartner.findByIdAndUpdate(id, { verificationStatus: status }, { new: true }).lean();
+    if (!profile) throw AppError.notFound('Delivery partner');
+    logger.info('[ops] driver verification', { opsUserId: req.auth!.userId, driverId: id, status, note });
+    notifyUser(profile.userId.toString(), {
+      title: status === 'VERIFIED' ? 'You are verified on Sthiva' : 'Verification update',
+      body: status === 'VERIFIED'
+        ? 'You can now get delivery jobs. Go on duty to receive them.'
+        : `Your driver verification was not approved.${note ? ` ${note}` : ''} Contact Sthiva support.`,
+      data: { screen: 'driver_available' },
+    });
+    res.json(ok(profile));
   } catch (err) { next(err); }
 }

@@ -17,7 +17,9 @@ export type ErrorCode =
   | 'GEOLOCATION_UNAVAILABLE'
   // Serviceability (features/serviceability)
   | 'NOT_SERVICEABLE'
-  | 'PINCODE_REQUIRED';
+  | 'PINCODE_REQUIRED'
+  // Delivery pricing (features/delivery/delivery-pricing.ts)
+  | 'DELIVERY_NOT_PRICED';
 
 export class AppError extends Error {
   public readonly statusCode: number;

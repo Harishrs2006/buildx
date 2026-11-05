@@ -23,6 +23,7 @@ export type ProfileUpdate = Partial<{
   categories: string[];
   brands: string[];
   canDeliver: boolean;
+  location: { lat: number; lng: number };
 }>;
 
 export async function updateSupplierProfile(client: ApiClient, update: ProfileUpdate): Promise<SupplierProfile> {

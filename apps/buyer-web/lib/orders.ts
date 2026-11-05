@@ -22,6 +22,11 @@ export const quoteSchema = z.object({
   subtotal: z.number(),
   gstAmount: z.number(),
   deliveryCharge: z.number(),
+  // OFF: no delivery charges yet. PRICED: vehicle, weight, distance. UNPRICED: can't order yet, message says why.
+  deliveryPricing: z.object({
+    status: z.enum(['OFF', 'PRICED', 'UNPRICED']),
+    vehicle: z.string().optional(), weightKg: z.number().optional(), distanceKm: z.number().optional(), message: z.string().optional(),
+  }).passthrough().optional(),
   total: z.number(),
 });
 export type Quote = z.infer<typeof quoteSchema>;

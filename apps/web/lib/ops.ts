@@ -47,7 +47,9 @@ export const orderDetailSchema = orderSummarySchema.extend({
   deliveryCharge: z.number(),
   supplierTotal: z.number().optional(),
   commissionTotal: z.number().optional(),
+  delivery: z.object({ vehicleName: z.string(), weightKg: z.number(), distanceKm: z.number(), driverSharePercent: z.number().optional() }).passthrough().optional(),
   earnings: z.object({
+    deliveryCharge: z.number().optional(), driverPayout: z.number().nullable().optional(), sthivaDeliveryShare: z.number().nullable().optional(),
     orderValue: z.number(), payoutIfSthivaDelivers: z.number(), commissionIfSthivaDelivers: z.number(),
     payoutIfYouDeliver: z.number(), commissionIfYouDeliver: z.number(), expectedPayout: z.number().nullable(),
   }).optional(),
@@ -100,6 +102,8 @@ export const driverSchema = z
     isAvailable: z.boolean(),
     totalDeliveries: z.number().optional(),
     activeOrders: z.number(),
+    verificationStatus: z.enum(['PENDING', 'VERIFIED', 'REJECTED']).optional(),
+    licenseNumber: z.string().optional(),
     userId: ref(person),
   })
   .passthrough();
@@ -144,6 +148,8 @@ export const opsApi = {
   supplierOptions: (c: ApiClient, id: string) => get(c, `/ops/orders/${id}/supplier-options`, z.array(supplierOptionSchema)),
   offer: (c: ApiClient, id: string, supplierId: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/offer`, { supplierId, reason }, z.unknown()),
   nextSupplier: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/orders/${id}/next-supplier`, { reason }, z.unknown()),
+  verifyDriver: (c: ApiClient, id: string, status: 'VERIFIED' | 'REJECTED', note?: string) =>
+    send(c, 'PATCH', `/ops/drivers/${id}/verification`, { status, ...(note ? { note } : {}) }, z.unknown()),
   drivers: (c: ApiClient) => get(c, '/ops/drivers', z.array(driverSchema)),
   suppliers: (c: ApiClient, verification?: Verification) => get(c, '/ops/suppliers', z.array(supplierSchema), { verification }),
   verify: (c: ApiClient, id: string, status: 'VERIFIED' | 'REJECTED', note?: string) =>
@@ -168,6 +174,7 @@ export const settingsSchema = z.object({
   categories: z.array(commissionRowSchema),
   vehicles: z.array(vehicleSchema),
   offerTimeoutMinutes: z.number().nullable(),
+  driverSharePercent: z.number().nullable().optional(),
 });
 export type PlatformSettings = z.infer<typeof settingsSchema>;
 export type VehicleInput = Omit<Vehicle, '_id'>;
@@ -178,8 +185,8 @@ export const settingsApi = {
     send(c, 'PATCH', `/ops/settings/commission/${categoryId}`, body, commissionRowSchema),
   addVehicle: (c: ApiClient, body: VehicleInput) => send(c, 'POST', '/ops/settings/vehicles', body, vehicleSchema),
   updateVehicle: (c: ApiClient, id: string, body: Partial<Omit<VehicleInput, 'code'>>) => send(c, 'PATCH', `/ops/settings/vehicles/${id}`, body, vehicleSchema),
-  setGeneral: (c: ApiClient, offerTimeoutMinutes: number | null) =>
-    send(c, 'PATCH', '/ops/settings/general', { offerTimeoutMinutes }, z.object({ offerTimeoutMinutes: z.number().nullable() })),
+  setGeneral: (c: ApiClient, body: { offerTimeoutMinutes?: number | null; driverSharePercent?: number | null }) =>
+    send(c, 'PATCH', '/ops/settings/general', body, z.unknown()),
 };
 
 // Sthiva catalog (ops). Shapes mirror catalog.controller.ts.

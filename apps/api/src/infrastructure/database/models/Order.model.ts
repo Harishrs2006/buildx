@@ -72,6 +72,8 @@ export interface IOrder extends Document {
   allocation?: Allocation;
   deliveryMethod: 'STANDARD' | 'EXPRESS';
   deliveryCharge: number;
+  // How the delivery charge was worked out (absent when delivery pricing was off)
+  delivery?: { vehicleCode: string; vehicleName: string; weightKg: number; distanceKm: number; driverSharePercent?: number };
   subtotal: number;        // Σ taxable value
   gstAmount: number;       // Σ GST
   total: number;           // amount payable
@@ -166,6 +168,14 @@ const orderSchema = new Schema<IOrder>(
     },
     deliveryMethod: { type: String, enum: ['STANDARD', 'EXPRESS'], default: 'STANDARD' },
     deliveryCharge: { type: Number, default: 0 },
+    delivery: {
+      _id: false,
+      vehicleCode: String,
+      vehicleName: String,
+      weightKg: Number,
+      distanceKm: Number,
+      driverSharePercent: Number,
+    },
     subtotal: { type: Number, required: true },
     gstAmount: { type: Number, required: true },
     total: { type: Number, required: true },

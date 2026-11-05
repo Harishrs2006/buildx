@@ -317,6 +317,17 @@ export default function OrderPage() {
               </dd>
             </div>
           </dl>
+          {(o.earnings.deliveryCharge ?? 0) > 0 && (
+            <p className="mt-3 text-[14px] text-stone">
+              Delivery {rupees.format(o.earnings.deliveryCharge!)}
+              {o.delivery && <> ({o.delivery.vehicleName}, {o.delivery.weightKg} kg, {o.delivery.distanceKm} km)</>}
+              {o.deliveryMode === 'SUPPLIER'
+                ? ': all of it goes to the supplier, who delivered.'
+                : o.earnings.driverPayout !== null && o.earnings.driverPayout !== undefined
+                  ? `: driver ${rupees.format(o.earnings.driverPayout)}, Sthiva ${rupees.format(o.earnings.sthivaDeliveryShare ?? 0)}.`
+                  : ': driver share not set in Settings.'}
+            </p>
+          )}
           {o.supplierTotal === undefined && <p className="mt-3 text-[13px] text-stone">Placed before commission existed: the supplier gets the full amount.</p>}
           {o.earnings.commissionIfSthivaDelivers < 0 && <p className="mt-3 text-[13px] text-error">This supplier charges more than the buyer pays: Sthiva loses on this order.</p>}
         </Panel>
