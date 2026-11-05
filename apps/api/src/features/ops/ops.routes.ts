@@ -5,10 +5,12 @@ import {
   summary, listOrders, getOrder, cancel, unassign, assign, recordCod, addNote,
   listDrivers, listSuppliers, setSupplierVerification, setUserActive,
   offerToSupplier, nextSupplier, supplierOptions, setDriverVerification, markDelivered, resolveProblem,
+  listUsers, getAnalytics,
 } from './ops.controller';
 import {
   listOrdersQuery, opsCancelSchema, opsUnassignSchema, opsAssignSchema, opsCodSchema, opsNoteSchema,
   supplierListQuery, supplierVerificationSchema, userActiveSchema, opsOfferSchema, opsUnassignSchema as opsReasonSchema,
+  usersQuery, analyticsQuery,
 } from './ops.schemas';
 import { opsList, opsGet, opsCreate, opsUpdate, opsMerge } from '../catalog/catalog.controller';
 import { catalogCreateSchema, catalogUpdateSchema, catalogMergeSchema } from '../catalog/catalog.schemas';
@@ -43,6 +45,9 @@ router.get('/drivers', listDrivers);
 router.patch('/drivers/:id/verification', validate(supplierVerificationSchema), setDriverVerification);
 router.get('/suppliers', validate(supplierListQuery, 'query'), listSuppliers);
 router.patch('/suppliers/:id/verification', validate(supplierVerificationSchema), setSupplierVerification);
+
+router.get('/users', validate(usersQuery, 'query'), listUsers);
+router.get('/analytics', validate(analyticsQuery, 'query'), getAnalytics);
 
 // Account suspension is ADMIN-only
 router.patch('/users/:id/active', requireRole('ADMIN'), validate(userActiveSchema), setUserActive);
