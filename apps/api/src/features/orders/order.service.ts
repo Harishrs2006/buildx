@@ -12,6 +12,9 @@ import type { CartItemsInput, CreateOrderInput } from './order.schemas';
 import { env } from '../../config/env';
 import { offerExpiry } from './allocation.service';
 import { ratesFor, buyerProduct, type Rates } from './commission';
+import { activeVehicles, deliveryPoint, quoteDelivery, type DeliveryQuote, type LatLng } from '../delivery/delivery-pricing';
+import { SupplierProfile } from '../../infrastructure/database/models/SupplierProfile.model';
+import { getPlatformSettings } from '../../infrastructure/database/models/PlatformSettings.model';
 import { checkSupplier, eligibleSupplierIds, notServiceable, resolveDestination, type Destination } from '../serviceability/serviceability.service';
 
 /**
@@ -68,11 +71,35 @@ type PricedCart = {
   priced: PricedOrder;       // what the buyer pays (supplier price + commission)
   supplierPriced: PricedOrder; // what the supplier's own prices come to
   rates: Rates[];
+  delivery: DeliveryQuote;
 };
 
-type Plan = { listings: LeanProduct[]; rates: Rates[]; priced: PricedOrder; supplierPriced: PricedOrder };
+type Plan = { listings: LeanProduct[]; rates: Rates[]; priced: PricedOrder; supplierPriced: PricedOrder; delivery: DeliveryQuote };
 
-function planFor(items: CartItemsInput, listings: LeanProduct[], rateMap: Map<string, Rates>): Plan {
+const deliveryPaise = (d: DeliveryQuote) => (d.status === 'PRICED' ? d.chargePaise : 0);
+/** Ranking: deliverable plans first, then cheapest goods + delivery. */
+function better(a: Plan, b: Plan) {
+  const ua = a.delivery.status === 'UNPRICED' ? 1 : 0;
+  const ub = b.delivery.status === 'UNPRICED' ? 1 : 0;
+  if (ua !== ub) return ua < ub;
+  return a.priced.totalPaise + deliveryPaise(a.delivery) < b.priced.totalPaise + deliveryPaise(b.delivery);
+}
+
+async function withDelivery(
+  plan: Omit<Plan, 'delivery'>, items: CartItemsInput, destination: LatLng | null, vehicles: Awaited<ReturnType<typeof activeVehicles>>
+): Promise<Plan> {
+  if (vehicles.length === 0) return { ...plan, delivery: { status: 'OFF' } }; // delivery pricing not set up
+  const supplier = await SupplierProfile.findById(plan.listings[0].supplierId).select('location').lean();
+  const delivery = await quoteDelivery({
+    lines: plan.listings.map((l, i) => ({ catalogItemId: l.catalogItemId, quantity: items[i].quantity })),
+    supplierLocation: supplier?.location,
+    destination,
+    vehicles,
+  });
+  return { ...plan, delivery };
+}
+
+function planFor(items: CartItemsInput, listings: LeanProduct[], rateMap: Map<string, Rates>): Omit<Plan, 'delivery'> {
   const rates = listings.map((l) => {
     const r = rateMap.get(l.categoryId.toString());
     if (!r) throw AppError.conflict(`${l.name} isn't on sale yet. Please check back soon.`);
@@ -88,7 +115,7 @@ function planFor(items: CartItemsInput, listings: LeanProduct[], rateMap: Map<st
  * (same catalog items) with enough stock, the cheapest for the buyer. The listings the buyer added
  * are just a way to name the items. Carts with items outside the catalog keep their own supplier.
  */
-async function chooseListings(items: CartItemsInput, asAdded: LeanProduct[], pincode: string | undefined, session?: ClientSession) {
+async function chooseListings(items: CartItemsInput, asAdded: LeanProduct[], pincode: string | undefined, destination: LatLng | null, session?: ClientSession) {
   const itemIds = asAdded.map((p) => p.catalogItemId);
   if (itemIds.some((id) => !id)) return null;
   const eligible = await eligibleSupplierIds(pincode);
@@ -101,14 +128,15 @@ async function chooseListings(items: CartItemsInput, asAdded: LeanProduct[], pin
   const bySupplier = new Map<string, LeanProduct[]>();
   for (const l of listings) bySupplier.set(l.supplierId.toString(), [...(bySupplier.get(l.supplierId.toString()) ?? []), l]);
   const rateMap = await ratesFor(listings.map((l) => l.categoryId));
+  const vehicles = await activeVehicles();
 
   let best: Plan | null = null;
   for (const own of bySupplier.values()) {
     const lines = items.map((it, idx) => own.find((l) => l.catalogItemId!.equals(itemIds[idx]!) && l.stockQuantity >= it.quantity));
     if (lines.some((l) => !l)) continue;
     try {
-      const plan = planFor(items, lines as LeanProduct[], rateMap);
-      if (!best || plan.priced.totalPaise < best.priced.totalPaise) best = plan;
+      const plan = await withDelivery(planFor(items, lines as LeanProduct[], rateMap), items, destination, vehicles);
+      if (!best || better(plan, best)) best = plan;
     } catch (err) {
       if (err instanceof PricingError || err instanceof AppError) continue; // this supplier can't sell this cart
       throw err;
@@ -117,7 +145,7 @@ async function chooseListings(items: CartItemsInput, asAdded: LeanProduct[], pin
   return best;
 }
 
-async function priceCart(items: CartItemsInput, session?: ClientSession, pincode?: string): Promise<PricedCart> {
+async function priceCart(items: CartItemsInput, session?: ClientSession, pincode?: string, destination: LatLng | null = null): Promise<PricedCart> {
   const ids = items.map((i) => i.productId);
   const found = await Product.find({ _id: { $in: ids } }).session(session ?? null).lean<LeanProduct[]>();
   const byId = new Map(found.map((p) => [p._id.toString(), p]));
@@ -128,7 +156,7 @@ async function priceCart(items: CartItemsInput, session?: ClientSession, pincode
     return p;
   });
 
-  const chosen = await chooseListings(items, products, pincode, session);
+  const chosen = await chooseListings(items, products, pincode, destination, session);
   if (chosen) return { supplierId: chosen.listings[0].supplierId, products: chosen.listings, ...chosen };
 
   // Nobody can supply the whole cart: with one supplier's items, let the usual checks explain why
@@ -137,7 +165,8 @@ async function priceCart(items: CartItemsInput, session?: ClientSession, pincode
     throw AppError.conflict('No single supplier can deliver all these items here. Please order them separately.');
   }
   try {
-    const plan = planFor(items, products, await ratesFor(products.map((p) => p.categoryId)));
+    const base = planFor(items, products, await ratesFor(products.map((p) => p.categoryId)));
+    const plan = await withDelivery(base, items, destination, await activeVehicles());
     return { supplierId: products[0].supplierId, products, ...plan };
   } catch (err) {
     throw pricingToAppError(err);
@@ -165,9 +194,10 @@ function lineView(p: PricedCart['products'][number], line: PricedOrder['lines'][
 }
 
 // POST /orders/quote — same pricing as order creation, no writes
-export async function quoteOrder(items: CartItemsInput, deliveryPincode?: string) {
+export async function quoteOrder(items: CartItemsInput, deliveryPincode?: string, point?: { lat?: number; lng?: number }) {
   const destination = deliveryPincode !== undefined ? await resolveDestination(deliveryPincode) : null;
-  const { supplierId, products, priced } = await priceCart(items, undefined, destination?.pincode);
+  const dropPoint = await deliveryPoint({ ...point, pincode: destination?.pincode });
+  const { supplierId, products, priced, delivery } = await priceCart(items, undefined, destination?.pincode, dropPoint);
   await assertSupplierCanServe(supplierId, destination);
   return {
     supplierId,
@@ -180,8 +210,12 @@ export async function quoteOrder(items: CartItemsInput, deliveryPincode?: string
     })),
     subtotal: paiseToRupees(priced.subtotalPaise),
     gstAmount: paiseToRupees(priced.gstPaise),
-    deliveryCharge: 0,
-    total: paiseToRupees(priced.totalPaise),
+    deliveryCharge: paiseToRupees(deliveryPaise(delivery)),
+    // How delivery was priced: OFF (no vehicles set up), PRICED, or UNPRICED with a reason to show
+    deliveryPricing: delivery.status === 'PRICED'
+      ? { status: 'PRICED', vehicle: delivery.vehicleName, weightKg: delivery.weightKg, distanceKm: delivery.distanceKm }
+      : delivery,
+    total: paiseToRupees(priced.totalPaise + deliveryPaise(delivery)),
   };
 }
 
@@ -223,16 +257,20 @@ export async function createOrder(params: {
   }
   // Postal validity is reference data — check it before opening the transaction
   const destination = pincode !== undefined ? await resolveDestination(pincode) : null;
+  const dropPoint = await deliveryPoint({ lat: input.deliveryAddress.lat, lng: input.deliveryAddress.lng, pincode: destination?.pincode });
+  const driverShare = (await getPlatformSettings())?.driverSharePercent ?? null;
 
   try {
     const order = await inTransaction(async (session) => {
-      const { supplierId, products, priced, supplierPriced, rates } = await priceCart(input.items, session, destination?.pincode);
+      const { supplierId, products, priced, supplierPriced, rates, delivery } = await priceCart(input.items, session, destination?.pincode, dropPoint);
+      if (delivery.status === 'UNPRICED') throw new AppError(delivery.message, 'DELIVERY_NOT_PRICED', 409);
+      const chargePaise = deliveryPaise(delivery);
 
       // Re-checked here, inside the transaction, regardless of any earlier quote: a supplier
       // who dropped this PIN since the quote makes the whole order (and stock change) roll back
       await assertSupplierCanServe(supplierId, destination, session);
 
-      if (input.expectedTotal !== undefined && toPaise(input.expectedTotal) !== priced.totalPaise) {
+      if (input.expectedTotal !== undefined && toPaise(input.expectedTotal) !== priced.totalPaise + chargePaise) {
         throw AppError.conflict('Prices changed since you reviewed your order. Please check the new total.');
       }
 
@@ -271,10 +309,16 @@ export async function createOrder(params: {
               : input.deliveryAddress,
             serviceabilityCheck: destination ? 'VERIFIED' : 'SKIPPED_NO_PINCODE',
             deliveryMethod: input.deliveryMethod,
-            deliveryCharge: 0,
+            deliveryCharge: paiseToRupees(chargePaise),
+            ...(delivery.status === 'PRICED' ? {
+              delivery: {
+                vehicleCode: delivery.vehicleCode, vehicleName: delivery.vehicleName, weightKg: delivery.weightKg, distanceKm: delivery.distanceKm,
+                ...(driverShare !== null ? { driverSharePercent: driverShare } : {}),
+              },
+            } : {}),
             subtotal: paiseToRupees(priced.subtotalPaise),
             gstAmount: paiseToRupees(priced.gstPaise),
-            total: paiseToRupees(priced.totalPaise),
+            total: paiseToRupees(priced.totalPaise + chargePaise),
             notes: input.notes,
             paymentMethod: 'COD',
             paymentStatus: 'PENDING',

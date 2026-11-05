@@ -29,6 +29,7 @@ export const supplierProfileSchema = z
     categories: z.array(z.string()).optional(),
     brands: z.array(z.string()).optional(),
     canDeliver: z.boolean().optional(),
+    location: z.object({ lat: z.number(), lng: z.number() }).optional(),
     avgRating: z.number().optional(),
     totalReviews: z.number().optional(),
   })

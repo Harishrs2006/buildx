@@ -70,7 +70,7 @@ function CheckoutForm() {
 
   const notServiceable = quote.status === 'success' && quote.data.delivery !== null && !quote.data.delivery.serviceable;
   const canPlace =
-    !placing && quote.status === 'success' && !notServiceable && fullAddress.trim().length >= 5 && /^[6-9]\d{9}$/.test(contactPhone);
+    !placing && quote.status === 'success' && !notServiceable && quote.data.deliveryPricing?.status !== 'UNPRICED' && fullAddress.trim().length >= 5 && /^[6-9]\d{9}$/.test(contactPhone);
 
   async function handlePlaceOrder(e: React.FormEvent) {
     e.preventDefault();
@@ -208,10 +208,16 @@ function CheckoutForm() {
                 <SummaryRow onDark label="Subtotal" value={rupees.format(quote.data.subtotal)} />
                 <SummaryRow onDark label="GST" value={rupees.format(quote.data.gstAmount)} />
                 <SummaryRow onDark label="Delivery" value={quote.data.deliveryCharge > 0 ? rupees.format(quote.data.deliveryCharge) : 'No charge'} />
+                {quote.data.deliveryPricing?.status === 'PRICED' && (
+                  <p className="text-[13px] text-stone-light">{quote.data.deliveryPricing.vehicle}, {quote.data.deliveryPricing.weightKg} kg, about {quote.data.deliveryPricing.distanceKm} km</p>
+                )}
                 <div className="mt-2 border-t border-white/10 pt-3">
                   <SummaryRow strong label="Total" value={rupees.format(quote.data.total)} />
                 </div>
               </div>
+              {quote.data.deliveryPricing?.status === 'UNPRICED' && (
+                <p role="alert" className="mt-4 rounded-xl bg-signal-red/15 px-4 py-3 text-[14px] text-[#FFB4B6]">{quote.data.deliveryPricing.message}</p>
+              )}
               {notServiceable && (
                 <p role="alert" className="mt-4 rounded-xl bg-signal-red/15 px-4 py-3 text-[14px] text-[#FFB4B6]">
                   This supplier does not deliver to PIN {quote.data.delivery?.pincode}. Change your PIN on the home page or pick another supplier.

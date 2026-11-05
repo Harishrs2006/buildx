@@ -67,7 +67,10 @@ type EarningLine = { lineTotal: number; supplierLineTotal?: number; commissionPe
  * What a supplier earns on an order, both ways it can be delivered, in rupees. Orders from before
  * commission existed have no supplier side: the supplier earns the full line.
  */
-export function supplierEarnings(order: { total: number; items: EarningLine[]; deliveryMode?: 'PLATFORM' | 'SUPPLIER' }) {
+export function supplierEarnings(order: {
+  total: number; items: EarningLine[]; deliveryMode?: 'PLATFORM' | 'SUPPLIER';
+  deliveryCharge?: number; delivery?: { driverSharePercent?: number } | null;
+}) {
   const sum = (self: boolean) => order.items.reduce(
     (acc, it) => {
       const r = payoutFor({ ...it, supplierLineTotal: it.supplierLineTotal ?? it.lineTotal }, self);
@@ -77,15 +80,23 @@ export function supplierEarnings(order: { total: number; items: EarningLine[]; d
   );
   const sthiva = sum(false);
   const own = sum(true);
+  // Delivery charge (user decision 2026-11-05): all of it to the supplier when they deliver;
+  // with a Sthiva driver, the driver gets the admin-set share and Sthiva the rest.
+  const chargePaise = toPaise(order.deliveryCharge ?? 0);
+  const share = order.delivery?.driverSharePercent;
+  const driverPaise = typeof share === 'number' ? Number((2n * BigInt(chargePaise) * BigInt(Math.round(share * 100)) + 10000n) / 20000n) : null;
   return {
     orderValue: order.total,
+    deliveryCharge: paiseToRupees(chargePaise),
     // If a Sthiva delivery partner delivers
     payoutIfSthivaDelivers: paiseToRupees(sthiva.payout),
     commissionIfSthivaDelivers: paiseToRupees(sthiva.commission),
-    // If the supplier delivers with their own vehicle (Sthiva keeps the lower rate)
-    payoutIfYouDeliver: paiseToRupees(own.payout),
+    driverPayout: driverPaise === null ? null : paiseToRupees(driverPaise),
+    sthivaDeliveryShare: driverPaise === null ? null : paiseToRupees(chargePaise - driverPaise),
+    // If the supplier delivers with their own vehicle (Sthiva keeps the lower rate; delivery charge is theirs)
+    payoutIfYouDeliver: paiseToRupees(own.payout + chargePaise),
     commissionIfYouDeliver: paiseToRupees(own.commission),
     // Once the delivery mode is chosen
-    expectedPayout: order.deliveryMode === 'SUPPLIER' ? paiseToRupees(own.payout) : order.deliveryMode === 'PLATFORM' ? paiseToRupees(sthiva.payout) : null,
+    expectedPayout: order.deliveryMode === 'SUPPLIER' ? paiseToRupees(own.payout + chargePaise) : order.deliveryMode === 'PLATFORM' ? paiseToRupees(sthiva.payout) : null,
   };
 }

@@ -149,6 +149,7 @@ export async function seedDriver(uid: string) {
     vehicleType: 'TEMPO',
     vehicleNumber: 'KA06AB1234',
     licenseNumber: 'KA0620200001234',
+    verificationStatus: 'VERIFIED',
   });
   return { ...seeded, profile };
 }

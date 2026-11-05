@@ -8,6 +8,9 @@ export interface IDeliveryPartner extends Document {
   licenseNumber: string;
   serviceAreas: string[];
   isAvailable: boolean;
+  // Sthiva checks licence and vehicle before a driver gets jobs. Drivers from before this field
+  // existed have no value and are treated as verified.
+  verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED';
   totalDeliveries: number;
   avgRating: number;
   totalReviews: number;
@@ -27,6 +30,7 @@ const deliveryPartnerSchema = new Schema<IDeliveryPartner>(
     licenseNumber: { type: String, required: true, trim: true },
     serviceAreas: [String],
     isAvailable: { type: Boolean, default: true },
+    verificationStatus: { type: String, enum: ['PENDING', 'VERIFIED', 'REJECTED'], default: 'PENDING' },
     totalDeliveries: { type: Number, default: 0 },
     avgRating: { type: Number, default: 0, min: 0, max: 5 },
     totalReviews: { type: Number, default: 0 },
@@ -35,3 +39,8 @@ const deliveryPartnerSchema = new Schema<IDeliveryPartner>(
 );
 
 export const DeliveryPartner = model<IDeliveryPartner>('DeliveryPartner', deliveryPartnerSchema);
+
+/** May this driver take Sthiva delivery jobs? (Drivers from before verification existed: yes.) */
+export function isDriverVerified(p: { verificationStatus?: string | null } | null | undefined): boolean {
+  return !!p && (p.verificationStatus === undefined || p.verificationStatus === null || p.verificationStatus === 'VERIFIED');
+}

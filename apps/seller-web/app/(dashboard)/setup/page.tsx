@@ -70,6 +70,8 @@ export default function SetupPage() {
   const [address, setAddress] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
   const [canDeliver, setCanDeliver] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [locError, setLocError] = useState<string | null>(null);
   // step 2
   const [pinInput, setPinInput] = useState('');
   // step 3
@@ -201,6 +203,43 @@ export default function SetupPage() {
               ))}
             </div>
           </fieldset>
+
+          <div className="flex flex-col gap-2">
+            <p className="text-[15px] font-semibold">Pickup location</p>
+            <p className="text-[13px] text-stone">Where goods are collected (your shop or yard). Sthiva uses it to work out delivery charges by distance. Do this while you are at the shop.</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                disabled={locating}
+                onClick={() => {
+                  setLocError(null);
+                  if (!('geolocation' in navigator)) { setLocError('This browser cannot share location. Try on your phone.'); return; }
+                  setLocating(true);
+                  navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                      try {
+                        profile.replace(await updateSupplierProfile(client, { location: { lat: Math.round(pos.coords.latitude * 1e6) / 1e6, lng: Math.round(pos.coords.longitude * 1e6) / 1e6 } }));
+                      } catch (err) {
+                        setLocError(err instanceof Error ? err.message : 'Could not save the location.');
+                      } finally { setLocating(false); }
+                    },
+                    () => { setLocating(false); setLocError('Location permission was denied. Allow it in your browser and try again.'); },
+                    { enableHighAccuracy: true, timeout: 15000 }
+                  );
+                }}
+                className="btn-ghost"
+              >
+                <span className="material-symbols-outlined text-[20px]" aria-hidden="true">my_location</span>
+                {locating ? 'Finding you' : p?.location ? 'Update to where I am now' : 'Use where I am now'}
+              </button>
+              {p?.location && (
+                <a href={`https://www.google.com/maps?q=${p.location.lat},${p.location.lng}`} target="_blank" rel="noreferrer" className="text-[14px] text-cobalt hover:underline">
+                  Saved: {p.location.lat.toFixed(5)}, {p.location.lng.toFixed(5)} (check on map)
+                </a>
+              )}
+            </div>
+            {locError && <p className="text-[13px] text-error">{locError}</p>}
+          </div>
 
           <fieldset>
             <legend className="text-[15px] font-semibold">Who delivers your orders?</legend>

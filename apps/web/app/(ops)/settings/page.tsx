@@ -165,7 +165,11 @@ function VehicleRow({ v, canEdit, onSaved }: { v: Vehicle; canEdit: boolean; onS
   );
 }
 
-function OfferTimeout({ value, canEdit, onSaved }: { value: number | null; canEdit: boolean; onSaved: () => void }) {
+function GeneralNumber({ field, value, canEdit, onSaved, unit, label, min, max, step, placeholder, invalid }: {
+  field: 'offerTimeoutMinutes' | 'driverSharePercent';
+  value: number | null | undefined; canEdit: boolean; onSaved: () => void;
+  unit: string; label: string; min: number; max: number; step: number | string; placeholder: string; invalid: string;
+}) {
   const client = useApiClient();
   const [v, setV] = useState(show(value));
   const [busy, setBusy] = useState(false);
@@ -174,14 +178,14 @@ function OfferTimeout({ value, canEdit, onSaved }: { value: number | null; canEd
   async function save() {
     setBusy(true);
     setError(null);
-    try { await settingsApi.setGeneral(client, num(v)); onSaved(); } catch (err) { setError(errorText(err, 'Use whole minutes from 1 to 1440.')); } finally { setBusy(false); }
+    try { await settingsApi.setGeneral(client, { [field]: num(v) }); onSaved(); } catch (err) { setError(errorText(err, invalid)); } finally { setBusy(false); }
   }
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <input type="number" min={1} max={1440} step={1} value={v} onChange={(e) => setV(e.target.value)} disabled={!canEdit || busy}
-        placeholder="Off" aria-label="Minutes a supplier has to accept an order" className="field w-28" />
-      <span className="text-stone">minutes</span>
+      <input type="number" min={min} max={max} step={step} value={v} onChange={(e) => setV(e.target.value)} disabled={!canEdit || busy}
+        placeholder={placeholder} aria-label={label} className="field w-28" />
+      <span className="text-stone">{unit}</span>
       {canEdit && v !== show(value) && <button type="button" disabled={busy} onClick={save} className="btn-lime px-4">Save</button>}
       {error && <p className="w-full text-[13px] text-error">{error}</p>}
     </div>
@@ -230,7 +234,7 @@ export default function SettingsPage() {
             )}
           </Section>
 
-          <Section title="Delivery vehicles" hint="Sthiva picks the smallest vehicle in use that can carry the order. Charge = base fare + rate per km from the supplier to the site.">
+          <Section title="Delivery vehicles" hint="Sthiva picks the smallest vehicle in use that can carry the order. Charge = base fare + rate per km (straight-line distance from the supplier's pickup point to the site). Delivery charges start once at least one vehicle is in use; every catalog item then needs a weight and every supplier a pickup location.">
             {state.data.vehicles.length === 0 && <p className="text-[14px] text-stone">No vehicles added yet.</p>}
             <ul className="flex flex-col gap-3">
               {state.data.vehicles.map((v) => <VehicleRow key={`${v._id}-${v.updatedAt ?? ''}`} v={v} canEdit={canEdit} onSaved={reload} />)}
@@ -244,7 +248,13 @@ export default function SettingsPage() {
           </Section>
 
           <Section title="Supplier answer time" hint="How long a supplier has to accept an order before Sthiva offers it to the next supplier. Leave empty to turn it off; then the ops team moves unanswered orders by hand.">
-            <OfferTimeout key={show(state.data.offerTimeoutMinutes)} value={state.data.offerTimeoutMinutes} canEdit={canEdit} onSaved={reload} />
+            <GeneralNumber key={show(state.data.offerTimeoutMinutes)} field="offerTimeoutMinutes" value={state.data.offerTimeoutMinutes} canEdit={canEdit} onSaved={reload}
+              unit="minutes" label="Minutes a supplier has to accept an order" min={1} max={1440} step={1} placeholder="Off" invalid="Use whole minutes from 1 to 1440." />
+          </Section>
+
+          <Section title="Driver share of the delivery charge" hint="What a Sthiva delivery partner earns from each delivery charge; Sthiva keeps the rest. When a supplier delivers with their own vehicle, they get the whole delivery charge.">
+            <GeneralNumber key={show(state.data.driverSharePercent)} field="driverSharePercent" value={state.data.driverSharePercent} canEdit={canEdit} onSaved={reload}
+              unit="%" label="Driver share of the delivery charge" min={0} max={100} step="0.01" placeholder="Not set" invalid="Use a number from 0 to 100." />
           </Section>
         </>
       )}

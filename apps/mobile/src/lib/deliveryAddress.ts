@@ -11,6 +11,7 @@ export type DeliveryAddressForm = {
   label: string;
   fullAddress: string;
   contactPhone: string;
+  pincode?: string; // 6-digit delivery PIN (checks supplier coverage and prices delivery)
 };
 
 /** A position actually reported by the device's location provider after permission was granted */
@@ -32,6 +33,7 @@ export function buildDeliveryAddress(form: DeliveryAddressForm, location: Device
     fullAddress: form.fullAddress.trim(),
     contactPhone: form.contactPhone,
   };
+  if (form.pincode && /^[1-9]\d{5}$/.test(form.pincode)) address.pincode = form.pincode;
   if (location && location.source === 'device' && validCoordinate(location)) {
     address.lat = location.lat;
     address.lng = location.lng;
