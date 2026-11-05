@@ -5,7 +5,7 @@ import { Colors } from '../../src/constants/colors';
 import { Font } from '../../src/constants/typography';
 import { useAuthStore } from '../../src/store/auth.store';
 import { signOutEverywhere } from '../../src/lib/googleAuth';
-import { IS_PARTNER } from '../../src/lib/appVariant';
+import { APP_VARIANT, appForRole } from '../../src/lib/appVariant';
 import { SthivaMark, Button, Eyebrow, Icon } from '../../src/components/ui';
 
 const ROLE_NAMES: Record<string, string> = {
@@ -16,11 +16,17 @@ const ROLE_NAMES: Record<string, string> = {
   ADMIN: 'a Sthiva admin',
 };
 
-/** Shown when an account opens the app meant for the other side of the marketplace. */
+const THIS_APP = {
+  buyer: 'This app is for buying materials. Suppliers manage their orders in Sthiva Partner, drivers in Sthiva Driver.',
+  partner: 'This app is for suppliers and delivery partners. Buying materials happens in the Sthiva app.',
+  driver: 'This app is for delivery partners. Buying happens in the Sthiva app, selling in Sthiva Partner.',
+};
+
+/** Shown when an account opens the app meant for another side of the marketplace. */
 export default function OtherAppScreen() {
   const { user, clear } = useAuthStore();
   const [leaving, setLeaving] = useState(false);
-  const otherApp = IS_PARTNER ? 'Sthiva' : 'Sthiva Partner';
+  const otherApp = appForRole(user?.role);
   const who = ROLE_NAMES[user?.role ?? ''] ?? 'another kind of';
 
   async function switchAccount() {
@@ -39,9 +45,7 @@ export default function OtherAppScreen() {
           <Text style={styles.accent}>{otherApp}.</Text>
         </Text>
         <Text style={styles.text}>
-          You are signed in with {who} account. {IS_PARTNER
-            ? 'This app is for suppliers and delivery partners. Buying materials happens in the Sthiva app.'
-            : 'This app is for buying materials. Suppliers and delivery partners manage their orders in the Sthiva Partner app.'}
+          You are signed in with {who} account. {THIS_APP[APP_VARIANT]}
         </Text>
         <View style={styles.tip}>
           <Icon name="information-outline" size={20} color={Colors.ink} />

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '../constants/colors';
 import { Font } from '../constants/typography';
 import { BRAND_COLORS, MARK } from '../constants/brand';
-import { IS_PARTNER } from '../lib/appVariant';
+import { IS_WORK_APP } from '../lib/appVariant';
 
 // Hi-Vis building blocks for the app, matching the websites (docs/DESIGN_SYSTEM.md)
 
@@ -129,7 +129,7 @@ export function Icon({ name, size = 22, color = Colors.ink }: { name: IconName; 
 export function SthivaMark({ size = 32, onDark = false, tile = false }: { size?: number; onDark?: boolean; tile?: boolean }) {
   const maskId = `sthiva-${useId().replace(/[^a-zA-Z0-9]/g, '')}`;
   const [left, right] = tile
-    ? IS_PARTNER ? [BRAND_COLORS.white, BRAND_COLORS.yellow] : [BRAND_COLORS.ink, BRAND_COLORS.white]
+    ? IS_WORK_APP ? [BRAND_COLORS.white, BRAND_COLORS.yellow] : [BRAND_COLORS.ink, BRAND_COLORS.white]
     : [onDark ? BRAND_COLORS.white : BRAND_COLORS.ink, BRAND_COLORS.yellow];
   const mark = (
     <Svg width={tile ? size * 0.76 : size} height={tile ? size * 0.76 : size} viewBox={MARK.viewBox}>
@@ -150,7 +150,7 @@ export function SthivaMark({ size = 32, onDark = false, tile = false }: { size?:
     <View
       accessibilityElementsHidden
       importantForAccessibility="no"
-      style={{ width: size, height: size, borderRadius: size * 0.23, backgroundColor: IS_PARTNER ? BRAND_COLORS.ink : BRAND_COLORS.yellow, alignItems: 'center', justifyContent: 'center' }}
+      style={{ width: size, height: size, borderRadius: size * 0.23, backgroundColor: IS_WORK_APP ? BRAND_COLORS.ink : BRAND_COLORS.yellow, alignItems: 'center', justifyContent: 'center' }}
     >
       {mark}
     </View>

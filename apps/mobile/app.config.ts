@@ -1,12 +1,15 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 /**
- * One codebase, two apps:
+ * One codebase, three apps:
  *   APP_VARIANT unset   -> "Sthiva"          (com.sthiva.app)      for buyers
- *   APP_VARIANT=partner -> "Sthiva Partner"  (com.sthiva.partner)  for suppliers, delivery partners and Sthiva ops
- * Both Android packages are registered in Firebase project buildx-15494 (one google-services.json holds both).
+ *   APP_VARIANT=partner -> "Sthiva Partner"  (com.sthiva.partner)  for suppliers and Sthiva ops (drivers who started here)
+ *   APP_VARIANT=driver  -> "Sthiva Driver"   (com.sthiva.driver)   for delivery partners
+ * Every Android package is registered in Firebase project buildx-15494 (one google-services.json holds them all).
  */
-const partner = process.env.APP_VARIANT === 'partner';
+const variant = process.env.APP_VARIANT === 'partner' || process.env.APP_VARIANT === 'driver' ? process.env.APP_VARIANT : 'buyer';
+const partner = variant === 'partner';
+const driver = variant === 'driver';
 
 /**
  * Over-the-air updates (EAS Update, Expo organisation sthiva). Screen and logic changes reach installed apps
@@ -18,22 +21,28 @@ const partner = process.env.APP_VARIANT === 'partner';
  * that they cannot run.
  */
 const EAS_PROJECT_ID = '26067cb1-d12d-4279-9bda-bb3fc6f6eca3';
-const CHANNEL = partner ? 'partner-production' : 'buyer-production';
+const CHANNEL = `${variant}-production`;
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  name: partner ? 'Sthiva Partner' : 'Sthiva',
+  name: driver ? 'Sthiva Driver' : partner ? 'Sthiva Partner' : 'Sthiva',
   slug: config.slug ?? 'sthiva',
-  scheme: partner ? 'sthivapartner' : 'sthiva',
-  icon: partner ? './assets/partner/icon.png' : config.icon,
+  scheme: driver ? 'sthivadriver' : partner ? 'sthivapartner' : 'sthiva',
+  icon: driver ? './assets/driver/icon.png' : partner ? './assets/partner/icon.png' : config.icon,
   ios: {
     ...config.ios,
-    bundleIdentifier: partner ? 'com.sthiva.partner' : 'com.sthiva.app',
+    bundleIdentifier: driver ? 'com.sthiva.driver' : partner ? 'com.sthiva.partner' : 'com.sthiva.app',
   },
   android: {
     ...config.android,
-    package: partner ? 'com.sthiva.partner' : 'com.sthiva.app',
-    adaptiveIcon: partner
+    package: driver ? 'com.sthiva.driver' : partner ? 'com.sthiva.partner' : 'com.sthiva.app',
+    adaptiveIcon: driver
+      ? {
+          foregroundImage: './assets/driver/android-icon-foreground.png',
+          monochromeImage: './assets/android-icon-monochrome.png',
+          backgroundColor: '#FAF8F3',
+        }
+      : partner
       ? {
           foregroundImage: './assets/partner/android-icon-foreground.png',
           monochromeImage: './assets/android-icon-monochrome.png',
@@ -56,7 +65,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     : {}),
   extra: {
     ...config.extra,
-    appVariant: partner ? 'partner' : 'buyer',
+    appVariant: variant,
     ...(EAS_PROJECT_ID ? { eas: { projectId: EAS_PROJECT_ID } } : {}),
   },
 });
