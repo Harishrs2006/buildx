@@ -126,6 +126,9 @@ function OrderCard({ order, onDone }: { order: SupplierOrder; onDone: () => void
           {(a.pincode || a.district) && (
             <p className="mt-0.5 text-[14px] text-stone">{[a.district, a.state].filter(Boolean).join(', ')}{a.pincode && <> · PIN <span className="font-mono text-ink">{a.pincode}</span></>}</p>
           )}
+          {typeof order.distanceKm === 'number' && (
+            <p className="mt-0.5 text-[14px] text-stone">About <span className="font-mono text-ink">{order.distanceKm}</span> km from your pickup point (straight line)</p>
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
             <a href={`tel:${a.contactPhone}`} className="btn-ghost h-10 px-3 text-[14px]">
               <span className="material-symbols-outlined text-[18px]" aria-hidden="true">call</span>

@@ -13,6 +13,10 @@ export function resolveScreen(screen?: string, orderId?: string): string | null 
       return orderId ? `/(buyer)/order/${orderId}` : '/(buyer)/orders';
     case 'supplier_orders':
       return '/(supplier)/orders';
+    case 'supplier_weekly':
+      return '/(supplier)/weekly';
+    case 'supplier_profile':
+      return '/(supplier)/profile';
     case 'driver_available':
       return orderId ? `/(driver)/order/${orderId}` : '/(driver)/available';
     default:

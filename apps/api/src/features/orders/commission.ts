@@ -13,10 +13,10 @@ import { commissionPercent } from '../settings/rates';
 
 export type Rates = { platform: number; supplier: number | null };
 
-/** Commission rates per category id. Categories without a "Sthiva delivers" rate are absent. */
+/** Commission rates per category id. Categories without a "Sthiva delivers" rate, or hidden by an admin, are absent. */
 export async function ratesFor(categoryIds: (Types.ObjectId | string)[]): Promise<Map<string, Rates>> {
   const ids = [...new Set(categoryIds.map(String))];
-  const cats = await Category.find({ _id: { $in: ids } }).select('commission').lean();
+  const cats = await Category.find({ _id: { $in: ids }, isActive: { $ne: false } }).select('commission').lean();
   const map = new Map<string, Rates>();
   for (const c of cats) {
     const platform = commissionPercent(c.commission, 'PLATFORM');

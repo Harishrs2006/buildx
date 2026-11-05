@@ -83,6 +83,7 @@ export default function SupplierHome() {
           <Action icon="clipboard-text-outline" label="Orders" onPress={() => router.push('/(supplier)/orders')} />
           <Action icon="package-variant-closed" label="Products" onPress={() => router.push('/(supplier)/products')} />
           <Action icon="chart-line" label="Sales" onPress={() => router.push('/(supplier)/analytics' as never)} />
+          <Action icon="calendar-check-outline" label="Weekly check" onPress={() => router.push('/(supplier)/weekly' as never)} />
         </View>
         <Button title="List a product" variant="lime" onPress={() => router.push('/(supplier)/product/add')} style={styles.cta} />
 

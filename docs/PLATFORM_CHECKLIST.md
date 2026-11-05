@@ -37,13 +37,13 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | --- | --- | --- |
 | Registration: business, owner, phone, address, GSTIN | DONE | |
 | PIN codes served | DONE | Checked against India Post directory |
-| Verification documents upload | PART | Schema has kycDocuments; no upload screen |
+| Verification documents upload | DONE | GST certificate, shop licence or Udyam; private files, 10-minute ops links |
 | Admin verifies before selling | DONE | Ops console |
 | Delivery options (own vehicle or Sthiva) | DONE | Profile setting (canDeliver) plus choice per order at dispatch |
-| Weekly availability (product, qty, supply price, delivery, areas) | TODO | Core gap |
+| Weekly availability (product, qty, supply price, delivery, areas) | DONE | Weekly check: confirm every item's quantity and price; Monday reminder; ops sees last check. No auto-pause (owner can decide) |
 | Incoming order notification | DONE | Push |
 | Accept / reject order | DONE | Phase 3: offers, next supplier on reject or timeout |
-| Order view: distance, Sthiva commission, expected payout | PART | Commission and payout done; distance in phase 5 |
+| Order view: distance, Sthiva commission, expected payout | DONE | Distance: straight line from the pickup point |
 | Fulfil, dispatch, deliver | DONE | |
 
 ## 3. Pricing and commission
@@ -82,7 +82,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Supplier verification | DONE | |
 | Suspend users | DONE | ADMIN only |
 | Buyers and drivers lists, driver verification | DONE | Phase 7: People tab (search, role filter, suspend / reinstate for admins) |
-| Categories and catalog management | PART | Catalog items: review, edit, merge, add (phase 2). Categories still seeded |
+| Categories and catalog management | DONE | Catalog items (phase 2); categories add, rename, order, hide in Settings |
 | Commission and delivery rate settings | DONE | Phase 1 (Settings tab) |
 | Supplier reassignment after rejection | DONE | Phase 3: automatic, plus ops offer / move to next supplier |
 | Vehicle selection, delivery charge | PART | Phase 5a automatic; manual override in 5b |

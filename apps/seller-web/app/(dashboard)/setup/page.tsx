@@ -11,6 +11,7 @@ import {
   useSupplierProfile, type BusinessType,
 } from '../../../lib/setup';
 import { ErrorNote } from '../../../components/ui';
+import { VerificationDocuments } from '../../../components/VerificationDocuments';
 
 const GSTIN_RE = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const STEPS = ['Your business', 'Where you deliver', 'What you sell'] as const;
@@ -393,6 +394,7 @@ export default function SetupPage() {
         </section>
       )}
 
+      <VerificationDocuments />
       <DeleteAccount />
     </div>
   );

@@ -17,6 +17,7 @@ export interface IProduct extends Document {
   minOrderQuantity: number;
   stockQuantity: number;
   lowStockAlert: number;
+  availabilityConfirmedAt?: Date; // last weekly check that confirmed this listing's quantity and price
   weight?: number;
   specifications: Record<string, string>;
   tags: string[];
@@ -67,6 +68,7 @@ const productSchema = new Schema<IProduct>(
     minOrderQuantity: { type: Number, default: 1, min: 1 },
     stockQuantity: { type: Number, default: 0, min: 0 },
     lowStockAlert: { type: Number, default: 10 },
+    availabilityConfirmedAt: Date,
     weight: Number,
     specifications: { type: Map, of: String, default: {} },
     tags: [String],

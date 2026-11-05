@@ -156,6 +156,16 @@ export const opsApi = {
     send(c, 'PATCH', `/ops/drivers/${id}/verification`, { status, ...(note ? { note } : {}) }, z.unknown()),
   drivers: (c: ApiClient) => get(c, '/ops/drivers', z.array(driverSchema)),
   suppliers: (c: ApiClient, verification?: Verification) => get(c, '/ops/suppliers', z.array(supplierSchema), { verification }),
+  // Verification papers: view links expire after 10 minutes, so they are fetched only when opened
+  documents: (c: ApiClient, id: string) => get(c, `/ops/suppliers/${id}/documents`, z.object({
+    gstin: z.string().nullable(),
+    documents: z.array(z.object({
+      type: z.string(), label: z.string(), status: z.enum(['SUBMITTED', 'ACCEPTED', 'REJECTED']),
+      note: z.string().optional(), uploadedAt: z.string().optional(), format: z.string().optional(), viewUrl: z.string(),
+    })),
+  })),
+  reviewDocument: (c: ApiClient, id: string, type: string, status: 'ACCEPTED' | 'REJECTED', note?: string) =>
+    send(c, 'PATCH', `/ops/suppliers/${id}/documents/${type}`, { status, ...(note ? { note } : {}) }, z.unknown()),
   verify: (c: ApiClient, id: string, status: 'VERIFIED' | 'REJECTED', note?: string) =>
     send(c, 'PATCH', `/ops/suppliers/${id}/verification`, { status, ...(note ? { note } : {}) }, supplierSchema),
 };
@@ -169,6 +179,8 @@ export const commissionRowSchema = z.object({
   _id: z.string(),
   name: z.string(),
   slug: z.string().optional(),
+  description: z.string().nullable().optional(),
+  sortOrder: z.number().optional(),
   isActive: z.boolean().optional(),
   platformDeliveryPercent: z.number().nullable(),
   supplierDeliveryPercent: z.number().nullable(),
@@ -188,6 +200,10 @@ export const settingsApi = {
   get: (c: ApiClient) => get(c, '/ops/settings', settingsSchema),
   setCommission: (c: ApiClient, categoryId: string, body: { platformDeliveryPercent: number | null; supplierDeliveryPercent: number | null }) =>
     send(c, 'PATCH', `/ops/settings/commission/${categoryId}`, body, commissionRowSchema),
+  addCategory: (c: ApiClient, body: { name: string; description?: string; sortOrder?: number }) =>
+    send(c, 'POST', '/ops/settings/categories', body, z.unknown()),
+  updateCategory: (c: ApiClient, id: string, body: Partial<{ name: string; description: string; sortOrder: number; isActive: boolean }>) =>
+    send(c, 'PATCH', `/ops/settings/categories/${id}`, body, z.unknown()),
   addVehicle: (c: ApiClient, body: VehicleInput) => send(c, 'POST', '/ops/settings/vehicles', body, vehicleSchema),
   updateVehicle: (c: ApiClient, id: string, body: Partial<Omit<VehicleInput, 'code'>>) => send(c, 'PATCH', `/ops/settings/vehicles/${id}`, body, vehicleSchema),
   setGeneral: (c: ApiClient, body: { offerTimeoutMinutes?: number | null; driverSharePercent?: number | null; driverOfferTimeoutMinutes?: number | null }) =>

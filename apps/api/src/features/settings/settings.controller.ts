@@ -6,6 +6,7 @@ import { VehicleType } from '../../infrastructure/database/models/VehicleType.mo
 import { PlatformSettings, getPlatformSettings } from '../../infrastructure/database/models/PlatformSettings.model';
 import { AppError } from '../../shared/errors/AppError';
 import { logger } from '../../shared/logger/logger';
+import { slugify } from '../catalog/catalog.service';
 
 // Admin-controlled platform rules: commission per category, delivery vehicles and rates,
 // supplier offer timeout. Operators can read them; only admins change them.
@@ -24,7 +25,7 @@ function id(req: Request, label: string): string {
 export async function getSettings(_req: Request, res: Response, next: NextFunction) {
   try {
     const [categories, vehicles, general] = await Promise.all([
-      Category.find({}).select('name slug isActive commission sortOrder').sort({ sortOrder: 1, name: 1 }).lean(),
+      Category.find({}).select('name slug description isActive commission sortOrder').sort({ sortOrder: 1, name: 1 }).lean(),
       VehicleType.find({}).sort({ maxLoadKg: 1 }).lean(),
       getPlatformSettings(),
     ]);
@@ -33,6 +34,8 @@ export async function getSettings(_req: Request, res: Response, next: NextFuncti
         _id: c._id,
         name: c.name,
         slug: c.slug,
+        description: c.description ?? null,
+        sortOrder: c.sortOrder ?? 0,
         isActive: c.isActive,
         platformDeliveryPercent: c.commission?.platformDeliveryPercent ?? null,
         supplierDeliveryPercent: c.commission?.supplierDeliveryPercent ?? null,
@@ -69,6 +72,30 @@ export async function setCommission(req: Request, res: Response, next: NextFunct
       platformDeliveryPercent: category.commission?.platformDeliveryPercent ?? null,
       supplierDeliveryPercent: category.commission?.supplierDeliveryPercent ?? null,
     }));
+  } catch (err) { next(err); }
+}
+
+// POST /ops/settings/categories — a new category starts with no commission, so it stays out of the
+// shop until an admin sets its rate
+export async function createCategory(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { name, description, sortOrder } = req.body as { name: string; description?: string; sortOrder?: number };
+    const slug = slugify(name);
+    if (await Category.exists({ slug })) throw AppError.conflict(`A category called "${name}" already exists`);
+    const category = await Category.create({ name, slug, description, sortOrder: sortOrder ?? 0, isActive: true });
+    audit(req, 'category created', { categoryId: String(category._id), name, slug });
+    res.status(201).json(ok(category));
+  } catch (err) { next(err); }
+}
+
+// PATCH /ops/settings/categories/:id — rename, describe, reorder, show or hide (slug never changes)
+export async function updateCategory(req: Request, res: Response, next: NextFunction) {
+  try {
+    const categoryId = id(req, 'category');
+    const category = await Category.findByIdAndUpdate(categoryId, { $set: req.body }, { new: true, runValidators: true }).lean();
+    if (!category) throw AppError.notFound('Category');
+    audit(req, 'category updated', { categoryId, ...req.body });
+    res.json(ok(category));
   } catch (err) { next(err); }
 }
 

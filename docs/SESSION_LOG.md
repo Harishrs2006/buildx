@@ -1,54 +1,36 @@
-# BuildX session log
+# Sthiva (formerly BuildX) session log
 
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE (2026-11-05 02:20 IST)
-- Brand is **Sthiva** (renamed from BuildX, PR #58 merged). Live and showing Sthiva: buyer https://buildx-vgud.vercel.app,
-  seller https://buildx-48kc.vercel.app, ops https://buildx-ops.vercel.app, API https://buildx-api.onrender.com.
-  Service ids keep "buildx" on purpose (see 2026-11-05 01:55 entry).
-- Project lives at C:/dev/BuildX (root has node_modules now). Mobile builds: C:/bx/mobile. Sync with
-  `cp -r app src assets scripts app.json app.config.ts /c/bx/mobile/` (robocopy via `cmd //c` silently copied NOTHING
-  once: always grep a renamed string in C:/bx/mobile before building, and grep the bundle in the APK after).
-- Two apps from one codebase: Sthiva (com.sthiva.app) and Sthiva Partner (com.sthiva.partner, APP_VARIANT=partner).
-  APKs in C:/dev/BuildX: Sthiva.apk, Sthiva-Partner.apk (old BuildX*.apk are obsolete).
+## CURRENT STATE (2026-11-05 23:30 IST)
+- Brand **Sthiva**. Live: shop https://www.sthiva.com (sthiva.com redirects), suppliers https://seller.sthiva.com,
+  ops https://ops.sthiva.com, API https://api.sthiva.com (old *.vercel.app and buildx-api.onrender.com still work).
+  Service ids keep "buildx" on purpose. DNS at Cloudflare (all records DNS only).
+- ALL 8 PLATFORM PHASES MERGED (#66-#77): admin settings, catalog, supplier offers, one price + commission, delivery
+  pricing + driver offers + delivery code, settlements/payouts, insights + people, Sthiva Driver app.
+  Checklist: docs/PLATFORM_CHECKLIST.md.
+- Three apps from one codebase (apps/mobile, APP_VARIANT): Sthiva (com.sthiva.app), Sthiva Partner
+  (com.sthiva.partner), Sthiva Driver (com.sthiva.driver). APKs in C:/dev/BuildX. Builds in C:/bx/mobile:
+  `APP_VARIANT=<v> npx expo prebuild -p android --clean --no-install`, then gradle (see 2026-11-05 23:20 entry).
+  OTA: `node scripts/publish-update.cjs <buyer|partner|driver> "note"` (from C:/bx/mobile).
+- Live data: all 10 categories at 0% commission; no vehicles yet (delivery charges OFF); answer times and driver
+  share not set.
+- Websites skip builds unless their own files change (vercel.json ignoreCommand in each web app).
 - API keep-alive: .github/workflows/keep-api-awake.yml (every 10 min).
 
 ## NEXT STEPS
-PLATFORM BUILD (user's full business model, 2026-11-05; checklist + phases in docs/PLATFORM_CHECKLIST.md).
-User decisions 2026-11-05 07:40 IST:
-- Suppliers add and edit their own items (products, brands, price, qty, areas, delivery yes/no) on the seller website
-  any time; first step after sign-up is adding what they supply. Admin can also add/edit anything.
-- Buyer sees ONE item per product at ONE price; Sthiva picks the supplier: offer to best supplier (stock, serves PIN,
-  nearest), on reject/timeout to the next; admin can step in.
-- Commission: percent per category, separate (lower) percent when supplier delivers; numbers entered by admin only.
-- Delivery fee (Sthiva driver): vehicle types with capacity, base fare, per-km rate set by admin; smallest vehicle
-  that fits; admin can override.
-- Claude's working rule (user can change): buyer price for a PIN = lowest supplier price serving it + commission;
-  auto-offers only to suppliers whose price is not higher, so commission never shrinks; others via admin.
-Phase 1 (admin settings) merged as #66. Phase 2 merged as #67. Phase 3 (supplier offers) = PR feat/supplier-offers.
-  After merge: user publishes OTA updates (partner + buyer) so the apps show Accept/Reject and the new label.
-  Phase 4 (one price + commission) = PR feat/one-price. IMPORTANT after merge: the shop hides every category
-  without a commission, so the owner must set commission per category in ops Settings (0 is allowed).
-  Phase 4 merged (#70). 2026-11-05 09:00: at owner's request set 0% commission (both rates) on all 10 live
-  categories via a one-off script with apps/api/.env (script deleted); live shop shows 10 products again.
-  Owner decisions 2026-11-05 09:05: supplier keeps the whole delivery charge when they deliver; driver gets an
-  admin-set % (driverSharePercent); driver jobs offered one driver at a time + ops can assign; re-offer stays strict.
-  Phase 5a merged (#71). Phase 5b = PR feat/driver-offers. After merge: publish partner + buyer OTA updates
-  (old Partner app can't send the delivery code). Delivery charges stay OFF until an admin adds a vehicle type.
-  Next: Phase 6 (settlement records: supplier/driver payouts, admin marks paid).
-0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
-   Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
-   projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
-   commits do not build the websites. Until then avoid pushing many branches (each push = 3 deployments).
-1. User installs Sthiva-Partner.apk (their Google account is a supplier) and Sthiva.apk, checks look and order alerts.
-2. User registers "Sthiva Private Limited" (backup Setuzo/Udvora), files trademark (class 35), buys sthiva.com.
-   Then follow DOMAIN PLAN below.
-3. User will send new MongoDB credentials: switch Render MONGODB_URI (keep dbName decision in mind).
-4. Government sign-in method later (user decides; likely DigiLocker). Google stays until then.
-5. Launch prep: support email / phone / legal name for the websites; NEXT_PUBLIC_ALLOW_INDEXING=true after the domain.
-6. Real SMS needs Firebase Blaze (money: user decides).
-7. Open old PRs #51 (launch prep) and #34 (README refresh) predate the rename: review/rebase or close.
+Waiting on the owner (decisions or accounts):
+1. Publish OTA updates for partner + buyer (phases 5b-7 need them), install Sthiva-Driver.apk and try it.
+2. Ops Settings: answer times, driver share, real commission rates, vehicles; catalog weights; supplier pickup points.
+3. DONE (owner chose GST + shop licence/Udyam, 2026-11-05): supplier verification documents.
+4. Weekly availability DONE (no auto-pause for suppliers who skip it: owner can decide). Still needing rules:
+   product variations, market reference prices,
+   online payment (Razorpay needs company KYC) and refunds.
+5. Websites' NEXT_PUBLIC_API_URL -> https://api.sthiva.com (Vercel asks the owner for an emailed code).
+6. Launch details: business email, legal name, support phone; then NEXT_PUBLIC_ALLOW_INDEXING=true.
+7. New MongoDB credentials (owner sends), government sign-in later, real SMS needs Firebase Blaze (money).
+8. Old PRs #51 and #34 predate the rename: review/rebase or close.
 
 ## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
 BOUGHT 2026-11-05 on Cloudflare Registrar (account harishrs21082006, nameservers jillian/sean.ns.cloudflare.com).
@@ -582,3 +564,29 @@ Original plan:
     5e8f...f625, bundle uses https://api.sthiva.com, appVariant driver. NOTE: C:/bx/mobile/android is now prebuilt
     for the driver variant; run `APP_VARIANT=<variant> npx expo prebuild -p android --clean --no-install` before
     building another app.
+- 2026-11-05 23:30 IST: User merged #77 (phase 8). Polish branch chore/polish:
+  - Supplier orders show straight-line km from the supplier's pickup point (stored delivery distance, else address or
+    PIN post office); seller website + Partner app.
+  - Ops Settings: Categories section (add, rename, order, show/hide; slug fixed). Hidden categories are now off sale
+    in listings and orders (isActive checked in sellableCategoryIds and ratesFor).
+  - Vercel ignored-build step was already in place. Session log CURRENT STATE / NEXT STEPS rewritten.
+  - 363 API tests pass (2 new files + 1 settings test); ops and seller sites build; mobile tsc clean.
+- 2026-11-05 23:55 IST: Owner decisions: verification documents = GST certificate (if registered) + shop licence or
+  Udyam certificate (no Aadhaar, no bank proof for now); next build = weekly availability.
+  - Documents (same PR #78): POST/GET /suppliers/me/documents (multipart type+file, JPEG/PNG/PDF <= 5 MB, one per
+    type, replacing deletes the old file); GET /ops/suppliers/:id/documents (10-minute signed links, each view
+    logged), PATCH /ops/suppliers/:id/documents/:type (accept / reject with reason, supplier gets a push).
+    Files are Cloudinary type=private (StorageService.uploadPrivate / privateViewUrl); no public URL stored or sent.
+  - UI: seller website Business page "Verification documents"; ops Suppliers card "Documents" panel.
+  - 4 new API tests pass; ops and seller sites build.
+- 2026-11-06 00:20 IST: WEEKLY AVAILABILITY (same PR #78).
+  - GET/POST /suppliers/me/weekly: every ACTIVE/OUT_OF_STOCK listing; POST must include all of them (quantity +
+    price), checks bulk tiers first, applies stock-driven status, sets Product.availabilityConfirmedAt and
+    SupplierProfile.weeklyConfirmedAt. Weeks start Monday 00:00 IST.
+  - Reminder: sendWeeklyReminders in the one-minute sweeper; Monday 09:00-24:00 IST, verified active suppliers with
+    listings who have not confirmed; one per week (weeklyReminderFor claimed atomically). Push opens the weekly screen.
+  - No automatic pausing of suppliers who skip it (would be a new business rule; owner decides).
+  - UI: seller website Weekly check tab; Partner app Weekly check (from Overview); ops supplier card shows last check.
+  - Fixed: Partner app supplier and driver tab bars showed blank tabs for pushed screens (analytics, product add/edit,
+    driver order); now href:null like the buyer and ops layouts.
+  - 371 API tests pass (5 new); ops + seller sites build; mobile tsc clean. Needs partner OTA after merge.

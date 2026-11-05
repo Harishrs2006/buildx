@@ -13,11 +13,18 @@ import {
   usersQuery, analyticsQuery,
 } from './ops.schemas';
 import { opsList, opsGet, opsCreate, opsUpdate, opsMerge } from '../catalog/catalog.controller';
+import { opsDocuments, reviewDocument } from '../suppliers/documents';
+import { z } from 'zod';
+
+const documentReviewSchema = z.object({
+  status: z.enum(['ACCEPTED', 'REJECTED']),
+  note: z.string().trim().max(300).optional(),
+}).refine((v) => v.status === 'ACCEPTED' || (v.note ?? '').length >= 3, { message: 'Say why it was not accepted', path: ['note'] });
 import { catalogCreateSchema, catalogUpdateSchema, catalogMergeSchema } from '../catalog/catalog.schemas';
-import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral } from '../settings/settings.controller';
+import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral, createCategory, updateCategory } from '../settings/settings.controller';
 import { opsBalances, opsList as settlementList, opsGet as settlementGet, opsCreate as settlementCreate, opsMarkPaid, opsCancel as settlementCancel } from '../settlements/settlement.controller';
 import { balancesQuery, settlementListQuery, createSettlementSchema, markPaidSchema, cancelSettlementSchema } from '../settlements/settlement.schemas';
-import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema } from '../settings/settings.schemas';
+import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema, categoryCreateSchema, categoryUpdateSchema } from '../settings/settings.schemas';
 
 const router = Router();
 
@@ -45,6 +52,8 @@ router.get('/drivers', listDrivers);
 router.patch('/drivers/:id/verification', validate(supplierVerificationSchema), setDriverVerification);
 router.get('/suppliers', validate(supplierListQuery, 'query'), listSuppliers);
 router.patch('/suppliers/:id/verification', validate(supplierVerificationSchema), setSupplierVerification);
+router.get('/suppliers/:id/documents', opsDocuments);
+router.patch('/suppliers/:id/documents/:type', validate(documentReviewSchema), reviewDocument);
 
 router.get('/users', validate(usersQuery, 'query'), listUsers);
 router.get('/analytics', validate(analyticsQuery, 'query'), getAnalytics);
@@ -62,6 +71,8 @@ router.post('/catalog/:id/merge', validate(catalogMergeSchema), opsMerge);
 // Platform settings: operators read, ADMIN changes
 router.get('/settings', getSettings);
 router.patch('/settings/commission/:id', requireRole('ADMIN'), validate(commissionSchema), setCommission);
+router.post('/settings/categories', requireRole('ADMIN'), validate(categoryCreateSchema), createCategory);
+router.patch('/settings/categories/:id', requireRole('ADMIN'), validate(categoryUpdateSchema), updateCategory);
 router.post('/settings/vehicles', requireRole('ADMIN'), validate(vehicleCreateSchema), createVehicle);
 router.patch('/settings/vehicles/:id', requireRole('ADMIN'), validate(vehicleUpdateSchema), updateVehicle);
 router.patch('/settings/general', requireRole('ADMIN'), validate(generalSettingsSchema), updateGeneral);

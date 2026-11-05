@@ -9,6 +9,11 @@ export default function SupplierLayout() {
       <Tabs.Screen name="products" options={{ tabBarIcon: ({ focused }) => <TabItem label="Products" icon="package-variant-closed" focused={focused} /> }} />
       <Tabs.Screen name="payouts" options={{ tabBarIcon: ({ focused }) => <TabItem label="Payouts" icon="cash-multiple" focused={focused} /> }} />
       <Tabs.Screen name="profile" options={{ tabBarIcon: ({ focused }) => <TabItem label="Profile" icon="account-circle-outline" focused={focused} /> }} />
+      {/* Pushed screens, not tabs */}
+      <Tabs.Screen name="weekly" options={{ href: null }} />
+      <Tabs.Screen name="analytics" options={{ href: null }} />
+      <Tabs.Screen name="product/add" options={{ href: null }} />
+      <Tabs.Screen name="product/edit" options={{ href: null }} />
     </Tabs>
   );
 }

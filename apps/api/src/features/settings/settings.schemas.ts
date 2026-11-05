@@ -9,6 +9,18 @@ export const commissionSchema = z.object({
   supplierDeliveryPercent: percent,
 });
 
+// Categories buyers browse by. The slug is made from the name once and never changes: supplier
+// profiles and links point at it.
+export const categoryCreateSchema = z.object({
+  name: z.string().trim().min(2).max(60),
+  description: z.string().trim().max(300).optional(),
+  sortOrder: z.number().int().min(0).max(1000).optional(),
+});
+export const categoryUpdateSchema = categoryCreateSchema
+  .partial()
+  .extend({ isActive: z.boolean().optional() })
+  .refine((v) => Object.keys(v).length > 0, 'Nothing to change');
+
 export const vehicleCreateSchema = z.object({
   code: z.string().trim().toUpperCase().regex(/^[A-Z][A-Z0-9_]{1,29}$/, 'Code: capital letters, digits and _ only, e.g. MINI_TRUCK'),
   name: z.string().trim().min(2).max(60),
