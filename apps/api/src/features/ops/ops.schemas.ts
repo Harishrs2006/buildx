@@ -27,6 +27,13 @@ export const opsUnassignSchema = z.object({ reason });
 export const opsAssignSchema = z.object({ driverUserId: objectId, note: z.string().trim().max(500).optional() });
 export const opsCodSchema = z.object({ amount: z.number().finite().positive(), note: reason });
 export const opsOfferSchema = z.object({ supplierId: objectId, reason });
+export const usersQuery = z.object({
+  role: z.enum(['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN']).optional(),
+  q: z.string().trim().max(60).optional(),
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+export const analyticsQuery = z.object({ days: z.coerce.number().refine((d) => [7, 30, 90].includes(d), 'Pick 7, 30 or 90 days').default(30) });
 export const opsNoteSchema = z.object({ note: z.string().trim().min(1).max(1000) });
 
 export const supplierListQuery = z.object({

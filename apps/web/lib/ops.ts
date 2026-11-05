@@ -252,6 +252,40 @@ export const settlementApi = {
   cancel: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/settlements/${id}/cancel`, { reason }, settlementSchema),
 };
 
+// People and analytics (ops). Shapes mirror ops.controller.ts listUsers and analytics.service.ts.
+export const ROLES = ['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN'] as const;
+export type Role = (typeof ROLES)[number];
+export const personSchema = z
+  .object({
+    _id: z.string(), name: z.string(), phone: z.string().optional(), email: z.string().optional(),
+    role: z.enum(ROLES), isActive: z.boolean(), createdAt: z.string(),
+    orders: z.number().optional(), delivered: z.number().optional(),
+  })
+  .passthrough();
+export type Person = z.infer<typeof personSchema>;
+const rateRow = { id: z.string(), name: z.string(), offers: z.number(), accepted: z.number(), rejected: z.number(), expired: z.number(), delivered: z.number(), acceptRate: z.number().nullable() };
+export const analyticsSchema = z.object({
+  days: z.number(),
+  totals: z.object({
+    placed: z.number(), cancelled: z.number(), delivered: z.number(), sales: z.number(),
+    supplierEarnings: z.number(), driverEarnings: z.number(), sthivaShare: z.number(), averageOrder: z.number().nullable(),
+  }),
+  cancelledBy: z.record(z.number()),
+  series: z.array(z.object({ date: z.string(), placed: z.number(), delivered: z.number(), sales: z.number() })),
+  topItems: z.array(z.object({ name: z.string(), unit: z.string(), quantity: z.number(), sales: z.number() })),
+  suppliers: z.array(z.object({ ...rateRow, sales: z.number() })),
+  drivers: z.array(z.object(rateRow)),
+});
+export type Analytics = z.infer<typeof analyticsSchema>;
+
+export const peopleApi = {
+  list: (c: ApiClient, q: Query): Promise<{ data: Person[]; meta: PaginationMeta }> =>
+    c.requestPage('/ops/users', { auth: true, envelope: true, schema: z.array(personSchema), query: q }),
+  setActive: (c: ApiClient, id: string, isActive: boolean, reason: string) =>
+    send(c, 'PATCH', `/ops/users/${id}/active`, { isActive, reason }, z.unknown()),
+  analytics: (c: ApiClient, days: number) => get(c, '/ops/analytics', analyticsSchema, { days }),
+};
+
 export type Load<T> = { status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; error: unknown };
 
 // Fetches on mount and whenever `deps` change. `reload` refetches without flashing a skeleton.

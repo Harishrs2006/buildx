@@ -81,7 +81,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Assign / unassign driver | DONE | |
 | Supplier verification | DONE | |
 | Suspend users | DONE | ADMIN only |
-| Buyers and drivers lists, driver verification | PART | Drivers list only |
+| Buyers and drivers lists, driver verification | DONE | Phase 7: People tab (search, role filter, suspend / reinstate for admins) |
 | Categories and catalog management | PART | Catalog items: review, edit, merge, add (phase 2). Categories still seeded |
 | Commission and delivery rate settings | DONE | Phase 1 (Settings tab) |
 | Supplier reassignment after rejection | DONE | Phase 3: automatic, plus ops offer / move to next supplier |
@@ -89,7 +89,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Failed delivery handling | DONE | Phase 5b: driver/supplier report, ops queue, resolve or cancel |
 | Refunds | TODO | Only after online payment exists |
 | Payouts and settlement records | DONE | Phase 6: Payouts tab; statements net earnings against cash kept; admin marks paid |
-| Analytics (orders, sales, commission, performance) | PART | Summary counts only |
+| Analytics (orders, sales, commission, performance) | DONE | Phase 7: Insights tab (7/30/90 days, IST) |
 
 ## Build phases
 
