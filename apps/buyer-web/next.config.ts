@@ -12,6 +12,8 @@ const securityHeaders = [
   { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
 ];
 
+const FIREBASE_HOST = 'buildx-15494.firebaseapp.com';
+
 const nextConfig: NextConfig = {
   devIndicators: false,
   // @sthiva/web-core ships TypeScript source, not a compiled package, so Next must transpile it
@@ -22,7 +24,15 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: 'https', hostname: 'res.cloudinary.com' }],
   },
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders }];
+    return [
+      // Everything except Firebase's sign-in pages, which must be framed by this same site
+      { source: '/((?!__/).*)', headers: securityHeaders },
+      { source: '/__/:path*', headers: securityHeaders.map((h) => (h.key === 'X-Frame-Options' ? { ...h, value: 'SAMEORIGIN' } : h)) },
+    ];
+  },
+  // Google sign-in runs from this site's own address (lib/firebase.ts authDomainFor)
+  async rewrites() {
+    return [{ source: '/__/:path*', destination: `https://${FIREBASE_HOST}/__/:path*` }];
   },
 };
 

@@ -23,11 +23,11 @@ Thank you for your interest in contributing to Sthiva — India's B2B constructi
 
 ```bash
 # 1. Fork the repo on GitHub, then clone your fork
-git clone https://github.com/<your-username>/buildx.git
-cd buildx
+git clone https://github.com/<your-username>/sthiva.git
+cd sthiva
 
 # 2. Add the upstream remote
-git remote add upstream https://github.com/Harishrs2006/buildx.git
+git remote add upstream https://github.com/Harishrs2006/sthiva.git
 
 # 3. Install dependencies
 npm install
@@ -159,4 +159,4 @@ Tests require the Docker services to be running (`npm run docker:up`).
 
 ## Questions?
 
-Open a [GitHub Discussion](https://github.com/Harishrs2006/buildx/discussions) or file an [issue](https://github.com/Harishrs2006/buildx/issues).
+Open a [GitHub Discussion](https://github.com/Harishrs2006/sthiva/discussions) or file an [issue](https://github.com/Harishrs2006/sthiva/issues).

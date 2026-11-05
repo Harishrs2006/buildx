@@ -2,7 +2,7 @@
 
 ## Links
 - Deployed site: https://buildx-vgud.vercel.app/  (apps/buyer-web)
-- Repo: https://github.com/Harishrs2006/buildx
+- Repo: https://github.com/Harishrs2006/sthiva
 - PRD: ../BuildX_PRD.pdf
 - Skills/tools requested (installed: ~/.claude/skills, sources in ~/tools):
   - https://github.com/nextlevelbuilder/ui-ux-pro-max-skill

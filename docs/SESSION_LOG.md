@@ -600,3 +600,17 @@ Original plan:
     "Hidden from buyers". Test helper seedSupplier now starts confirmed; full suite also passes with the rule on.
   - Renames: API log service sthiva-api; keep-awake pings https://api.sthiva.com/health; Dockerfile tag.
   - 375 API tests pass; ops + seller build; mobile tsc clean.
+- 2026-11-06 01:30 IST: Owner asked why vercel.app links remain and why names still say buildx. Done:
+  - Vercel: buildx-vgud/48kc/ops.vercel.app now 308-redirect to www./seller./ops.sthiva.com. Projects renamed
+    sthiva-shop, sthiva-seller, sthiva-ops; team renamed Sthiva, URL vercel.com/sthiva (was buildx9).
+  - Firebase public-facing name BuildX -> Sthiva (Google consent app name was already Sthiva).
+  - Google sign-in window on the websites showed buildx-15494.firebaseapp.com: buyer-web and seller-web now rewrite
+    /__/:path* to Firebase and use their own host as authDomain on *.sthiva.com (lib/firebase.ts authDomainFor);
+    buyer-web lets /__/ pages be framed SAMEORIGIN. Web OAuth client now allows https://www.sthiva.com/__/auth/handler
+    and https://seller.sthiva.com/__/auth/handler. Ops console is phone sign-in only (unchanged).
+  - GitHub repo renamed Harishrs2006/buildx -> Harishrs2006/sthiva (old URLs redirect; Vercel/Render follow).
+    Docs links updated. Local folder stays C:/dev/BuildX/buildx.
+  - Left on purpose (fixed IDs, never shown to customers): Firebase project id buildx-15494, MongoDB db 'buildx',
+    Cloudinary cloud/folder buildx, Render service buildx-api (render.yaml blueprint name; renaming risks a second
+    service) and its buildx-api.onrender.com address (api.sthiva.com is the public one), Android packages com.buildx.*
+    (old builds) in Firebase.
