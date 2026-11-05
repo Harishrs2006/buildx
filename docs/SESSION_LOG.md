@@ -623,3 +623,7 @@ Original plan:
   Docker Desktop was not running, so images were not built locally.
   docs/LAUNCH.md now starts with a two-day launch plan. Waiting on the owner: demo supplier removal OK, support
   phone/email/legal name, first real suppliers, Settings values, Vultr server.
+- 2026-11-06 IST: Owner OK: removed the demo supplier now. Live DB: "BuildX Demo Supplier (placeholder...)" set
+  isActive=false and its 10 listings DISCONTINUED (soft, reversible; no open orders). Live /products now 0.
+  Owner chose to show their name until the company exists: Vercel sthiva-shop NEXT_PUBLIC_LEGAL_NAME =
+  "Sthiva, operated by Harish R S" (live after the next shop deploy). Support phone/email still to come from owner.
