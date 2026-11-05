@@ -9,3 +9,8 @@ apps/mobile
 apps/web/.next
 coverage
 *.log
+**/.next
+# Local-only files that are not part of the repo
+apps/web/app/(admin)
+apps/web/lib/api-client.ts
+deploy/vultr/.env

@@ -1,0 +1,35 @@
+# Caddy gets and renews HTTPS certificates for every name below on its own (Let's Encrypt).
+# DNS for each name must point at this server first (Cloudflare record, "DNS only").
+{
+	email {$ACME_EMAIL}
+}
+
+(common) {
+	encode zstd gzip
+	header -Server
+}
+
+sthiva.com {
+	import common
+	redir https://www.sthiva.com{uri} permanent
+}
+
+www.sthiva.com {
+	import common
+	reverse_proxy shop:3000
+}
+
+seller.sthiva.com {
+	import common
+	reverse_proxy seller:3000
+}
+
+ops.sthiva.com {
+	import common
+	reverse_proxy ops:3000
+}
+
+api.sthiva.com {
+	import common
+	reverse_proxy api:4000
+}

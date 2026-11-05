@@ -1,0 +1,74 @@
+# Sthiva on one Vultr server: API + shop + seller portal + ops console behind Caddy (HTTPS).
+# The database stays on MongoDB Atlas. Values come from deploy/vultr/.env (never committed).
+# Start or update:  docker compose -f deploy/vultr/docker-compose.yml --env-file deploy/vultr/.env up -d --build
+
+x-web-args: &web-args
+  NEXT_PUBLIC_API_URL: https://api.sthiva.com
+  NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+  NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:-buildx-15494.firebaseapp.com}
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID:-buildx-15494}
+  NEXT_PUBLIC_PHONE_SIGNIN: ${NEXT_PUBLIC_PHONE_SIGNIN:-false}
+
+services:
+  api:
+    build: { context: ../.., dockerfile: apps/api/Dockerfile }
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      MONGODB_URI: ${MONGODB_URI}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-buildx-15494}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FRONTEND_URL: https://www.sthiva.com,https://sthiva.com,https://seller.sthiva.com,https://ops.sthiva.com
+      ORDERS_REQUIRE_DELIVERY_PINCODE: ${ORDERS_REQUIRE_DELIVERY_PINCODE:-false}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+    logging: &logs { driver: json-file, options: { max-size: "20m", max-file: "5" } }
+
+  shop:
+    build:
+      context: ../..
+      dockerfile: deploy/vultr/web.Dockerfile
+      args:
+        <<: *web-args
+        APP: buyer-web
+        NEXT_PUBLIC_SITE_URL: https://www.sthiva.com
+        NEXT_PUBLIC_SELLER_PORTAL_URL: https://seller.sthiva.com
+        NEXT_PUBLIC_ALLOW_INDEXING: ${NEXT_PUBLIC_ALLOW_INDEXING:-false}
+        NEXT_PUBLIC_SUPPORT_EMAIL: ${NEXT_PUBLIC_SUPPORT_EMAIL:-}
+        NEXT_PUBLIC_SUPPORT_PHONE: ${NEXT_PUBLIC_SUPPORT_PHONE:-}
+        NEXT_PUBLIC_LEGAL_NAME: ${NEXT_PUBLIC_LEGAL_NAME:-}
+    restart: unless-stopped
+    logging: *logs
+
+  seller:
+    build: { context: ../.., dockerfile: deploy/vultr/web.Dockerfile, args: { <<: *web-args, APP: seller-web } }
+    restart: unless-stopped
+    logging: *logs
+
+  ops:
+    build: { context: ../.., dockerfile: deploy/vultr/web.Dockerfile, args: { <<: *web-args, APP: web } }
+    restart: unless-stopped
+    logging: *logs
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443", "443:443/udp"]
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api, shop, seller, ops]
+    logging: *logs
+
+volumes:
+  caddy_data:
+  caddy_config:
