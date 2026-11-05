@@ -546,3 +546,24 @@ Original plan:
   - Code (branch feat/sthiva-domain): buyer site.ts default URL, mobile home WEB_URL, eas.json and
     publish-update.cjs now use https://api.sthiva.com and https://www.sthiva.com.
   - PR #72 (phase 5b) was merged by the user.
+- 2026-11-05 20:15 IST: PHASE 6 settlements (branch feat/settlements). User merged #73 (domain).
+  - Settlement model (ST-yymmdd-xxxxxx): one supplier or driver, order lines (earned, cash kept), totals, net
+    (positive = Sthiva pays them, negative = they pay Sthiva), PENDING -> PAID (reference) or CANCELLED (frees orders).
+  - Orders count once DELIVERED and cash confirmed (CAPTURED/PARTIAL); Order.supplierSettlementId / driverSettlementId
+    stop double counting (claimed in a transaction). Earnings reuse commission.ts: supplier expectedPayout by
+    delivery mode, driver = driverSharePercent of the delivery charge. Cash kept = codAmountCollected when the
+    supplier or the assigned driver confirmed it; ops-recorded cash counts as Sthiva's.
+  - API: GET /ops/settlements/balances?party, GET /ops/settlements, GET /ops/settlements/:id (operators);
+    POST /ops/settlements, /:id/paid, /:id/cancel (ADMIN). GET /suppliers/me/settlements, /delivery/me/settlements.
+  - UI: ops console Payouts tab; seller website Payouts tab; Sthiva Partner app Payouts tab (supplier and driver).
+  - No payment schedule invented: an admin settles whenever they choose. 355 API tests pass (6 new); ops and
+    seller sites build; mobile tsc clean.
+- 2026-11-05 22:45 IST: PHASE 7 admin analytics + people (branch feat/admin-analytics, stacked on feat/settlements #74).
+  - GET /ops/analytics?days=7|30|90 (IST days): placed, cancelled (by who), delivered, sales, supplier and driver
+    earnings, Sthiva share (sales - partner earnings, via settlement orderAmounts), daily series, top 10 items,
+    supplier and driver offer answers (offers/took/rejected/no answer, accept %) and deliveries.
+  - GET /ops/users?role&q&page: every account (deleted hidden), regex-safe search on name/email/phone, buyer order counts.
+    Suspend/reinstate uses the existing ADMIN-only PATCH /ops/users/:id/active (reason required).
+  - Ops console: Insights tab (stat tiles, sales-per-day bar chart with hover + table view, top items, supplier and
+    driver tables) and People tab. Desktop tabs show icons only below xl; phone tab bar scrolls.
+  - 359 API tests pass (4 new); ops site builds. Not yet seen in a browser with real data (needs ops sign-in).

@@ -224,6 +224,68 @@ export const catalogApi = {
   merge: (c: ApiClient, id: string, intoId: string) => send(c, 'POST', `/ops/catalog/${id}/merge`, { intoId }, z.object({ moved: z.number() }).passthrough()),
 };
 
+// Settlements with suppliers and drivers. Shapes mirror settlement.service.ts.
+export type Party = 'SUPPLIER' | 'DRIVER';
+export const balanceSchema = z.object({
+  party: z.enum(['SUPPLIER', 'DRIVER']), partyId: z.string(), partyName: z.string(),
+  orders: z.number(), earned: z.number(), cashHeld: z.number(), net: z.number(), waitingForCash: z.number(),
+});
+export type Balance = z.infer<typeof balanceSchema>;
+export const settlementSchema = z
+  .object({
+    _id: z.string(), number: z.string(), party: z.enum(['SUPPLIER', 'DRIVER']), partyName: z.string(),
+    orders: z.array(z.object({ orderId: z.string(), orderNumber: z.string(), deliveredAt: z.string().optional(), earned: z.number(), cashHeld: z.number() })),
+    earned: z.number(), cashHeld: z.number(), net: z.number(),
+    status: z.enum(['PENDING', 'PAID', 'CANCELLED']),
+    reference: z.string().optional(), note: z.string().optional(), cancelReason: z.string().optional(),
+    paidAt: z.string().optional(), createdAt: z.string(),
+  })
+  .passthrough();
+export type Settlement = z.infer<typeof settlementSchema>;
+
+export const settlementApi = {
+  balances: (c: ApiClient, party: Party) => get(c, '/ops/settlements/balances', z.array(balanceSchema), { party }),
+  list: (c: ApiClient, q: Query) => get(c, '/ops/settlements', z.array(settlementSchema), q),
+  create: (c: ApiClient, party: Party, partyId: string) => send(c, 'POST', '/ops/settlements', { party, partyId }, settlementSchema),
+  markPaid: (c: ApiClient, id: string, reference: string, note?: string) =>
+    send(c, 'POST', `/ops/settlements/${id}/paid`, { reference, ...(note ? { note } : {}) }, settlementSchema),
+  cancel: (c: ApiClient, id: string, reason: string) => send(c, 'POST', `/ops/settlements/${id}/cancel`, { reason }, settlementSchema),
+};
+
+// People and analytics (ops). Shapes mirror ops.controller.ts listUsers and analytics.service.ts.
+export const ROLES = ['BUYER', 'SUPPLIER', 'DELIVERY_PARTNER', 'OPERATOR', 'ADMIN'] as const;
+export type Role = (typeof ROLES)[number];
+export const personSchema = z
+  .object({
+    _id: z.string(), name: z.string(), phone: z.string().optional(), email: z.string().optional(),
+    role: z.enum(ROLES), isActive: z.boolean(), createdAt: z.string(),
+    orders: z.number().optional(), delivered: z.number().optional(),
+  })
+  .passthrough();
+export type Person = z.infer<typeof personSchema>;
+const rateRow = { id: z.string(), name: z.string(), offers: z.number(), accepted: z.number(), rejected: z.number(), expired: z.number(), delivered: z.number(), acceptRate: z.number().nullable() };
+export const analyticsSchema = z.object({
+  days: z.number(),
+  totals: z.object({
+    placed: z.number(), cancelled: z.number(), delivered: z.number(), sales: z.number(),
+    supplierEarnings: z.number(), driverEarnings: z.number(), sthivaShare: z.number(), averageOrder: z.number().nullable(),
+  }),
+  cancelledBy: z.record(z.number()),
+  series: z.array(z.object({ date: z.string(), placed: z.number(), delivered: z.number(), sales: z.number() })),
+  topItems: z.array(z.object({ name: z.string(), unit: z.string(), quantity: z.number(), sales: z.number() })),
+  suppliers: z.array(z.object({ ...rateRow, sales: z.number() })),
+  drivers: z.array(z.object(rateRow)),
+});
+export type Analytics = z.infer<typeof analyticsSchema>;
+
+export const peopleApi = {
+  list: (c: ApiClient, q: Query): Promise<{ data: Person[]; meta: PaginationMeta }> =>
+    c.requestPage('/ops/users', { auth: true, envelope: true, schema: z.array(personSchema), query: q }),
+  setActive: (c: ApiClient, id: string, isActive: boolean, reason: string) =>
+    send(c, 'PATCH', `/ops/users/${id}/active`, { isActive, reason }, z.unknown()),
+  analytics: (c: ApiClient, days: number) => get(c, '/ops/analytics', analyticsSchema, { days }),
+};
+
 export type Load<T> = { status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; error: unknown };
 
 // Fetches on mount and whenever `deps` change. `reload` refetches without flashing a skeleton.

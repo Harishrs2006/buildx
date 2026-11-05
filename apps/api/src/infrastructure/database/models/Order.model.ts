@@ -118,6 +118,9 @@ export interface IOrder extends Document {
   codCollectedAt?: Date;
   codCollectedBy?: Types.ObjectId;
   codCollectedByRole?: 'DELIVERY_PARTNER' | 'SUPPLIER' | 'OPERATOR' | 'ADMIN';
+  // Settlement statements this order is counted in (features/settlements); absent = not settled yet
+  supplierSettlementId?: Types.ObjectId;
+  driverSettlementId?: Types.ObjectId;
   statusHistory: OrderStatusEvent[];
   opsNotes: OpsNote[];
   createdAt: Date;
@@ -248,6 +251,8 @@ const orderSchema = new Schema<IOrder>(
     idempotencyKey: String,
     requestHash: String,
     codAmountCollected: Number,
+    supplierSettlementId: { type: Schema.Types.ObjectId, ref: 'Settlement', index: true },
+    driverSettlementId: { type: Schema.Types.ObjectId, ref: 'Settlement', index: true },
     codCollectedAt: Date,
     codCollectedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     codCollectedByRole: { type: String, enum: ['DELIVERY_PARTNER', 'SUPPLIER', 'OPERATOR', 'ADMIN'] },

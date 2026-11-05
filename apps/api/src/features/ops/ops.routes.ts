@@ -5,14 +5,18 @@ import {
   summary, listOrders, getOrder, cancel, unassign, assign, recordCod, addNote,
   listDrivers, listSuppliers, setSupplierVerification, setUserActive,
   offerToSupplier, nextSupplier, supplierOptions, setDriverVerification, markDelivered, resolveProblem,
+  listUsers, getAnalytics,
 } from './ops.controller';
 import {
   listOrdersQuery, opsCancelSchema, opsUnassignSchema, opsAssignSchema, opsCodSchema, opsNoteSchema,
   supplierListQuery, supplierVerificationSchema, userActiveSchema, opsOfferSchema, opsUnassignSchema as opsReasonSchema,
+  usersQuery, analyticsQuery,
 } from './ops.schemas';
 import { opsList, opsGet, opsCreate, opsUpdate, opsMerge } from '../catalog/catalog.controller';
 import { catalogCreateSchema, catalogUpdateSchema, catalogMergeSchema } from '../catalog/catalog.schemas';
 import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral } from '../settings/settings.controller';
+import { opsBalances, opsList as settlementList, opsGet as settlementGet, opsCreate as settlementCreate, opsMarkPaid, opsCancel as settlementCancel } from '../settlements/settlement.controller';
+import { balancesQuery, settlementListQuery, createSettlementSchema, markPaidSchema, cancelSettlementSchema } from '../settlements/settlement.schemas';
 import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema } from '../settings/settings.schemas';
 
 const router = Router();
@@ -42,6 +46,9 @@ router.patch('/drivers/:id/verification', validate(supplierVerificationSchema), 
 router.get('/suppliers', validate(supplierListQuery, 'query'), listSuppliers);
 router.patch('/suppliers/:id/verification', validate(supplierVerificationSchema), setSupplierVerification);
 
+router.get('/users', validate(usersQuery, 'query'), listUsers);
+router.get('/analytics', validate(analyticsQuery, 'query'), getAnalytics);
+
 // Account suspension is ADMIN-only
 router.patch('/users/:id/active', requireRole('ADMIN'), validate(userActiveSchema), setUserActive);
 
@@ -58,5 +65,13 @@ router.patch('/settings/commission/:id', requireRole('ADMIN'), validate(commissi
 router.post('/settings/vehicles', requireRole('ADMIN'), validate(vehicleCreateSchema), createVehicle);
 router.patch('/settings/vehicles/:id', requireRole('ADMIN'), validate(vehicleUpdateSchema), updateVehicle);
 router.patch('/settings/general', requireRole('ADMIN'), validate(generalSettingsSchema), updateGeneral);
+
+// Settlements with suppliers and drivers: operators read, ADMIN creates, marks paid, cancels
+router.get('/settlements/balances', validate(balancesQuery, 'query'), opsBalances);
+router.get('/settlements', validate(settlementListQuery, 'query'), settlementList);
+router.get('/settlements/:id', settlementGet);
+router.post('/settlements', requireRole('ADMIN'), validate(createSettlementSchema), settlementCreate);
+router.post('/settlements/:id/paid', requireRole('ADMIN'), validate(markPaidSchema), opsMarkPaid);
+router.post('/settlements/:id/cancel', requireRole('ADMIN'), validate(cancelSettlementSchema), settlementCancel);
 
 export { router as opsRoutes };

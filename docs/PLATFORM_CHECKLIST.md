@@ -70,7 +70,7 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Pickup and drop details, navigation | DONE | Opens Google Maps |
 | Status updates | DONE | |
 | OTP / proof of delivery | DONE | Phase 5b: 4-digit buyer code; ops can confirm without it |
-| History, earnings | PART | History yes; earnings need delivery pricing |
+| History, earnings | DONE | Phase 6: Payouts tab in Sthiva Partner (driver share of delivery charge) |
 | Separate driver app | TODO | Drivers currently use Sthiva Partner |
 
 ## 5. Admin (ops console)
@@ -81,15 +81,15 @@ delivery partner, admin). Status: DONE = works end to end, PART = some of it exi
 | Assign / unassign driver | DONE | |
 | Supplier verification | DONE | |
 | Suspend users | DONE | ADMIN only |
-| Buyers and drivers lists, driver verification | PART | Drivers list only |
+| Buyers and drivers lists, driver verification | DONE | Phase 7: People tab (search, role filter, suspend / reinstate for admins) |
 | Categories and catalog management | PART | Catalog items: review, edit, merge, add (phase 2). Categories still seeded |
 | Commission and delivery rate settings | DONE | Phase 1 (Settings tab) |
 | Supplier reassignment after rejection | DONE | Phase 3: automatic, plus ops offer / move to next supplier |
 | Vehicle selection, delivery charge | PART | Phase 5a automatic; manual override in 5b |
 | Failed delivery handling | DONE | Phase 5b: driver/supplier report, ops queue, resolve or cancel |
 | Refunds | TODO | Only after online payment exists |
-| Payouts and settlement records | TODO | |
-| Analytics (orders, sales, commission, performance) | PART | Summary counts only |
+| Payouts and settlement records | DONE | Phase 6: Payouts tab; statements net earnings against cash kept; admin marks paid |
+| Analytics (orders, sales, commission, performance) | DONE | Phase 7: Insights tab (7/30/90 days, IST) |
 
 ## Build phases
 

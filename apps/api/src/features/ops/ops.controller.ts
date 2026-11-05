@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { analytics } from '../analytics/analytics.service';
 import { isValidObjectId, Types } from 'mongoose';
 import { ok } from '@sthiva/shared';
 import { Order } from '../../infrastructure/database/models/Order.model';
@@ -464,5 +465,47 @@ export async function resolveProblem(req: Request, res: Response, next: NextFunc
     ).lean();
     if (!order) throw AppError.conflict('No open delivery problem on this order');
     res.json(ok(await withOpsNote(id, req, `Delivery problem resolved: ${req.body.reason}`)));
+  } catch (err) { next(err); }
+}
+
+// ─── People and analytics ───────────────────────────────────────────────────
+
+const escapeRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// GET /ops/users?role=&q=&page=&limit= — every account (deleted ones hidden), newest first
+export async function listUsers(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { role, q, page, limit } = req.query as unknown as { role?: string; q?: string; page: number; limit: number };
+    const filter: Record<string, unknown> = { deletedAt: { $exists: false } };
+    if (role) filter.role = role;
+    if (q) {
+      const rx = { $regex: escapeRegex(q), $options: 'i' };
+      const digits = q.replace(/\D/g, '');
+      filter.$or = [{ name: rx }, { email: rx }, ...(digits.length >= 3 ? [{ phone: { $regex: digits } }] : [])];
+    }
+    const [users, total] = await Promise.all([
+      User.find(filter).select('name phone email role isActive onboardingComplete createdAt')
+        .sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit).lean(),
+      User.countDocuments(filter),
+    ]);
+    // Orders each buyer placed and got delivered
+    const ids = users.filter((u) => u.role === 'BUYER').map((u) => u._id);
+    const counts = ids.length ? await Order.aggregate([
+      { $match: { buyerId: { $in: ids } } },
+      { $group: { _id: '$buyerId', orders: { $sum: 1 }, delivered: { $sum: { $cond: [{ $eq: ['$status', 'DELIVERED'] }, 1, 0] } } } },
+    ]) : [];
+    const by = new Map(counts.map((c) => [String(c._id), c]));
+    res.json(ok(
+      users.map((u) => ({ ...u, ...(u.role === 'BUYER' ? { orders: by.get(String(u._id))?.orders ?? 0, delivered: by.get(String(u._id))?.delivered ?? 0 } : {}) })),
+      { total, page, limit, totalPages: Math.ceil(total / limit), hasNext: page * limit < total, hasPrev: page > 1 }
+    ));
+  } catch (err) { next(err); }
+}
+
+// GET /ops/analytics?days=7|30|90
+export async function getAnalytics(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { days } = req.query as unknown as { days: number };
+    res.json(ok(await analytics(days)));
   } catch (err) { next(err); }
 }
