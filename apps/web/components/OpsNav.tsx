@@ -10,6 +10,7 @@ const TABS = [
   { href: '/orders', label: 'Orders', icon: 'receipt_long' },
   { href: '/suppliers', label: 'Suppliers', icon: 'storefront' },
   { href: '/drivers', label: 'Drivers', icon: 'local_shipping' },
+  { href: '/settings', label: 'Settings', icon: 'tune' },
 ] as const;
 
 function isActive(pathname: string, href: string) {

@@ -9,6 +9,8 @@ import {
   listOrdersQuery, opsCancelSchema, opsUnassignSchema, opsAssignSchema, opsCodSchema, opsNoteSchema,
   supplierListQuery, supplierVerificationSchema, userActiveSchema,
 } from './ops.schemas';
+import { getSettings, setCommission, createVehicle, updateVehicle, updateGeneral } from '../settings/settings.controller';
+import { commissionSchema, vehicleCreateSchema, vehicleUpdateSchema, generalSettingsSchema } from '../settings/settings.schemas';
 
 const router = Router();
 
@@ -32,5 +34,12 @@ router.patch('/suppliers/:id/verification', validate(supplierVerificationSchema)
 
 // Account suspension is ADMIN-only
 router.patch('/users/:id/active', requireRole('ADMIN'), validate(userActiveSchema), setUserActive);
+
+// Platform settings: operators read, ADMIN changes
+router.get('/settings', getSettings);
+router.patch('/settings/commission/:id', requireRole('ADMIN'), validate(commissionSchema), setCommission);
+router.post('/settings/vehicles', requireRole('ADMIN'), validate(vehicleCreateSchema), createVehicle);
+router.patch('/settings/vehicles/:id', requireRole('ADMIN'), validate(vehicleUpdateSchema), updateVehicle);
+router.patch('/settings/general', requireRole('ADMIN'), validate(generalSettingsSchema), updateGeneral);
 
 export { router as opsRoutes };

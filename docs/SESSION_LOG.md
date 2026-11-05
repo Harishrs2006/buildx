@@ -15,6 +15,18 @@ Times are IST.
 - API keep-alive: .github/workflows/keep-api-awake.yml (every 10 min).
 
 ## NEXT STEPS
+PLATFORM BUILD (user's full business model, 2026-11-05; checklist + phases in docs/PLATFORM_CHECKLIST.md).
+User decisions 2026-11-05 07:40 IST:
+- Suppliers add and edit their own items (products, brands, price, qty, areas, delivery yes/no) on the seller website
+  any time; first step after sign-up is adding what they supply. Admin can also add/edit anything.
+- Buyer sees ONE item per product at ONE price; Sthiva picks the supplier: offer to best supplier (stock, serves PIN,
+  nearest), on reject/timeout to the next; admin can step in.
+- Commission: percent per category, separate (lower) percent when supplier delivers; numbers entered by admin only.
+- Delivery fee (Sthiva driver): vehicle types with capacity, base fare, per-km rate set by admin; smallest vehicle
+  that fits; admin can override.
+- Claude's working rule (user can change): buyer price for a PIN = lowest supplier price serving it + commission;
+  auto-offers only to suppliers whose price is not higher, so commission never shrinks; others via admin.
+Phase 1 (admin settings) = PR docs/platform-plan. Next: Phase 2 (catalog items linking supplier listings).
 0. VERCEL BUILD LIMIT HIT 2026-11-05 ~02:45 IST ("Deployment rate limited, retry in 24 hours", free Hobby plan).
    Production still shows #59 (first S mark, lime). After ~03:00 IST 2026-11-06: redeploy main on all three Vercel
    projects (buildx-vgud, buildx-48kc, buildx-ops) and add an Ignored Build Step per project so docs/mobile/api-only
@@ -455,3 +467,13 @@ Not bought yet on 2026-11-05 (RDAP 404). Once the user buys it:
   profile footer shows "update <id>" when running an OTA update.
   User created the Expo organisation "sthiva" and transferred the project: now @sthiva/sthiva (same id). app.config.ts
   owner: 'sthiva'. Personal Expo usernames cannot be renamed (the typo account hatish_r_s stays as the login).
+- 2026-11-05 07:50 IST: User pasted the full Sthiva business model (buyer, supplier, delivery partner, admin). Audited
+  the code against it: docs/PLATFORM_CHECKLIST.md (DONE/PART/TODO + 8 phases). User answered the 4 business rules
+  (see NEXT STEPS). Phase 1 built: Category.commission (percent, Sthiva-delivers / supplier-delivers), VehicleType model
+  (code, name, maxLoadKg, baseFare, perKmRate), PlatformSettings (offerTimeoutMinutes, null = off), pure rates.ts
+  (commissionPercent, commissionPaise, pickVehicle, deliveryChargePaise; integer paise). API: GET /ops/settings
+  (ops), PATCH /ops/settings/commission/:id, POST+PATCH /ops/settings/vehicles, PATCH /ops/settings/general (ADMIN).
+  Ops console: new Settings tab. 304 API tests pass (9 new), API + ops typecheck clean. No default numbers anywhere.
+- 2026-11-05 07:20 IST: GitHub sidebar still listed "claude" as contributor (stale cache; API and history are clean).
+  Toggled default branch main -> tmp-refresh -> main to force a recount; added local commit-msg hook that blocks
+  Claude/AI co-author lines. If still shown, user asks GitHub Support to refresh the contributors cache.

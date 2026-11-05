@@ -10,6 +10,8 @@ export interface ICategory extends Document {
   parentId?: Types.ObjectId;
   sortOrder: number;
   isActive: boolean;
+  // Sthiva commission in percent, set by an admin. Absent = not configured yet.
+  commission?: { platformDeliveryPercent?: number; supplierDeliveryPercent?: number };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +26,13 @@ const categorySchema = new Schema<ICategory>(
     parentId: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     sortOrder: { type: Number, default: 0 },
     isActive: { type: Boolean, default: true },
+    commission: {
+      _id: false,
+      // Sthiva's driver delivers
+      platformDeliveryPercent: { type: Number, min: 0, max: 100 },
+      // The supplier delivers with their own vehicle
+      supplierDeliveryPercent: { type: Number, min: 0, max: 100 },
+    },
   },
   { timestamps: true }
 );

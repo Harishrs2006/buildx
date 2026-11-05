@@ -126,6 +126,38 @@ export const opsApi = {
     send(c, 'PATCH', `/ops/suppliers/${id}/verification`, { status, ...(note ? { note } : {}) }, supplierSchema),
 };
 
+// Platform settings (GET for ops, changes ADMIN only). Shapes mirror settings.controller.ts.
+export const vehicleSchema = z
+  .object({ _id: z.string(), code: z.string(), name: z.string(), maxLoadKg: z.number(), baseFare: z.number(), perKmRate: z.number(), isActive: z.boolean() })
+  .passthrough();
+export type Vehicle = z.infer<typeof vehicleSchema>;
+export const commissionRowSchema = z.object({
+  _id: z.string(),
+  name: z.string(),
+  slug: z.string().optional(),
+  isActive: z.boolean().optional(),
+  platformDeliveryPercent: z.number().nullable(),
+  supplierDeliveryPercent: z.number().nullable(),
+}).passthrough();
+export type CommissionRow = z.infer<typeof commissionRowSchema>;
+export const settingsSchema = z.object({
+  categories: z.array(commissionRowSchema),
+  vehicles: z.array(vehicleSchema),
+  offerTimeoutMinutes: z.number().nullable(),
+});
+export type PlatformSettings = z.infer<typeof settingsSchema>;
+export type VehicleInput = Omit<Vehicle, '_id'>;
+
+export const settingsApi = {
+  get: (c: ApiClient) => get(c, '/ops/settings', settingsSchema),
+  setCommission: (c: ApiClient, categoryId: string, body: { platformDeliveryPercent: number | null; supplierDeliveryPercent: number | null }) =>
+    send(c, 'PATCH', `/ops/settings/commission/${categoryId}`, body, commissionRowSchema),
+  addVehicle: (c: ApiClient, body: VehicleInput) => send(c, 'POST', '/ops/settings/vehicles', body, vehicleSchema),
+  updateVehicle: (c: ApiClient, id: string, body: Partial<Omit<VehicleInput, 'code'>>) => send(c, 'PATCH', `/ops/settings/vehicles/${id}`, body, vehicleSchema),
+  setGeneral: (c: ApiClient, offerTimeoutMinutes: number | null) =>
+    send(c, 'PATCH', '/ops/settings/general', { offerTimeoutMinutes }, z.object({ offerTimeoutMinutes: z.number().nullable() })),
+};
+
 export type Load<T> = { status: 'loading' } | { status: 'success'; data: T } | { status: 'error'; error: unknown };
 
 // Fetches on mount and whenever `deps` change. `reload` refetches without flashing a skeleton.
