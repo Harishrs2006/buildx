@@ -129,7 +129,7 @@ export async function seedUser(uid: string, opts: SeedUserOpts = {}) {
 // Defaults to a VERIFIED supplier (an approved seller); pass verificationStatus to test others
 export async function seedSupplier(
   uid: string,
-  opts: { verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED'; servicePincodes?: string[] } = {}
+  opts: { verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED'; servicePincodes?: string[]; weeklyConfirmed?: boolean } = {}
 ) {
   const seeded = await seedUser(uid, { role: 'SUPPLIER' });
   const profile = await SupplierProfile.create({
@@ -138,6 +138,8 @@ export async function seedSupplier(
     whatsappNumber: '9876543210',
     verificationStatus: opts.verificationStatus ?? 'VERIFIED',
     servicePincodes: opts.servicePincodes ?? [],
+    // Up to date with the compulsory Monday check unless a test says otherwise
+    ...(opts.weeklyConfirmed === false ? {} : { weeklyConfirmedAt: new Date() }),
   });
   return { ...seeded, profile };
 }

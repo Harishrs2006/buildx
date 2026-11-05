@@ -10,6 +10,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+// On sthiva.com the Google sign-in window runs from this site's own address (next.config rewrites /__/auth to
+// Firebase), so people see sthiva.com instead of the Firebase project address. Elsewhere (local, previews) the
+// configured Firebase address is used.
+export function authDomainFor(hostname: string): string | undefined {
+  return /(^|\.)sthiva\.com$/.test(hostname) ? hostname : process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+}
+
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 
@@ -23,7 +30,7 @@ export function getFirebaseAuth(): Auth {
     );
   }
   if (!app) {
-    app = getApps()[0] ?? initializeApp(firebaseConfig);
+    app = getApps()[0] ?? initializeApp({ ...firebaseConfig, authDomain: authDomainFor(window.location.hostname) });
     auth = getAuth(app);
   }
   return auth!;

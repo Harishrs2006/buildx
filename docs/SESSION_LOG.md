@@ -24,7 +24,7 @@ Waiting on the owner (decisions or accounts):
 1. Publish OTA updates for partner + buyer (phases 5b-7 need them), install Sthiva-Driver.apk and try it.
 2. Ops Settings: answer times, driver share, real commission rates, vehicles; catalog weights; supplier pickup points.
 3. DONE (owner chose GST + shop licence/Udyam, 2026-11-05): supplier verification documents.
-4. Weekly availability DONE (no auto-pause for suppliers who skip it: owner can decide). Still needing rules:
+4. Weekly availability DONE; Monday check compulsory from 9 Nov 2026 (missed = hidden until confirmed). Still needing rules:
    product variations, market reference prices,
    online payment (Razorpay needs company KYC) and refunds.
 5. Websites' NEXT_PUBLIC_API_URL -> https://api.sthiva.com (Vercel asks the owner for an emailed code).
@@ -590,3 +590,27 @@ Original plan:
   - Fixed: Partner app supplier and driver tab bars showed blank tabs for pushed screens (analytics, product add/edit,
     driver order); now href:null like the buyer and ops layouts.
   - 371 API tests pass (5 new); ops + seller sites build; mobile tsc clean. Needs partner OTA after merge.
+- 2026-11-06 00:45 IST: Owner: suppliers update whenever they need, but every Monday the check is compulsory.
+  Branch feat/weekly-compulsory:
+  - Deadline end of Monday IST; on Monday last week's check still counts; from Tuesday a supplier without this week's
+    check is left out of eligibleProfileFilter (not listed, not offered orders) until they confirm (immediate).
+  - Starts with the week of 9 Nov 2026 (ENFORCED_FROM; env WEEKLY_ENFORCED_FROM overrides for tests).
+  - Reminders: Monday 09:00 (says items hide at midnight once enforced) + one "your items are hidden" notice after
+    the deadline (weeklyHiddenNoticeFor). Seller website + Partner app show the hidden banner; ops card shows
+    "Hidden from buyers". Test helper seedSupplier now starts confirmed; full suite also passes with the rule on.
+  - Renames: API log service sthiva-api; keep-awake pings https://api.sthiva.com/health; Dockerfile tag.
+  - 375 API tests pass; ops + seller build; mobile tsc clean.
+- 2026-11-06 01:30 IST: Owner asked why vercel.app links remain and why names still say buildx. Done:
+  - Vercel: buildx-vgud/48kc/ops.vercel.app now 308-redirect to www./seller./ops.sthiva.com. Projects renamed
+    sthiva-shop, sthiva-seller, sthiva-ops; team renamed Sthiva, URL vercel.com/sthiva (was buildx9).
+  - Firebase public-facing name BuildX -> Sthiva (Google consent app name was already Sthiva).
+  - Google sign-in window on the websites showed buildx-15494.firebaseapp.com: buyer-web and seller-web now rewrite
+    /__/:path* to Firebase and use their own host as authDomain on *.sthiva.com (lib/firebase.ts authDomainFor);
+    buyer-web lets /__/ pages be framed SAMEORIGIN. Web OAuth client now allows https://www.sthiva.com/__/auth/handler
+    and https://seller.sthiva.com/__/auth/handler. Ops console is phone sign-in only (unchanged).
+  - GitHub repo renamed Harishrs2006/buildx -> Harishrs2006/sthiva (old URLs redirect; Vercel/Render follow).
+    Docs links updated. Local folder stays C:/dev/BuildX/buildx.
+  - Left on purpose (fixed IDs, never shown to customers): Firebase project id buildx-15494, MongoDB db 'buildx',
+    Cloudinary cloud/folder buildx, Render service buildx-api (render.yaml blueprint name; renaming risks a second
+    service) and its buildx-api.onrender.com address (api.sthiva.com is the public one), Android packages com.buildx.*
+    (old builds) in Firebase.

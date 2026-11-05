@@ -18,7 +18,7 @@ and terminal chat history is lost; this log is the only memory.
 - Every asset (images, logos, fonts, animations) lives in the repo and is pushed.
 
 ## Map
-- apps/buyer-web: public storefront, deployed on Vercel (https://www.sthiva.com, also https://buildx-vgud.vercel.app/)
+- apps/buyer-web: public storefront, deployed on Vercel (https://www.sthiva.com)
 - apps/seller-web: supplier portal | apps/web: admin (PRD says it needs repair)
 - apps/api: Express + MongoDB | apps/mobile: Expo app | packages/web-core: shared API client
 - Design system: `docs/DESIGN_SYSTEM.md` (shared by web and the mobile app)

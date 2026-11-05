@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import { seedUser, seedSupplier, seedProduct, startDb, stopDb, clearDb, makeApp } from './helpers';
 import { Product } from '../src/infrastructure/database/models/Product.model';
 import { SupplierProfile } from '../src/infrastructure/database/models/SupplierProfile.model';
-import { weekStart, sendWeeklyReminders } from '../src/features/suppliers/weekly';
+import { weekStart, sendWeeklyReminders, confirmedSinceRequired } from '../src/features/suppliers/weekly';
 
 const app = makeApp();
 const api = (path: string) => `/api/v1${path}`;
@@ -14,7 +14,7 @@ beforeAll(startDb);
 afterAll(stopDb);
 beforeEach(async () => {
   await clearDb();
-  supplier = await seedSupplier('supplier');
+  supplier = await seedSupplier('supplier', { weeklyConfirmed: false });
 });
 
 describe('weeks', () => {
@@ -67,12 +67,52 @@ describe('Monday reminders', () => {
     expect(await sendWeeklyReminders(new Date('2026-11-09T02:00:00Z'))).toBe(0); // 07:30 IST, too early
     expect(await sendWeeklyReminders(monday10)).toBe(1);
     expect(await sendWeeklyReminders(monday10)).toBe(0); // already reminded this week
-    expect(await sendWeeklyReminders(new Date('2026-11-10T04:30:00Z'))).toBe(0); // Tuesday
+    // Tuesday: past the deadline, one "your items are hidden" notice
+    expect(await sendWeeklyReminders(new Date('2026-11-10T04:30:00Z'))).toBe(1);
+    expect(await sendWeeklyReminders(new Date('2026-11-11T04:30:00Z'))).toBe(0);
   });
 
   it('skip suppliers who already confirmed this week', async () => {
     await SupplierProfile.updateOne({ _id: supplier.profile._id }, { verificationStatus: 'VERIFIED', weeklyConfirmedAt: new Date('2026-11-09T03:00:00Z') });
     await seedProduct(supplier.profile._id);
     expect(await sendWeeklyReminders(monday10)).toBe(0);
+  });
+
+  it('send no hidden notice before the rule starts', async () => {
+    await SupplierProfile.updateOne({ _id: supplier.profile._id }, { verificationStatus: 'VERIFIED' });
+    await seedProduct(supplier.profile._id);
+    expect(await sendWeeklyReminders(new Date('2026-11-05T04:30:00Z'))).toBe(0); // Thursday before the first deadline
+  });
+});
+
+describe('compulsory Monday check', () => {
+  it('is not enforced before the end of Monday 9 Nov 2026', () => {
+    expect(confirmedSinceRequired(new Date('2026-11-09T18:29:00Z'))).toBeNull();
+    expect(confirmedSinceRequired(new Date('2026-11-09T18:30:00Z'))?.toISOString()).toBe('2026-11-08T18:30:00.000Z');
+  });
+
+  it("on Monday last week's check still counts; from Tuesday it must be this week's", () => {
+    const monday = new Date('2026-11-16T10:00:00Z'); // Monday 16 Nov, 15:30 IST
+    expect(confirmedSinceRequired(monday)?.toISOString()).toBe('2026-11-08T18:30:00.000Z');
+    const tuesday = new Date('2026-11-17T00:00:00Z'); // Tuesday 05:30 IST
+    expect(confirmedSinceRequired(tuesday)?.toISOString()).toBe('2026-11-15T18:30:00.000Z');
+  });
+
+  it('hides a supplier who has not confirmed from the shop until they do', async () => {
+    const p = await seedProduct(supplier.profile._id, { stockQuantity: 5 });
+    const listed = async () => (await request(app).get(api('/products'))).body.products.length;
+    try {
+      // A Tuesday after the rule starts (only the clock is faked; timers stay real for the database)
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-11-17T06:00:00Z'));
+      expect(await listed()).toBe(0);
+      const week = (await request(app).get(api('/suppliers/me/weekly')).set(supplier.headers)).body.data;
+      expect(week.hidden).toBe(true);
+      await request(app).post(api('/suppliers/me/weekly')).set(supplier.headers)
+        .send({ items: [{ productId: String(p._id), stockQuantity: 5, basePrice: 400 }] });
+      expect(await listed()).toBe(1);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

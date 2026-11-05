@@ -4,6 +4,9 @@ import type { ApiClient } from '@sthiva/web-core';
 // Weekly availability check. Shapes mirror apps/api features/suppliers/weekly.ts.
 export const weeklySchema = z.object({
   weekStart: z.string(),
+  // End of Monday: confirm by then or buyers stop seeing your items until you do
+  deadline: z.string(),
+  hidden: z.boolean(),
   confirmedAt: z.string().nullable(),
   confirmedThisWeek: z.boolean(),
   canDeliver: z.boolean(),

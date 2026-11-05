@@ -1,8 +1,11 @@
-// Weekly availability (owner decision 2026-11-05). Once a week each supplier goes through everything they
-// list and confirms how much they can supply and at what price, in one step. Suppliers who have not
-// confirmed get a reminder on Monday morning. Nothing is paused automatically: ops sees who is behind.
+// Weekly availability. Owner decisions: 2026-11-05 a weekly check; 2026-11-06 "whenever they need they can
+// update, but every Monday it is compulsory". Suppliers edit stock and prices any time; once a week they
+// also go through everything they list and confirm it, by the end of Monday. A supplier who has not
+// confirmed by then is hidden from buyers (not listed, not offered orders) until they confirm.
+// Reminders: Monday 09:00, and once more after the deadline if they are hidden.
 //
-// Weeks start Monday 00:00 India time (IST, UTC+5:30).
+// Weeks start Monday 00:00 India time (IST, UTC+5:30). Enforcement starts with the week of 9 Nov 2026
+// (deadline: end of Monday 9 Nov), so nobody is hidden for a week before the rule existed.
 
 import { Request, Response, NextFunction } from 'express';
 import { z } from 'zod';
@@ -28,6 +31,28 @@ export function weekStart(now = new Date()): Date {
 
 const LISTED = ['ACTIVE', 'OUT_OF_STOCK'];
 
+/** End of Monday 9 Nov 2026 IST: the first deadline that hides anyone (WEEKLY_ENFORCED_FROM overrides, for tests). */
+export const ENFORCED_FROM = new Date(process.env.WEEKLY_ENFORCED_FROM || '2026-11-09T18:30:00.000Z');
+
+/** End of Monday (IST) of the week `now` falls in. */
+export const weekDeadline = (now = new Date()) => new Date(weekStart(now).getTime() + DAY);
+
+/**
+ * Oldest weekly confirmation that still keeps a supplier visible, or null while the rule is not
+ * enforced yet. On Monday last week's check still counts; from Tuesday it must be this week's.
+ */
+export function confirmedSinceRequired(now = new Date()): Date | null {
+  if (now < ENFORCED_FROM) return null;
+  const start = weekStart(now);
+  return now >= weekDeadline(now) ? start : new Date(start.getTime() - 7 * DAY);
+}
+
+/** Mongo filter: suppliers who are up to date with the weekly check (empty while not enforced). */
+export function weeklyCheckFilter(now = new Date()): Record<string, unknown> {
+  const since = confirmedSinceRequired(now);
+  return since ? { weeklyConfirmedAt: { $gte: since } } : {};
+}
+
 export const weeklyConfirmSchema = z.object({
   items: z.array(z.object({
     productId: z.string().regex(/^[a-f\d]{24}$/i, 'Invalid product ID'),
@@ -49,11 +74,16 @@ export async function getWeekly(req: Request, res: Response, next: NextFunction)
     const items = await Product.find({ supplierId: profile._id, status: { $in: LISTED } })
       .select('name unit stockQuantity basePrice status minOrderQuantity')
       .sort({ name: 1 }).lean();
-    const start = weekStart();
+    const now = new Date();
+    const start = weekStart(now);
+    const since = confirmedSinceRequired(now);
     res.json(ok({
       weekStart: start,
+      deadline: weekDeadline(now),
       confirmedAt: profile.weeklyConfirmedAt ?? null,
       confirmedThisWeek: !!profile.weeklyConfirmedAt && profile.weeklyConfirmedAt >= start,
+      // Buyers can't see this supplier until they confirm
+      hidden: !!since && !(profile.weeklyConfirmedAt && profile.weeklyConfirmedAt >= since),
       canDeliver: profile.canDeliver ?? false,
       items,
     }));
@@ -105,37 +135,50 @@ export async function confirmWeekly(req: Request, res: Response, next: NextFunct
 }
 
 /**
- * Monday from 09:00 IST: one reminder per week to verified, active suppliers who have something listed
- * and have not confirmed this week. Safe to call often (runs in the one-minute sweeper).
+ * Reminders, one of each per week, to verified active suppliers with listings who have not confirmed:
+ *  - Monday from 09:00 IST: confirm by midnight
+ *  - after the Monday deadline (when enforced): your items are hidden until you confirm
+ * Safe to call often (runs in the one-minute sweeper); each send is claimed atomically.
  */
 export async function sendWeeklyReminders(now = new Date()) {
   const start = weekStart(now);
-  if (now.getTime() < start.getTime() + REMINDER_HOUR_IST * 60 * 60 * 1000) return 0;
-  if (now.getTime() >= start.getTime() + DAY) return 0; // Mondays only; a missed Monday is not chased later
+  const deadline = weekDeadline(now);
+  let kind: 'MONDAY' | 'HIDDEN' | null = null;
+  if (now < deadline) {
+    if (now.getTime() >= start.getTime() + REMINDER_HOUR_IST * 60 * 60 * 1000) kind = 'MONDAY';
+  } else if (confirmedSinceRequired(now)) {
+    kind = 'HIDDEN';
+  }
+  if (!kind) return 0;
+  const field = kind === 'MONDAY' ? 'weeklyReminderFor' : 'weeklyHiddenNoticeFor';
+  const notSent = { $or: [{ [field]: { $exists: false } }, { [field]: { $lt: start } }] };
   const due = await SupplierProfile.find({
     verificationStatus: 'VERIFIED',
     isActive: { $ne: false },
-    $and: [
-      { $or: [{ weeklyConfirmedAt: { $exists: false } }, { weeklyConfirmedAt: { $lt: start } }] },
-      { $or: [{ weeklyReminderFor: { $exists: false } }, { weeklyReminderFor: { $lt: start } }] },
-    ],
+    $and: [{ $or: [{ weeklyConfirmedAt: { $exists: false } }, { weeklyConfirmedAt: { $lt: start } }] }, notSent],
   }).select('_id userId').limit(500).lean();
+  const enforced = !!confirmedSinceRequired(new Date(deadline.getTime()));
   let sent = 0;
   for (const s of due) {
     // Claim first so two servers never send the same reminder twice
-    const claimed = await SupplierProfile.updateOne(
-      { _id: s._id, $or: [{ weeklyReminderFor: { $exists: false } }, { weeklyReminderFor: { $lt: start } }] },
-      { $set: { weeklyReminderFor: start } }
-    );
+    const claimed = await SupplierProfile.updateOne({ _id: s._id, ...notSent }, { $set: { [field]: start } });
     if (!claimed.modifiedCount) continue;
     if (!(await Product.exists({ supplierId: s._id, status: { $in: LISTED } }))) continue;
-    notifyUser(String(s.userId), {
-      title: 'Weekly check: confirm your stock and prices',
-      body: 'Tell Sthiva what you can supply this week. It takes a minute on the Weekly check page.',
-      data: { screen: 'supplier_weekly' },
-    });
+    notifyUser(String(s.userId), kind === 'MONDAY'
+      ? {
+          title: 'Weekly check: confirm your stock and prices today',
+          body: enforced
+            ? 'Confirm what you can supply this week by midnight tonight, or buyers will not see your items until you do.'
+            : 'Tell Sthiva what you can supply this week. It takes a minute on the Weekly check page.',
+          data: { screen: 'supplier_weekly' },
+        }
+      : {
+          title: 'Your items are hidden from buyers',
+          body: 'You missed this week\'s Monday check. Confirm your stock and prices and your items come back right away.',
+          data: { screen: 'supplier_weekly' },
+        });
     sent++;
   }
-  if (sent) logger.info('[weekly] reminders sent', { sent });
+  if (sent) logger.info('[weekly] reminders sent', { kind, sent });
   return sent;
 }

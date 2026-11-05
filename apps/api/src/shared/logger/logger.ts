@@ -19,7 +19,7 @@ const productionFormat = combine(
 export const logger = winston.createLogger({
   level: env.NODE_ENV === 'production' ? 'info' : 'debug',
   format: env.NODE_ENV === 'production' ? productionFormat : developmentFormat,
-  defaultMeta: { service: 'buildx-api' },
+  defaultMeta: { service: 'sthiva-api' },
   transports: [
     new winston.transports.Console(),
     ...(env.NODE_ENV === 'production'

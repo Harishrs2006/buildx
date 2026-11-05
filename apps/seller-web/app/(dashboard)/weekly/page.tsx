@@ -53,14 +53,26 @@ export default function WeeklyPage() {
 
   return (
     <div className="flex flex-col gap-6 pb-24">
-      <PageHead eyebrow={`Week of ${new Date(data.weekStart).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' })}`} title="Weekly check">
+      <PageHead eyebrow={`Week of ${new Date(data.weekStart).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', timeZone: 'Asia/Kolkata' })}`} title="Weekly check">
         <div className="flex flex-col gap-2 sm:items-end">
           {data.confirmedThisWeek
             ? <Pill tone="done">Confirmed {data.confirmedAt ? shortDate.format(new Date(data.confirmedAt)) : ''}</Pill>
             : <Pill tone="wait">Not confirmed this week</Pill>}
-          <p className="max-w-sm text-[15px] text-stone sm:text-right">Set how much of each item you can supply this week and your price, then confirm. Buyers only see what you have.</p>
+          <p className="max-w-sm text-[15px] text-stone sm:text-right">You can change stock and prices any time. Every Monday, confirm the whole list here before midnight.</p>
         </div>
       </PageHead>
+
+      {data.hidden && (
+        <div role="alert" className="rounded-2xl border-2 border-error bg-error-container p-4 text-[15px]">
+          <p className="font-semibold text-error">Buyers can&apos;t see your items right now</p>
+          <p className="mt-1">This week&apos;s Monday check was missed. Confirm below and your items are back on Sthiva straight away.</p>
+        </div>
+      )}
+      {!data.hidden && !data.confirmedThisWeek && (
+        <p className="rounded-2xl bg-[#FFF4D6] px-4 py-3 text-[15px] text-[#5C4300]">
+          Confirm before midnight on Monday {new Date(data.weekStart).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', timeZone: 'Asia/Kolkata' })}. After that, buyers won&apos;t see your items until you do.
+        </p>
+      )}
 
       {data.items.length === 0 ? (
         <EmptyState icon="inventory_2" title="Nothing listed yet" body="Add the materials you supply first. They show up here every week." cta={{ href: '/products/new', label: 'Add a product' }} />

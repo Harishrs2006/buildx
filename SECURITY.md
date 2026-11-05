@@ -12,7 +12,7 @@
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Please report security issues by opening a **[GitHub Security Advisory](https://github.com/Harishrs2006/buildx/security/advisories/new)** (private disclosure).
+Please report security issues by opening a **[GitHub Security Advisory](https://github.com/Harishrs2006/sthiva/security/advisories/new)** (private disclosure).
 
 Include:
 - Description of the vulnerability

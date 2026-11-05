@@ -1,5 +1,5 @@
 # Build from the repository root (npm workspaces need the root lockfile):
-#   docker build -f apps/api/Dockerfile -t buildx-api .
+#   docker build -f apps/api/Dockerfile -t sthiva-api .
 
 # ─── Build stage ────────────────────────────────────
 FROM node:20-alpine AS builder

@@ -2,7 +2,7 @@
 
 > B2B platform connecting contractors and construction companies with verified local suppliers — built for tier-2/3 India (starting Tumakuru, Karnataka)
 
-[![CI](https://github.com/Harishrs2006/buildx/actions/workflows/ci.yml/badge.svg)](https://github.com/Harishrs2006/buildx/actions/workflows/ci.yml)
+[![CI](https://github.com/Harishrs2006/sthiva/actions/workflows/ci.yml/badge.svg)](https://github.com/Harishrs2006/sthiva/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
@@ -30,7 +30,7 @@ Sthiva is a B2B marketplace mobile app where contractors and builders browse, co
 ## Architecture
 
 ```
-buildx/
+sthiva/
 ├── apps/
 │   ├── mobile/          # React Native (Expo) — buyer + supplier app
 │   └── api/             # Express.js REST API
@@ -49,8 +49,8 @@ buildx/
 
 ```bash
 # 1. Clone and install
-git clone https://github.com/Harishrs2006/buildx.git
-cd buildx
+git clone https://github.com/Harishrs2006/sthiva.git
+cd sthiva
 npm install
 
 # 2. Start local Redis (optional — app works without it)

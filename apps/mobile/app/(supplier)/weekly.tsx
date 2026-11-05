@@ -12,7 +12,7 @@ import { Button, Card, EmptyState, Notice, Pill, ScreenHeader } from '../../src/
 // item you list, then confirm once. Sthiva reminds you on Monday morning until it is done.
 
 type Item = { _id: string; name: string; unit: string; stockQuantity: number; basePrice: number };
-type Weekly = { weekStart: string; confirmedAt: string | null; confirmedThisWeek: boolean; items: Item[] };
+type Weekly = { weekStart: string; confirmedAt: string | null; confirmedThisWeek: boolean; hidden?: boolean; items: Item[] };
 type Row = { qty: string; price: string };
 
 const qtyOk = (v: string) => /^\d{1,8}$/.test(v);
@@ -68,7 +68,14 @@ export default function WeeklyScreen() {
                 ? <Pill label="Confirmed this week" bg={Colors.success} color={Colors.sand} />
                 : <Pill label="Not confirmed this week" bg={Colors.limeSoft} color={Colors.ink} />}
             </View>
-            <Text style={styles.body}>Set how much of each item you can supply this week and your price. Quantity 0 shows it as out of stock.</Text>
+            {week.hidden ? (
+              <Notice tone="error" title="Buyers can't see your items right now">
+                This week's Monday check was missed. Confirm below and your items come back straight away.
+              </Notice>
+            ) : null}
+            <Text style={styles.body}>
+              You can change stock and prices any time. Every Monday, confirm the whole list here before midnight, or buyers stop seeing your items until you do. Quantity 0 shows an item as out of stock.
+            </Text>
             {notice ? <Notice tone={notice.tone} onClose={() => setNotice(null)}>{notice.text}</Notice> : null}
             {week.items.map((i) => {
               const r = rows[i._id] ?? { qty: '', price: '' };

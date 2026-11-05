@@ -46,7 +46,7 @@ export function createApp(): Application {
   app.get("/health", (_req: Request, res: Response) => {
     res.json({
       status: "ok",
-      service: "buildx-api",
+      service: "sthiva-api",
       version: env.API_VERSION,
       timestamp: new Date().toISOString(),
     });
