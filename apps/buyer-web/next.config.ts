@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { NextConfig } from 'next';
+import { iconNames } from '../../packages/web-core/icons/icon-names.mjs';
 
 // Security headers for every response. A strict Content-Security-Policy is deliberately not set
 // yet: Firebase phone auth loads reCAPTCHA scripts and frames from several Google domains, and a
@@ -21,6 +22,8 @@ const nextConfig: NextConfig = {
   devIndicators: false,
   // @sthiva/web-core ships TypeScript source, not a compiled package, so Next must transpile it
   transpilePackages: ['@sthiva/web-core'],
+  // Only the icons this site uses are downloaded (see packages/web-core/icons/icon-names.mjs)
+  env: { ICON_NAMES: iconNames(process.cwd()) },
   poweredByHeader: false,
   reactStrictMode: true,
   images: {
