@@ -1,4 +1,5 @@
 import type { CatalogCategory, CatalogItem, ListingUnit } from './types';
+import { INTERIOR_CATEGORIES, INTERIOR_ITEMS } from './interiors';
 
 // Material types, specs, trade units and well-known brands in the Indian market (checked against
 // BIS standards and public product listings, October 2026). Brand lists say what exists in the
@@ -27,7 +28,8 @@ export const CATALOG_CATEGORIES: CatalogCategory[] = [
   { slug: 'paints-chemicals', name: 'Paints & Chemicals', photo: '/categories/paints-chemicals.jpg', tagline: 'Emulsions, primers, putty, enamels and waterproofing.', groups: ['Paints', 'Preparation', 'Waterproofing'] },
   { slug: 'plywood-timber', name: 'Plywood & Timber', photo: '/categories/plywood-timber.jpg', tagline: 'MR, BWR and marine plywood, boards, laminates, doors and timber.', groups: ['Plywood', 'Boards and laminates', 'Doors and timber'] },
   { slug: 'machines-tools', name: 'Machines & Tools', photo: '/categories/machines-tools.jpg', tagline: 'Power tools, site equipment, scaffolding and safety gear.', groups: ['Tools', 'Site equipment', 'Safety'] },
-  { slug: 'tiles-flooring', name: 'Tiles & Flooring', photo: '/categories/tiles-flooring.jpg', tagline: 'Vitrified and ceramic tiles, natural stone, adhesives and grout.', groups: ['Tiles', 'Natural stone', 'Fixing'] },
+  { slug: 'tiles-flooring', name: 'Tiles & Flooring', photo: '/categories/tiles-flooring.jpg', tagline: 'Vitrified and ceramic tiles, natural stone, wood and vinyl flooring, adhesives.', groups: ['Tiles', 'Natural stone', 'Wood and vinyl flooring', 'Fixing'] },
+  ...INTERIOR_CATEGORIES,
 ];
 
 export const CATALOG: CatalogItem[] = [
@@ -563,6 +565,7 @@ export const CATALOG: CatalogItem[] = [
     variants: [{ label: 'Type', options: ['Adhesive C1', 'Adhesive C2', 'Cement grout', 'Epoxy grout'] }],
     soldAs: [{ label: 'Per bag or pack' }], brands: ['MYK Laticrete', 'Roff', 'Ardex Endura', 'Kerakoll'], search: 'tile adhesive grout', image: I('tiles'),
   },
+  ...INTERIOR_ITEMS,
 ];
 
 export function catalogCategory(slug: string): CatalogCategory | undefined {

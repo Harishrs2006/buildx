@@ -35,6 +35,7 @@ export type CatalogItem = {
   image: string; // illustration in public/illustrations
   calculator?: Calculator;
   note?: string; // honest caveat shown on the page
+  madeToOrder?: boolean; // measured and quoted by the supplier, who confirms the date after accepting
 };
 
 export type CatalogCategory = {
