@@ -58,6 +58,7 @@ export function Header({ tone = 'light', darkUntilId }: { tone?: 'light' | 'dark
         <nav aria-label="Primary" className="ml-6 hidden items-center gap-1 lg:flex">
           {[
             { href: '/#categories', label: 'Materials' },
+            { href: '/rooms', label: 'Rooms' },
             { href: '/#how-it-works', label: 'How it works' },
             { href: '/#suppliers', label: 'For suppliers' },
           ].map((l) => (
