@@ -37,6 +37,7 @@ export function SiteFooter() {
           links={[
             { href: '/#categories', label: 'All materials' },
             { href: '/rooms', label: 'Shop by room' },
+            { href: '/designs', label: 'Interior designs' },
             { href: '/search', label: 'Search' },
             { href: '/cart', label: 'Cart' },
             { href: '/orders', label: 'Track orders' },

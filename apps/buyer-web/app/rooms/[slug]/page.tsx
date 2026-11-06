@@ -8,6 +8,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { MaterialCard } from '@/components/catalog/MaterialCard';
 import { RoomCard } from '@/components/rooms/RoomCard';
+import { RoomDesigns } from '@/components/designs/RoomDesigns';
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -85,6 +86,7 @@ export default async function RoomPage({ params }: Props) {
         </nav>
 
         <div className="container-x flex flex-col gap-14 pt-12 md:gap-20 md:pt-16">
+          <RoomDesigns kinds={r.sections.flatMap((s) => s.itemIds)} roomName={r.name} />
           {sections.map((s, i) => (
             <section key={s.title} id={anchor(s.title)} className="scroll-mt-28" aria-labelledby={`${anchor(s.title)}-title`}>
               <div className="flex items-baseline justify-between gap-4 border-b border-ink/10 pb-4">

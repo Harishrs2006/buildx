@@ -16,6 +16,7 @@ const RECENT_COUNT = 3;
 
 const LINKS = [
   { href: '/orders', icon: 'receipt_long', label: 'All orders' },
+  { href: '/quotes', icon: 'design_services', label: 'Design quotes' },
   { href: '/cart', icon: 'shopping_cart', label: 'Cart' },
   { href: '/refunds', icon: 'currency_rupee', label: 'Cancellations and refunds' },
   { href: '/privacy', icon: 'shield_person', label: 'Privacy policy' },

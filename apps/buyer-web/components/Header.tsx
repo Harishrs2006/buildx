@@ -59,6 +59,7 @@ export function Header({ tone = 'light', darkUntilId }: { tone?: 'light' | 'dark
           {[
             { href: '/#categories', label: 'Materials' },
             { href: '/rooms', label: 'Rooms' },
+            { href: '/designs', label: 'Designs' },
             { href: '/#how-it-works', label: 'How it works' },
             { href: '/#suppliers', label: 'For suppliers' },
           ].map((l) => (
