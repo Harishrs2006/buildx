@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomInt } from 'crypto';
+import { deliveryWindow } from './delivery-window';
 import mongoose, { ClientSession, Types } from 'mongoose';
 import { Product, IProduct } from '../../infrastructure/database/models/Product.model';
 import { Order, IOrder, OrderStatusEvent } from '../../infrastructure/database/models/Order.model';
@@ -62,7 +63,7 @@ async function inTransaction<T>(fn: (session: ClientSession) => Promise<T>): Pro
 type LeanProduct = Pick<
   IProduct,
   'supplierId' | 'name' | 'unit' | 'basePrice' | 'bulkPricing' | 'gstRate' | 'isGstInclusive'
-  | 'minOrderQuantity' | 'stockQuantity' | 'status' | 'images' | 'catalogItemId' | 'categoryId'
+  | 'minOrderQuantity' | 'stockQuantity' | 'status' | 'images' | 'catalogItemId' | 'categoryId' | 'deliveryDays' | 'deliveryDaysMax'
 > & { _id: Types.ObjectId };
 
 type PricedCart = {
@@ -201,6 +202,8 @@ export async function quoteOrder(items: CartItemsInput, deliveryPincode?: string
   await assertSupplierCanServe(supplierId, destination);
   return {
     supplierId,
+    // Usual delivery time of the chosen listings; the supplier confirms the date after accepting
+    expectedDelivery: deliveryWindow(products),
     // null for legacy quotes without a PIN; the order will re-check coverage anyway
     delivery: destination ? { ...destination, serviceable: true } : null,
     items: products.map((p, i) => ({
@@ -309,6 +312,7 @@ export async function createOrder(params: {
               : input.deliveryAddress,
             serviceabilityCheck: destination ? 'VERIFIED' : 'SKIPPED_NO_PINCODE',
             deliveryMethod: input.deliveryMethod,
+            expectedDelivery: deliveryWindow(products),
             deliveryCharge: paiseToRupees(chargePaise),
             ...(delivery.status === 'PRICED' ? {
               delivery: {

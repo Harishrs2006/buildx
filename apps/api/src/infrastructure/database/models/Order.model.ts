@@ -82,6 +82,11 @@ export interface IOrder extends Document {
   otpFailures?: number;
   // A delivery that went wrong (buyer not there, site closed, refused...), waiting for ops
   deliveryIssue?: { reason: string; at: Date; byRole: 'DELIVERY_PARTNER' | 'SUPPLIER'; byUserId: Types.ObjectId; resolvedAt?: Date; resolution?: string };
+  // Usual delivery time of the listings holding the order (days after acceptance); see delivery-window.ts
+  expectedDelivery?: { minDays: number; maxDays: number };
+  // Calendar date (YYYY-MM-DD, India) the supplier confirmed; can be changed later, buyer is told
+  deliveryDate?: string;
+  deliveryDateSetAt?: Date;
   deliveryMethod: 'STANDARD' | 'EXPRESS';
   deliveryCharge: number;
   // How the delivery charge was worked out (absent when delivery pricing was off)
@@ -203,6 +208,9 @@ const orderSchema = new Schema<IOrder>(
       index: true,
     },
     deliveryMode: { type: String, enum: ['PLATFORM', 'SUPPLIER'] },
+    expectedDelivery: { minDays: Number, maxDays: Number },
+    deliveryDate: { type: String, match: /^\d{4}-\d{2}-\d{2}$/ },
+    deliveryDateSetAt: Date,
     driverOffer: {
       state: { type: String, enum: ['OFFERED', 'ASSIGNED', 'NEEDS_OPS'] },
       driverUserId: { type: Schema.Types.ObjectId, ref: 'User' },

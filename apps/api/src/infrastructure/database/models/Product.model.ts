@@ -28,7 +28,8 @@ export interface IProduct extends Document {
   totalSold: number;
   isGstInclusive: boolean;
   gstRate: number;
-  deliveryDays: number;
+  deliveryDays: number;     // usual delivery time after the order is accepted: shortest, in days
+  deliveryDaysMax?: number; // ...and longest (absent = same as deliveryDays)
   location: { lat: number; lng: number; address: string };
   createdAt: Date;
   updatedAt: Date;
@@ -84,7 +85,8 @@ const productSchema = new Schema<IProduct>(
     totalSold: { type: Number, default: 0 },
     isGstInclusive: { type: Boolean, default: true },
     gstRate: { type: Number, default: 18, min: 0, max: 40 },
-    deliveryDays: { type: Number, default: 2 },
+    deliveryDays: { type: Number, default: 2, min: 0, max: 90 },
+    deliveryDaysMax: { type: Number, min: 0, max: 90 },
     location: {
       lat: Number,
       lng: Number,
