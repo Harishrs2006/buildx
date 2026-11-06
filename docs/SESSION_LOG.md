@@ -3,34 +3,35 @@
 Live memory for Claude sessions. Read this first. Newest entries at the bottom of the timeline.
 Times are IST.
 
-## CURRENT STATE (2026-11-05 23:30 IST)
-- Brand **Sthiva**. Live: shop https://www.sthiva.com (sthiva.com redirects), suppliers https://seller.sthiva.com,
-  ops https://ops.sthiva.com, API https://api.sthiva.com (old *.vercel.app and buildx-api.onrender.com still work).
-  Service ids keep "buildx" on purpose. DNS at Cloudflare (all records DNS only).
-- ALL 8 PLATFORM PHASES MERGED (#66-#77): admin settings, catalog, supplier offers, one price + commission, delivery
-  pricing + driver offers + delivery code, settlements/payouts, insights + people, Sthiva Driver app.
-  Checklist: docs/PLATFORM_CHECKLIST.md.
+## CURRENT STATE (2026-11-06 IST)
+- Brand **Sthiva**. Live: shop https://sthiva.com (www and buildx-vgud.vercel.app 308 -> sthiva.com), suppliers
+  https://seller.sthiva.com, ops https://ops.sthiva.com, API https://api.sthiva.com. All three websites now call
+  https://api.sthiva.com (NEXT_PUBLIC_API_URL switched 2026-11-06); buildx-api.onrender.com still answers.
+  Service ids keep "buildx" on purpose. DNS at Cloudflare (all records DNS only). support@sthiva.com via Cloudflare
+  Email Routing to the owner's Gmail.
+- Search: Google Search Console + Bing verified, sitemap submitted; GA4 G-9RH1C5X0WN loads only after consent.
+  Seller and ops sites: noindex + robots.txt disallow all.
+- ALL 8 PLATFORM PHASES MERGED (#66-#77) plus supplier documents, compulsory Monday check (from 9 Nov 2026).
+  Checklist: docs/PLATFORM_CHECKLIST.md. Vultr deploy kit ready in deploy/vultr (waiting for a server).
 - Three apps from one codebase (apps/mobile, APP_VARIANT): Sthiva (com.sthiva.app), Sthiva Partner
   (com.sthiva.partner), Sthiva Driver (com.sthiva.driver). APKs in C:/dev/BuildX. Builds in C:/bx/mobile:
   `APP_VARIANT=<v> npx expo prebuild -p android --clean --no-install`, then gradle (see 2026-11-05 23:20 entry).
-  OTA: `node scripts/publish-update.cjs <buyer|partner|driver> "note"` (from C:/bx/mobile).
-- Live data: all 10 categories at 0% commission; no vehicles yet (delivery charges OFF); answer times and driver
-  share not set.
-- Websites skip builds unless their own files change (vercel.json ignoreCommand in each web app).
-- API keep-alive: .github/workflows/keep-api-awake.yml (every 10 min).
+  OTA: `node scripts/publish-update.cjs <buyer|partner|driver> "note"` (from C:/bx/mobile; owner runs it).
+- Live data: demo supplier hidden, so 0 products until real suppliers join; categories at 0% commission; no
+  vehicles yet (delivery charges OFF); answer times and driver share not set.
+- Websites skip builds unless their own files change (vercel.json ignoreCommand). To redeploy after an env change:
+  Vercel Redeploy and untick "Use project's Ignore Build Step".
 
 ## NEXT STEPS
-Waiting on the owner (decisions or accounts):
-1. Publish OTA updates for partner + buyer (phases 5b-7 need them), install Sthiva-Driver.apk and try it.
-2. Ops Settings: answer times, driver share, real commission rates, vehicles; catalog weights; supplier pickup points.
-3. DONE (owner chose GST + shop licence/Udyam, 2026-11-05): supplier verification documents.
-4. Weekly availability DONE; Monday check compulsory from 9 Nov 2026 (missed = hidden until confirmed). Still needing rules:
-   product variations, market reference prices,
-   online payment (Razorpay needs company KYC) and refunds.
-5. Websites' NEXT_PUBLIC_API_URL -> https://api.sthiva.com (Vercel asks the owner for an emailed code).
-6. Launch details: business email, legal name, support phone; then NEXT_PUBLIC_ALLOW_INDEXING=true.
-7. New MongoDB credentials (owner sends), government sign-in later, real SMS needs Firebase Blaze (money).
-8. Old PRs #51 and #34 predate the rename: review/rebase or close.
+Waiting on the owner:
+1. Run the three OTA publish commands (partner, buyer, driver) from C:/bx/mobile.
+2. Sign the first real suppliers on seller.sthiva.com; verify their documents in ops.
+3. Ops Settings: commission per category, answer times, driver share, vehicles.
+4. Vultr server (Ubuntu 24.04, 4 GB, Mumbai): send the IP; Claude deploys and switches DNS.
+5. Product Hunt post (docs/PRODUCT_HUNT.md) after suppliers are live; send URL + post_id for the badge.
+6. Vercel 2FA; new MongoDB credentials; support phone (WhatsApp).
+Needs owner rules first: product variations, market reference prices, online payment/refunds (company KYC).
+Old PRs #51 and #34 predate the rename: review/rebase or close.
 
 ## DOMAIN PLAN: sthiva.com (brand renamed BuildX -> Sthiva on 2026-11-05)
 BOUGHT 2026-11-05 on Cloudflare Registrar (account harishrs21082006, nameservers jillian/sean.ns.cloudflare.com).
@@ -632,3 +633,4 @@ Original plan:
 - 2026-11-06 IST: #81 merged and live. Vercel: sthiva.com is Production, www.sthiva.com and buildx-vgud.vercel.app 308 -> sthiva.com. Verified live: robots allows, meta robots index,follow, canonical https://sthiva.com, sitemap 83 URLs on sthiva.com, footer support@sthiva.com + legal name. Sitemap submitted in Google Search Console (sc-domain:sthiva.com). docs/PRODUCT_HUNT.md launch kit written. Waiting on owner: Bing Webmaster import from GSC, Product Hunt post (then badge env vars), Vercel 2FA.
 - 2026-11-06 IST: #82 merged. Owner imported sthiva.com into Bing Webmaster Tools from GSC; sitemap was not imported, so submitted https://sthiva.com/sitemap.xml in Bing (status Processing). Search setup complete: Google + Bing verified with sitemaps, GA4 opt-in live. Remaining owner items: Product Hunt post after first real suppliers, Vercel 2FA, Vultr server, supplier onboarding, ops Settings values.
 - 2026-11-06 IST: Added robots.txt (disallow all) to seller-web and ops web (they already send noindex). EAS CLI on this laptop is logged in as the owner, but publishing OTA updates from Claude was blocked by the permission check; owner runs the publish commands.
+- 2026-11-06 IST: #84 live (seller/ops robots.txt Disallow: /). Switched NEXT_PUBLIC_API_URL to https://api.sthiva.com on Vercel sthiva-shop, sthiva-seller, sthiva-ops (Production + Preview, deleted + re-added as Config type) and redeployed each with the ignore build step off. CORS checked: api.sthiva.com allows https://sthiva.com.
