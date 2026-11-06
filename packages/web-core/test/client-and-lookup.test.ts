@@ -110,6 +110,19 @@ describe('API client', () => {
     expect(isAbortError(await pending.catch((e) => e))).toBe(true);
   });
 
+  it('lets one call wait longer than the client timeout (API waking up)', async () => {
+    const slow = vi.fn(
+      (_u: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((resolve, reject) => {
+          const t = setTimeout(() => resolve(new Response(JSON.stringify({ success: true, data: 1 }), { headers: { 'Content-Type': 'application/json' } })), 60);
+          init?.signal?.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('aborted', 'AbortError')); });
+        })
+    );
+    const c = createApiClient({ baseUrl: BASE, fetch: slow, timeoutMs: 20 });
+    expect((await c.request('/x', { schema: z.any(), envelope: true }).catch((e) => e)).code).toBe('TIMEOUT');
+    expect(await c.request('/x', { schema: z.any(), envelope: true, timeoutMs: 500 })).toBe(1);
+  });
+
   it('builds query strings, sends tokens only when asked, never sends cookies', async () => {
     const f = mockApi({ 'GET /p': ok({}) , 'GET /q': ok({}) });
     const c = createApiClient({ baseUrl: BASE, fetch: f as unknown as typeof fetch, getAuthToken: async () => 'tok' });

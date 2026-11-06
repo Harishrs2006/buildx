@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ApiClient } from '@sthiva/web-core';
+import { ApiClientError, type ApiClient } from '@sthiva/web-core';
 
 // Mirrors apps/api's AuthController.sendSynced / onboard response shapes.
 export const syncedUserSchema = z.object({
@@ -14,8 +14,19 @@ export const syncedUserSchema = z.object({
 export type SyncedUser = z.infer<typeof syncedUserSchema>;
 
 // Called right after Firebase sign-in succeeds (phone code or Google) (first time or returning buyer)
+const WAKE_TIMEOUT_MS = 60_000;
+
 export async function syncAuth(client: ApiClient): Promise<SyncedUser> {
-  return client.request('/auth/sync', { method: 'POST', auth: true, envelope: true, schema: syncedUserSchema });
+  const sync = (timeoutMs?: number) =>
+    client.request('/auth/sync', { method: 'POST', auth: true, envelope: true, schema: syncedUserSchema, timeoutMs });
+  try {
+    return await sync();
+  } catch (err) {
+    // The API host sleeps when idle and takes up to a minute to wake: try once more and wait longer
+    const unreachable = err instanceof ApiClientError && (err.code === 'TIMEOUT' || err.code === 'NETWORK_ERROR');
+    if (!unreachable) throw err;
+    return sync(WAKE_TIMEOUT_MS);
+  }
 }
 
 export async function onboardBuyer(client: ApiClient, name: string): Promise<SyncedUser> {
