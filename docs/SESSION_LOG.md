@@ -627,3 +627,4 @@ Original plan:
   isActive=false and its 10 listings DISCONTINUED (soft, reversible; no open orders). Live /products now 0.
   Owner chose to show their name until the company exists: Vercel sthiva-shop NEXT_PUBLIC_LEGAL_NAME =
   "Sthiva, operated by Harish R S" (live after the next shop deploy). Support phone/email still to come from owner.
+- 2026-11-06 IST: Owner asked for launch SEO: Search Console, GA, noindex, robots, www -> non-www, sitemap, Bing, Product Hunt + badge. Branch feat/seo-launch: opt-in GA4 (NEXT_PUBLIC_GA_ID; loads only after 'Allow analytics'; ads signals off), notice becomes a choice when GA is set, cookie + privacy pages updated, 'Change my analytics choice' on /cookies, Product Hunt badge in footer (NEXT_PUBLIC_PRODUCTHUNT_POST_ID/URL), SITE.url default https://sthiva.com, Vultr Caddy/compose flipped to non-www.

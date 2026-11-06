@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { ProductHuntBadge } from './ProductHuntBadge';
 import { SthivaLogo } from '@sthiva/web-core';
 import { SITE } from '@/lib/site';
 
@@ -54,7 +55,7 @@ export function SiteFooter() {
             { href: '/terms', label: 'Terms of service' },
             { href: '/privacy', label: 'Privacy policy' },
             { href: '/refunds', label: 'Cancellations and refunds' },
-            { href: '/cookies', label: 'Cookie policy' },
+            { href: '/cookies', label: 'Cookie policy and settings' },
             { href: '/account-deletion', label: 'Delete your account' },
           ]}
         />
@@ -64,6 +65,7 @@ export function SiteFooter() {
         <p>
           © {year} {SITE.legalName}. All rights reserved.
         </p>
+        <ProductHuntBadge />
         <p className="font-mono uppercase tracking-[0.16em]">Made in India · Cash on delivery</p>
       </div>
 

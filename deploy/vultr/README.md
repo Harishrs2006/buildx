@@ -18,7 +18,7 @@ images on Cloudinary, sign-in on Firebase. Replaces Render (free plan sleeps) an
 3. MongoDB Atlas, Network Access: add the server's IP.
 4. `/opt/sthiva/deploy/vultr/deploy.sh` builds and starts everything (first build 10 to 20 minutes).
 5. Check on the server before switching DNS:
-   `curl -k --resolve www.sthiva.com:443:127.0.0.1 https://www.sthiva.com -o /dev/null -w '%{http_code}'`
+   `curl -k --resolve sthiva.com:443:127.0.0.1 https://sthiva.com -o /dev/null -w '%{http_code}'`
    (certificates are issued only after step 6, so expect a certificate warning here).
 
 ## Switch traffic (minutes, reversible)

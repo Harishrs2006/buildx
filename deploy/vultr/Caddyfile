@@ -9,12 +9,13 @@
 	header -Server
 }
 
-sthiva.com {
+# sthiva.com is the main address; www forwards to it
+www.sthiva.com {
 	import common
-	redir https://www.sthiva.com{uri} permanent
+	redir https://sthiva.com{uri} permanent
 }
 
-www.sthiva.com {
+sthiva.com {
 	import common
 	reverse_proxy shop:3000
 }

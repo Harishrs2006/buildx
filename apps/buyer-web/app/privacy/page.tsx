@@ -52,6 +52,10 @@ export default function PrivacyPage() {
             <strong>Hosting and infrastructure providers</strong> that store and serve our app, database and product images (for
             example Vercel, Render, MongoDB Atlas and Cloudinary).
           </li>
+          <li>
+            <strong>Google Analytics</strong>, only if you choose &quot;Allow analytics&quot;: which pages are visited and how, so we
+            can improve the site. No advertising use. You can change this any time on the Cookie policy page.
+          </li>
           <li>Authorities, where the law requires it.</li>
         </ul>
         <p>Some of these providers may process data outside India, under their own security and privacy commitments.</p>
