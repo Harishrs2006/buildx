@@ -2,7 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { deliveryTimeLabel } from '@sthiva/web-core';
 import { PRICE_UNIT_LABEL, type Design } from '@/lib/designs';
-import { rupees } from '@/lib/format';
+import { rupeesWhole } from '@/lib/format';
 
 // A supplier's design: photo first, then name, starting price and how long it usually takes
 export function DesignCard({ design, tall = false }: { design: Design; tall?: boolean }) {
@@ -35,7 +35,7 @@ export function DesignCard({ design, tall = false }: { design: Design; tall?: bo
         <div className="shrink-0 text-right">
           <p className="text-[12px] text-stone">from</p>
           <p className="font-display text-[17px] font-bold tabular-nums">
-            {rupees.format(design.priceFrom)}<span className="text-[12px] font-medium text-stone">/{PRICE_UNIT_LABEL[design.priceUnit] ?? 'unit'}</span>
+            {rupeesWhole.format(design.priceFrom)}<span className="text-[12px] font-medium text-stone">/{PRICE_UNIT_LABEL[design.priceUnit] ?? 'unit'}</span>
           </p>
         </div>
       </div>

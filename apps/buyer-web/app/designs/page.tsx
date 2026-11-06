@@ -61,13 +61,13 @@ export default function DesignsPage() {
 
         <section className="sticky top-[var(--header-h)] z-30 mt-8 border-y border-ink/[0.07] bg-sand/90 backdrop-blur-xl" aria-label="Filters">
           <div className="container-x flex flex-col gap-2 py-3">
-            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:px-0" role="group" aria-label="Type">
+            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden" role="group" aria-label="Type">
               <Chip active={type === null} onClick={() => { setType(null); setPage(1); }}>All designs</Chip>
               {DESIGN_TYPES.map((t) => (
                 <Chip key={t.label} active={type === t.label} onClick={() => { setType(t.label); setPage(1); }}>{t.label}</Chip>
               ))}
             </div>
-            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 sm:mx-0 sm:px-0" role="group" aria-label="Style">
+            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden" role="group" aria-label="Style">
               <Chip active={style === null} onClick={() => { setStyle(null); setPage(1); }}>Any style</Chip>
               {DESIGN_STYLES.map((s) => (
                 <Chip key={s} active={style === s} onClick={() => { setStyle(s); setPage(1); }}>{s}</Chip>

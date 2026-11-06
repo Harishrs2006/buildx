@@ -10,7 +10,7 @@ import { BottomNav } from '@/components/BottomNav';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { PRICE_UNIT_LABEL, fetchDesign, requestDesignQuote, type Design } from '@/lib/designs';
-import { rupees } from '@/lib/format';
+import { rupeesWhole } from '@/lib/format';
 
 function QuoteForm({ design }: { design: Design }) {
   const client = useApiClient();
@@ -164,7 +164,7 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
 
               <dl className="card divide-y divide-sand-4/70">
                 {[
-                  ['Starting price', `${rupees.format(d.priceFrom)} per ${PRICE_UNIT_LABEL[d.priceUnit] ?? 'unit'}`],
+                  ['Starting price', `${rupeesWhole.format(d.priceFrom)} per ${PRICE_UNIT_LABEL[d.priceUnit] ?? 'unit'}`],
                   ['Usual time', `${deliveryTimeLabel(d.leadDays.min, d.leadDays.max)} after you confirm`],
                   ...(d.materials ? [['Materials', d.materials]] : []),
                   ['Style', d.style],
@@ -188,7 +188,7 @@ export default function DesignPage({ params }: { params: Promise<{ id: string }>
               <div className="on-ink rounded-3xl bg-ink p-6 text-sand">
                 <p className="text-[13px] text-sand/60">Starting from</p>
                 <p className="mt-1 font-display text-4xl font-bold tabular-nums">
-                  {rupees.format(d.priceFrom)}<span className="text-[16px] font-medium text-sand/60"> / {PRICE_UNIT_LABEL[d.priceUnit] ?? 'unit'}</span>
+                  {rupeesWhole.format(d.priceFrom)}<span className="text-[16px] font-medium text-sand/60"> / {PRICE_UNIT_LABEL[d.priceUnit] ?? 'unit'}</span>
                 </p>
                 <p className="mt-2 text-[14px] text-sand/70">The final price depends on your sizes and choices. The supplier confirms it, with a date, after talking to you.</p>
                 <div className="my-5 h-px bg-white/10" />
