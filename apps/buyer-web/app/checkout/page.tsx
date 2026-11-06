@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useApiClient, useSelectedLocation } from '@sthiva/web-core';
+import { deliveryTimePhrase, useApiClient, useSelectedLocation } from '@sthiva/web-core';
 import { Header } from '@/components/Header';
 import { BottomNav } from '@/components/BottomNav';
 import { RequireAuth } from '@/components/auth/RequireAuth';
@@ -215,6 +215,15 @@ function CheckoutForm() {
                   <SummaryRow strong label="Total" value={rupees.format(quote.data.total)} />
                 </div>
               </div>
+              {quote.data.expectedDelivery && (
+                <p className="mt-4 flex items-start gap-2.5 rounded-xl bg-white/[0.06] px-4 py-3 text-[14px] text-sand/80">
+                  <span className="material-symbols-outlined mt-0.5 text-[18px] text-lime" aria-hidden="true">event</span>
+                  <span>
+                    Usually delivered <strong className="font-semibold text-sand">{deliveryTimePhrase(quote.data.expectedDelivery.minDays, quote.data.expectedDelivery.maxDays)}</strong> after
+                    the supplier accepts. They confirm the exact date then, and your order page shows it.
+                  </span>
+                </p>
+              )}
               {quote.data.deliveryPricing?.status === 'UNPRICED' && (
                 <p role="alert" className="mt-4 rounded-xl bg-signal-red/15 px-4 py-3 text-[14px] text-[#FFB4B6]">{quote.data.deliveryPricing.message}</p>
               )}

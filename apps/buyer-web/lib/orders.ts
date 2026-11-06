@@ -28,6 +28,8 @@ export const quoteSchema = z.object({
     vehicle: z.string().optional(), weightKg: z.number().optional(), distanceKm: z.number().optional(), message: z.string().optional(),
   }).passthrough().optional(),
   total: z.number(),
+  // Usual delivery time of the listings (days after the supplier accepts)
+  expectedDelivery: z.object({ minDays: z.number(), maxDays: z.number() }).optional(),
 });
 export type Quote = z.infer<typeof quoteSchema>;
 
@@ -110,6 +112,9 @@ export const orderSchema = z
     statusHistory: z.array(statusEventSchema).optional(),
     // Given to whoever delivers; the API sends it only until the order is delivered or cancelled
     deliveryOtp: z.string().optional(),
+    // Usual delivery time, then the date the supplier confirmed (YYYY-MM-DD) once they accept
+    expectedDelivery: z.object({ minDays: z.number(), maxDays: z.number() }).optional(),
+    deliveryDate: z.string().optional(),
     createdAt: z.string(),
   })
   .passthrough();

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { CATALOG, CATALOG_CATEGORIES, catalogItem } from '../src/catalog/data';
 import { ROOMS, room, roomSections, roomsFor } from '../src/catalog/rooms';
 import { searchCatalog } from '../src/catalog/search';
+import { deliveryTimeLabel, deliveryTimePhrase, formatDeliveryDate, istDate } from '../src/delivery';
 
 const PUBLIC = path.join(__dirname, '../../../apps/buyer-web/public');
 
@@ -67,5 +68,20 @@ describe('search finds the new interiors', () => {
     ['mandir', 'pooja-units'],
   ])('%s', (q, id) => {
     expect(searchCatalog(q).items.map((i) => i.id)).toContain(id);
+  });
+});
+
+describe('delivery wording', () => {
+  it.each([
+    [0, 0, 'Same day'], [1, 1, '1 day'], [2, 3, '2 to 3 days'], [0, 2, 'Same day to 2 days'],
+    [14, 21, '2 to 3 weeks'], [14, 14, '2 weeks'], [7, 7, '7 days'], [10, 20, '10 to 20 days'], [3, 1, '3 days'],
+  ])('%i to %i days reads "%s"', (lo, hi, label) => {
+    expect(deliveryTimeLabel(lo, hi)).toBe(label);
+  });
+  it('defaults to the API default of 2 days and formats dates without a time-zone shift', () => {
+    expect(deliveryTimeLabel(undefined)).toBe('2 days');
+    expect([deliveryTimePhrase(0, 0), deliveryTimePhrase(0, 2), deliveryTimePhrase(14, 21)]).toEqual(['the same day', 'within 2 days', 'in 2 to 3 weeks']);
+    expect(formatDeliveryDate('2026-11-12')).toMatch(/Thu.*12.*Nov/);
+    expect(istDate(0, new Date('2026-11-06T20:00:00Z'))).toBe('2026-11-07'); // 01:30 IST next day
   });
 });

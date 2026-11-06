@@ -28,6 +28,7 @@ export const productDetailSchema = z
     minOrderQuantity: z.number().optional(),
     stockQuantity: z.number().optional(),
     deliveryDays: z.number().optional(),
+    deliveryDaysMax: z.number().optional(),
     specifications: z.record(z.string(), z.string()).optional(),
     images: z.array(imageSchema).optional(),
     supplierId: supplierSchema.nullable().optional(),

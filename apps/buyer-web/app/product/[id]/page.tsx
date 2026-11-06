@@ -12,7 +12,7 @@ import { QuantityHelper } from '@/components/catalog/QuantityHelper';
 import { useProduct } from '@/lib/products';
 import { useSupplierReviews } from '@/lib/reviews';
 import { addToCart } from '@/lib/cart';
-import { matchCatalogItem } from '@sthiva/web-core';
+import { deliveryTimePhrase, matchCatalogItem } from '@sthiva/web-core';
 import { rupees } from '@/lib/format';
 
 const relativeDate = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
@@ -226,10 +226,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <p className={`mt-4 flex items-center gap-1.5 text-[14px] ${inStock ? 'text-lime' : 'text-signal-red'}`}>
                     <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{inStock ? 'inventory' : 'block'}</span>
                     {inStock ? 'In stock with this supplier' : 'Out of stock'}
-                    {inStock && data.deliveryDays !== undefined && (
-                      <span className="text-stone-light"> · supplier quotes {data.deliveryDays} day{data.deliveryDays === 1 ? '' : 's'} to deliver</span>
-                    )}
                   </p>
+                  {inStock && data.deliveryDays !== undefined && (
+                    <p className="mt-2 flex items-center gap-1.5 text-[14px] text-stone-light">
+                      <span className="material-symbols-outlined text-[18px]" aria-hidden="true">schedule</span>
+                      Usually delivered {deliveryTimePhrase(data.deliveryDays, data.deliveryDaysMax)} after the supplier accepts
+                    </p>
+                  )}
                 </section>
 
                 {/* delivery check, right where the decision is made */}
