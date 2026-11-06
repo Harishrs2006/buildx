@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { LegalPage, Section } from '@/components/layout/LegalPage';
+import { CookieSettingsButton } from '@/components/layout/CookieSettingsButton';
 
 export const metadata: Metadata = {
   title: 'Cookie policy',
-  description: 'Sthiva uses only essential browser storage. No advertising or analytics cookies.',
+  description: 'What Sthiva stores in your browser, and your choice about analytics. No advertising cookies.',
   alternates: { canonical: '/cookies' },
 };
 
@@ -12,7 +13,7 @@ export default function CookiesPage() {
     <LegalPage
       path="/cookies"
       title="Cookie policy"
-      intro="Sthiva does not use advertising or analytics cookies. We only store what the site needs to work."
+      intro="Sthiva does not use advertising cookies. We store what the site needs to work, and use analytics only if you allow it."
     >
       <Section title="What we store in your browser">
         <ul>
@@ -27,8 +28,8 @@ export default function CookiesPage() {
             days. No coordinates are stored.
           </li>
           <li>
-            <strong>Notice preference</strong> (<code>sthiva.storageNotice</code>), remembering that you dismissed our storage
-            notice.
+            <strong>Notice preference</strong> (<code>sthiva.storageNotice</code>, <code>sthiva.analyticsConsent</code>), remembering
+            your answer to our cookie notice.
           </li>
         </ul>
       </Section>
@@ -37,8 +38,13 @@ export default function CookiesPage() {
           Google reCAPTCHA runs during sign-in to block automated abuse and may set its own cookies, under Google&apos;s privacy
           policy.
         </p>
+        <p>
+          Google Analytics runs only if you choose &quot;Allow analytics&quot;. It sets <code>_ga</code> cookies to count visits and
+          see which pages help. Advertising features are switched off.
+        </p>
       </Section>
       <Section title="Your choices">
+        <CookieSettingsButton />
         <p>
           You can clear this data at any time from your browser settings. If you do, you will be signed out and your cart and PIN
           will be forgotten.

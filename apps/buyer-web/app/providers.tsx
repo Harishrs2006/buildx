@@ -5,6 +5,7 @@ import { WebCoreProvider, createApiClient, createLocationStore } from '@sthiva/w
 import { getFirebaseAuth } from '../lib/firebase';
 import { AuthProvider } from '../components/auth/AuthProvider';
 import { StorageNotice } from '../components/layout/StorageNotice';
+import { Analytics } from '../components/layout/Analytics';
 
 // No app has a dev server pointed at it by default: set NEXT_PUBLIC_API_URL to the live API.
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
@@ -23,6 +24,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthProvider>
         {children}
         <StorageNotice />
+        <Analytics />
       </AuthProvider>
     </WebCoreProvider>
   );

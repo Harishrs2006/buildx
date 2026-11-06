@@ -1,7 +1,7 @@
 // Site-wide constants. Business details come from env so nothing unverified is hardcoded:
 // a field that is not configured is simply not shown.
 export const SITE = {
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.sthiva.com',
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://sthiva.com',
   description:
     'Sthiva is a construction materials marketplace. Browse cement, steel, sand, bricks and more from verified suppliers, check delivery to your PIN code, and pay cash on delivery.',
   allowIndexing: process.env.NEXT_PUBLIC_ALLOW_INDEXING === 'true',

@@ -37,12 +37,15 @@ services:
       args:
         <<: *web-args
         APP: buyer-web
-        NEXT_PUBLIC_SITE_URL: https://www.sthiva.com
+        NEXT_PUBLIC_SITE_URL: https://sthiva.com
         NEXT_PUBLIC_SELLER_PORTAL_URL: https://seller.sthiva.com
         NEXT_PUBLIC_ALLOW_INDEXING: ${NEXT_PUBLIC_ALLOW_INDEXING:-false}
         NEXT_PUBLIC_SUPPORT_EMAIL: ${NEXT_PUBLIC_SUPPORT_EMAIL:-}
         NEXT_PUBLIC_SUPPORT_PHONE: ${NEXT_PUBLIC_SUPPORT_PHONE:-}
         NEXT_PUBLIC_LEGAL_NAME: ${NEXT_PUBLIC_LEGAL_NAME:-}
+        NEXT_PUBLIC_GA_ID: ${NEXT_PUBLIC_GA_ID:-}
+        NEXT_PUBLIC_PRODUCTHUNT_POST_ID: ${NEXT_PUBLIC_PRODUCTHUNT_POST_ID:-}
+        NEXT_PUBLIC_PRODUCTHUNT_URL: ${NEXT_PUBLIC_PRODUCTHUNT_URL:-}
     restart: unless-stopped
     logging: *logs
 
