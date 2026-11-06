@@ -23,6 +23,7 @@ Times are IST.
   Vercel Redeploy and untick "Use project's Ignore Build Step".
 
 ## NEXT STEPS
+0. (Claude) 2026-11-07 or later: #89 merged but Vercel did not deploy it (Hobby "Deployment rate limited, retry in 24 hours"). Redeploy sthiva-shop, sthiva-seller, sthiva-ops from main (untick ignore build step), check /fonts/icons-*.woff2 is live, rerun Lighthouse. Fewer pushes per day: batch small PRs.
 Waiting on the owner:
 1. Run the three OTA publish commands (partner, buyer, driver) from C:/bx/mobile.
 2. Sign the first real suppliers on seller.sthiva.com; verify their documents in ops.
@@ -638,3 +639,4 @@ Original plan:
 - 2026-11-06 10:10 IST: #86 merged. SEO audit of all 83 sitemap URLs on sthiva.com: all 200, 87 internal links none broken. Fixed: 15 material guide descriptions were 29-46 chars (now summary + what the page covers, max 160); /search was in the sitemap but canonical to home (now its own title, noindex,follow, out of sitemap); home description 175 -> 149 chars.
 - 2026-11-06 10:25 IST: #87 merged and live (sitemap 82, new descriptions). Lighthouse on sthiva.com (mobile): perf 73, a11y/best-practices/SEO 100, LCP 15.8 s; cause: full Material Symbols font (2.3 MB, render-blocking). Fix (PR perf/icon-font-subset): packages/web-core/icons (official name list + icon-names.mjs) scans each site's code at build time and requests only the icons used (icon_names=). Shop font 2317 KB -> 45 KB; local mobile LCP 15.8 -> 4.7 s, page 3.2 MB -> 654 KB. Every icon on 6 shop pages checked in Chrome (renders as a glyph, not text). Seller and ops get the same subset (display block).
 - 2026-11-06 10:42 IST: #88 merged and live. Live Lighthouse: desktop perf 98 (LCP 3.1 -> 1.0 s), mobile 74 (LCP 15.8 -> 5.2 s). Next PR perf/self-host-icons: icon subset downloaded at build (selfHostIcons) into public/fonts/icons-<hash>.woff2 (gitignored, cached 1 year), stylesheet inlined, preload; falls back to Google's link if the download fails. Shop images AVIF first (sand photo 71 -> 35 KB). All icons rechecked in Chrome; shop, seller, ops builds pass.
+- 2026-11-06 IST: #89 merged; Vercel refused the main deploys (Hobby daily deployment limit, retry in 24 h). Live sites stay on #88 (fine). Redeploy tomorrow; this log is committed locally on docs/vercel-rate-limit and pushed with that redeploy.
