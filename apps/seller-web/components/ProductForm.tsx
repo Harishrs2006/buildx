@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  useApiClient, catalogItems, catalogItem, matchCatalogItem, suggestedListingName, suggestedListingUnit, type CatalogItem,
+  useApiClient, catalogItems, catalogItem, deliveryTimeLabel, DELIVERY_TIME_PRESETS, matchCatalogItem, suggestedListingName, suggestedListingUnit, type CatalogItem,
 } from '@sthiva/web-core';
 import { useCategories } from '../lib/categories';
 import { createSupplierProduct, productErrorText, searchSthivaItems, updateSupplierProduct, type ProductInput, type SthivaItem, type SupplierProduct } from '../lib/products';
@@ -120,9 +120,9 @@ const num = (v: string) => (v.trim() === '' ? NaN : Number(v));
 const isWhole = (v: string) => v.trim() !== '' && Number.isInteger(Number(v)) && Number(v) >= 0;
 
 // How the listing will look to a buyer, updated as the seller types
-function BuyerPreview({ name, brand, unit, price, gstRate, inclusive, tiers, stock, minOrder, deliveryDays, image }: {
+function BuyerPreview({ name, brand, unit, price, gstRate, inclusive, tiers, stock, minOrder, deliveryDays, deliveryDaysMax, image }: {
   name: string; brand?: string; unit: string; price: number; gstRate: number; inclusive: boolean;
-  tiers: { minQty: number; price: number }[]; stock: number; minOrder: number; deliveryDays: number; image?: string;
+  tiers: { minQty: number; price: number }[]; stock: number; minOrder: number; deliveryDays: number; deliveryDaysMax: number; image?: string;
 }) {
   const breakdown = gstBreakdown(price, gstRate, inclusive);
   // Only a bulk price the server would accept is shown as a deal
@@ -152,7 +152,7 @@ function BuyerPreview({ name, brand, unit, price, gstRate, inclusive, tiers, sto
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-[13px] text-stone">
           <span className={stock > 0 ? 'text-tertiary' : 'text-error'}>{stock > 0 ? 'In stock' : 'Out of stock'}</span>
           {minOrder > 1 && <span>Min {minOrder} {unit}</span>}
-          <span>Delivery in {deliveryDays} day{deliveryDays === 1 ? '' : 's'}</span>
+          <span>Delivery: {deliveryTimeLabel(deliveryDays, deliveryDaysMax).toLowerCase()}</span>
         </div>
       </div>
     </div>
@@ -187,6 +187,9 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
   const [lowStockAlert, setLowStockAlert] = useState(start?.lowStockAlert !== undefined ? String(start.lowStockAlert) : '10');
   const [minOrderQuantity, setMinOrderQuantity] = useState(start?.minOrderQuantity ? String(start.minOrderQuantity) : '1');
   const [deliveryDays, setDeliveryDays] = useState(start?.deliveryDays !== undefined ? String(start.deliveryDays) : '2');
+  const [deliveryDaysMax, setDeliveryDaysMax] = useState(
+    start?.deliveryDaysMax !== undefined ? String(start.deliveryDaysMax) : start?.deliveryDays !== undefined ? String(start.deliveryDays) : '3'
+  );
   const [images, setImages] = useState<ProductImage[]>(start?.images ?? []);
   const [submitting, setSubmitting] = useState<null | 'publish' | 'draft'>(null);
   const [error, setError] = useState<string | null>(null);
@@ -299,7 +302,9 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
     price: !(price > 0) ? 'Enter the price' : null,
     stock: stockQuantity !== '' && !isWhole(stockQuantity) ? 'Whole number, 0 or more' : null,
     minOrder: !(isWhole(minOrderQuantity) && Number(minOrderQuantity) >= 1) ? 'Whole number, 1 or more' : null,
-    delivery: !(isWhole(deliveryDays) && Number(deliveryDays) <= 60) ? 'Between 0 and 60 days' : null,
+    delivery: !(isWhole(deliveryDays) && Number(deliveryDays) <= 90 && isWhole(deliveryDaysMax) && Number(deliveryDaysMax) <= 90)
+      ? 'Between 0 and 90 days'
+      : Number(deliveryDaysMax) < Number(deliveryDays) ? 'The longest time must be at least the shortest' : null,
     lowStock: lowStockAlert !== '' && !isWhole(lowStockAlert) ? 'Whole number, 0 or more' : null,
     tiers: tierProblem,
   };
@@ -333,6 +338,7 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
       lowStockAlert: lowStockAlert === '' ? 0 : Number(lowStockAlert),
       minOrderQuantity: Number(minOrderQuantity),
       deliveryDays: Number(deliveryDays),
+      deliveryDaysMax: Number(deliveryDaysMax),
       specifications: cleanedSpecs,
       images,
     };
@@ -368,6 +374,7 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
       stock={isWhole(stockQuantity) ? Number(stockQuantity) : 0}
       minOrder={minOrder}
       deliveryDays={isWhole(deliveryDays) ? Number(deliveryDays) : 0}
+      deliveryDaysMax={isWhole(deliveryDaysMax) ? Number(deliveryDaysMax) : 0}
       image={images.find((i) => i.isPrimary)?.url ?? images[0]?.url}
     />
   );
@@ -618,9 +625,38 @@ export function ProductForm({ product, template, brands = [], sells = [] }: { pr
             <Field label={`Minimum order (${unitMany})`} error={show('minOrder')}>
               <input type="number" inputMode="numeric" min="1" step="1" value={minOrderQuantity} onChange={(e) => setMinOrderQuantity(e.target.value)} className="field font-mono" />
             </Field>
-            <Field label="Days to deliver" hint="Your own estimate, shown to buyers." error={show('delivery')}>
-              <input type="number" inputMode="numeric" min="0" max="60" step="1" value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)} className="field font-mono" />
-            </Field>
+          </div>
+          <div className="mt-5">
+            <p className="text-[14px] font-semibold">Usual delivery time</p>
+            <p className="mt-0.5 text-[13px] text-stone">
+              Counted from when you accept an order. Buyers see it on the listing; you confirm the exact date when you accept.
+              {item?.madeToOrder ? ' Made-to-order work usually takes weeks.' : ''}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Usual delivery time">
+              {DELIVERY_TIME_PRESETS.map((p) => {
+                const active = String(p.min) === deliveryDays && String(p.max) === deliveryDaysMax;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    onClick={() => { touch(); setDeliveryDays(String(p.min)); setDeliveryDaysMax(String(p.max)); }}
+                    className={`rounded-full px-4 py-2 text-[14px] font-medium transition-colors ${active ? 'bg-ink text-sand' : 'border border-sand-4 bg-sand hover:border-ink'}`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+            <div className="mt-3 grid max-w-sm grid-cols-2 gap-3">
+              <Field label="From (days)" error={show('delivery')}>
+                <input type="number" inputMode="numeric" min="0" max="90" step="1" value={deliveryDays} onChange={(e) => setDeliveryDays(e.target.value)} className="field font-mono" />
+              </Field>
+              <Field label="To (days)">
+                <input type="number" inputMode="numeric" min="0" max="90" step="1" value={deliveryDaysMax} onChange={(e) => setDeliveryDaysMax(e.target.value)} className="field font-mono" />
+              </Field>
+            </div>
           </div>
         </Step>
 

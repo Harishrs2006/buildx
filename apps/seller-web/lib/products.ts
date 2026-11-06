@@ -18,6 +18,7 @@ export const supplierProductSchema = z
     stockQuantity: z.number(),
     minOrderQuantity: z.number().optional(),
     deliveryDays: z.number().optional(),
+    deliveryDaysMax: z.number().optional(),
     gstRate: z.number().optional(),
     isGstInclusive: z.boolean().optional(),
     bulkPricing: z.array(z.object({ minQty: z.number(), price: z.number() })).optional(),
@@ -42,6 +43,7 @@ export type ProductInput = {
   stockQuantity?: number;
   minOrderQuantity?: number;
   deliveryDays?: number;
+  deliveryDaysMax?: number;
   gstRate?: number;
   isGstInclusive?: boolean;
   bulkPricing?: { minQty: number; price: number }[];
